@@ -73,10 +73,10 @@ difference = a - b
 product = a * b
 quotient = a / b
 
-PRINT "Sum: " + sum
-PRINT "Difference: " + difference
-PRINT "Product: " + product
-PRINT "Quotient: " + quotient
+PRINT sum
+PRINT difference
+PRINT product
+PRINT quotient
 
 Example 2: Input and Output
 
