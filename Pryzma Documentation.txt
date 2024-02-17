@@ -1,0 +1,92 @@
+Pryzma Programing Language Documentation
+
+Introduction:
+
+Pryzma is a simple programming language designed for ease of use and readability. It supports basic arithmetic operations, variable assignments, input/output operations, simple if statments, and simple flow control.
+
+Syntax:
+
+Variables:
+
+Variables in Pryzma can hold numeric values or strings. Variable names must start with a letter and can contain letters, numbers, and underscores.
+
+a = 10
+name = "John"
+
+Arithmetic Operations:
+
+Pryzma supports basic arithmetic operations including addition, subtraction, multiplication, and division.
+
+result = 10 + 5
+total = 2 * 3
+difference = 8 - 4
+quotient = 10 / 2
+
+Input/Output:
+
+Pryzma allows input from the user and output to the console. Concatenation is used to combine strings and variables for output.
+
+INPUT age
+PRINT "Your age is: " + age
+
+Flow Control:
+
+Pryzma supports simple flow control using the STOP statement. It terminates the program execution.
+
+STOP
+
+Comments:
+
+Comments in Pryzma start with the # symbol and continue to the end of the line.
+
+#This is a comment
+
+If statments:
+
+default condition value is true to chang it assign new value to varible named if_condition, if i wont to vheck if input is equal to 1 i can do:
+
+if_condition = "1"
+INPUT varible
+IF(varible,PRINT "true")
+
+if input will be 1 it will print true
+
+Examples:
+
+Example 1: Simple Arithmetic
+
+a = 10
+b = 5
+
+sum = a + b
+difference = a - b
+product = a * b
+quotient = a / b
+
+PRINT "Sum: " + sum
+PRINT "Difference: " + difference
+PRINT "Product: " + product
+PRINT "Quotient: " + quotient
+
+Example 2: Input and Output
+
+INPUT name
+
+PRINT "Hello, " + name
+
+Running Programs:
+
+To run a Pryzma program, save the code in a text file execute it by lunching the
+Pryzma interpreterand writing "run from file" command and providing a file path
+
+License:
+
+Pryzma is open-source software released under the Apache license. See the license.txt file for more details.
+
+Author:
+
+Pryzma was created by Igor Cielniak.
+
+Support:
+
+For questions, bug reports, and feature requests, please contact me igorcielniak.contact@gmail.com.

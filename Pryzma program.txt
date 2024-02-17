@@ -1,0 +1,12 @@
+PRINT "hello"
+a = "ff"
+PRINT a
+b = a + "dd"
+PRINT b
+
+INPUT f
+PRINT f
+
+INPUT age
+PRINT "Your age is:" + age
+
