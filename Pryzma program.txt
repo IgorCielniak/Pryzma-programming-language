@@ -3,6 +3,7 @@ a = "ff"
 PRINT a
 b = a + "dd"
 PRINT b
+PRINT a + b
 
 INPUT f
 PRINT f
@@ -10,13 +11,20 @@ PRINT f
 INPUT age
 PRINT "Your age is:" + age
 
-if_condition = 18
+hj = 1
+jh = 2
+dgdgd = hj + jh
 
-IF(age,PRINT "you are an adult")
+PRINT dgdgd
+
+if_condition = 1
 
 /gg{PRINT"text"}
 
 INPUT a
 IF(a,@gg)
 
+INPUT name
+
+PRINT "Hello, " + name
 
