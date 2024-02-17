@@ -43,13 +43,23 @@ Comments in Pryzma start with the # symbol and continue to the end of the line.
 
 If statments:
 
-default condition value is true to chang it assign new value to varible named if_condition, if i wont to vheck if input is equal to 1 i can do:
+default condition value is true to chang it assign new value to varible named if_condition, if you wont to heck if input is equal to 1 you can do:
 
 if_condition = "1"
 INPUT varible
 IF(varible,PRINT "true")
 
 if input will be 1 it will print true
+
+Functions:
+
+declare function:
+
+/function_name{function_body}
+
+calling functions:
+
+@function_name
 
 Examples:
 
