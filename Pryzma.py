@@ -5,6 +5,7 @@ import sys
 class PryzmaInterpreter:
     def __init__(self):
         self.variables = {'if_condition': 'true'}
+        self.functions = {}
 
     def interpret_file(self, file_path):
         file_path = file_path.strip('"')
@@ -12,8 +13,12 @@ class PryzmaInterpreter:
             program = file.read()
             self.interpret(program)
 
+    def define_function(self, name, body):
+        self.functions[name] = body
+
     def interpret(self, program):
         lines = program.split('\n')
+        
 
         for line in lines:
             line = line.strip()
@@ -36,10 +41,27 @@ class PryzmaInterpreter:
                 action = action.strip().rstrip(")")
                 if condition in self.variables and self.variables[condition] == self.variables['if_condition']:
                     self.interpret(action)
+            elif line.startswith("@"):
+                function_name = line[1:].strip()
+                if function_name in self.functions:
+                    self.interpret(self.functions[function_name])
+                else:
+                    print(f"Function '{function_name}' is not defined.")
+            elif line.startswith("/"):
+                function_definition = line[1:].split("{")
+                if len(function_definition) == 2:
+                    function_name = function_definition[0].strip()
+                    function_body = function_definition[1].strip().rstrip("}")
+                    self.define_function(function_name, function_body)
+                else:
+                    print(f"Invalid function definition: {line}")
             elif line == "STOP":
                 self.stop_program()
             else:
-                print(f"Invalid statement: {line}")
+                if line == "":
+                    continue
+                else:
+                    print(f"Invalid statement: {line}")
 
 
 
@@ -148,7 +170,7 @@ To show the license type "license" or to run code from file type "file"
         code = input("/// ")
         if code == "exit":
             break
-        elif code == "run from file":
+        elif code == "file":
             interpreter.interpret_file2()
         elif code == "license":
             interpreter.show_license()
