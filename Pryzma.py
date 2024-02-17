@@ -162,7 +162,7 @@ limitations under the License.
 if __name__ == "__main__":
     interpreter = PryzmaInterpreter()
 
-    print("""Pryzma 3.0
+    print("""Pryzma 3.1
 To show the license type "license" or to run code from file type "file"
     """)
 
