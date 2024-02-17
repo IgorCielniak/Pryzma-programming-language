@@ -10,3 +10,13 @@ PRINT f
 INPUT age
 PRINT "Your age is:" + age
 
+if_condition = 18
+
+IF(age,PRINT "you are an adult")
+
+/gg{PRINT"text"}
+
+INPUT a
+IF(a,@gg)
+
+
