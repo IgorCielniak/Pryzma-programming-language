@@ -1,10 +1,9 @@
 import re
 import sys
 
-
 class PryzmaInterpreter:
     def __init__(self):
-        self.variables = {'if_condition': 'true'}
+        self.variables = {}
         self.functions = {}
 
     def interpret_file(self, file_path):
@@ -19,13 +18,15 @@ class PryzmaInterpreter:
     def interpret(self, program):
         lines = program.split('\n')
         
-
         for line in lines:
             line = line.strip()
 
             if line.startswith("PRINT"):
                 value = line[len("PRINT"):].strip()
                 self.print_value(value)
+            elif line.startswith("CPRINT"):
+                value = line[len("CPRINT"):].strip()
+                self.cprint_value(value)
             elif line.startswith("INPUT"):
                 variable = line[len("INPUT"):].strip()
                 self.custom_input(variable)
@@ -35,11 +36,15 @@ class PryzmaInterpreter:
                 expression = expression.strip()
                 self.assign_variable(variable, expression)
             elif line.startswith("IF"):
-                _, condition_action = line.split("(")
-                condition, action = condition_action.split(",")
-                condition = condition.strip()
-                action = action.strip().rstrip(")")
-                if condition in self.variables and self.variables[condition] == self.variables['if_condition']:
+                _, condition_actions = line.split("(")
+                condition_actions = condition_actions.rstrip(")").split(",")
+                if len(condition_actions) != 3:
+                    print("Invalid IF instruction. Expected format: IF(condition, value, action)")
+                    continue
+                condition = condition_actions[0].strip()
+                value = condition_actions[1].strip()
+                action = condition_actions[2].strip()
+                if self.variables[value] == self.variables[condition]:
                     self.interpret(action)
             elif line.startswith("@"):
                 function_name = line[1:].strip()
@@ -78,7 +83,11 @@ class PryzmaInterpreter:
         value = self.evaluate_expression(expression)  # Re-evaluate the expression
 
         if value is not None:
-            self.variables[variable] = value
+            # Check if both variables are integers
+            if all(isinstance(self.variables[var], int) for var in (variable, expression)):
+                self.variables[variable] = self.variables[variable] + self.variables[expression]
+            else:
+                self.variables[variable] = value
         else:
             print(f"Invalid expression: {expression}")
 
@@ -110,6 +119,27 @@ class PryzmaInterpreter:
 
         if evaluated_value is not None:
             print(evaluated_value)
+    
+    def cprint_value(self, value):
+        evaluated_value = self.evaluate_expression(value)
+
+        if evaluated_value is not None:
+            if re.match(r"^\d+$", str(evaluated_value)):
+                print(evaluated_value)
+            else:
+                print(self.evaluate_expression(evaluated_value))
+
+
+    def printc_value(self, value):
+        evaluated_value = self.evaluate_expression(value)
+
+        if evaluated_value is not None:
+            # If the evaluated value is a mathematical expression, evaluate it first
+            if re.match(r"^\d+$", str(evaluated_value)):
+                print(evaluated_value)
+            else:
+                print(self.evaluate_expression(evaluated_value))
+
 
     def custom_input(self, variable):
         prompt = f"Enter a value for {variable}: "
@@ -162,7 +192,7 @@ limitations under the License.
 if __name__ == "__main__":
     interpreter = PryzmaInterpreter()
 
-    print("""Pryzma 3.1
+    print("""Pryzma 3.0
 To show the license type "license" or to run code from file type "file"
     """)
 
