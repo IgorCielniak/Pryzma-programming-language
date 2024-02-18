@@ -129,18 +129,6 @@ class PryzmaInterpreter:
             else:
                 print(self.evaluate_expression(evaluated_value))
 
-
-    def printc_value(self, value):
-        evaluated_value = self.evaluate_expression(value)
-
-        if evaluated_value is not None:
-            # If the evaluated value is a mathematical expression, evaluate it first
-            if re.match(r"^\d+$", str(evaluated_value)):
-                print(evaluated_value)
-            else:
-                print(self.evaluate_expression(evaluated_value))
-
-
     def custom_input(self, variable):
         prompt = f"Enter a value for {variable}: "
         value = self.get_input(prompt)
