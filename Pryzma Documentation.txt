@@ -43,13 +43,11 @@ Comments in Pryzma start with the # symbol and continue to the end of the line.
 
 If statments:
 
-default condition value is true to chang it assign new value to varible named if_condition, if you wont to heck if input is equal to 1 you can do:
-
-if_condition = "1"
 INPUT varible
-IF(varible,PRINT "true")
+INPUT varible2
+IF(varible,varible2,PRINT "true")
 
-if input will be 1 it will print true
+if both inputs will be for example 1 it will print true
 
 Functions:
 
@@ -57,9 +55,23 @@ declare function:
 
 /function_name{function_body}
 
+function body can have only one instruction
+
 calling functions:
 
 @function_name
+
+CPRINT:
+
+for example with program like that:
+
+INPUT a
+INPUT b
+INPUT operator
+c = a + operator + b
+CPRINT c
+
+and inputs like that 1, 2, + ,c will equal 1+2 and while printing it will be auto calculated and output will be 3
 
 Examples:
 
