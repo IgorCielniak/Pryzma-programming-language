@@ -99,7 +99,9 @@ PRINT "Hello, " + name
 Running Programs:
 
 To run a Pryzma program, save the code in a text file execute it by lunching the
-Pryzma interpreterand writing "file" command and providing a file path
+Pryzma interpreterand writing "file" command and providing a file path, or by lunching it from command line and  providing a file path sorunded  with " like that:
+
+python Pryzma.py "file_path"
 
 License:
 
