@@ -49,7 +49,10 @@ class PryzmaInterpreter:
             elif line.startswith("@"):
                 function_name = line[1:].strip()
                 if function_name in self.functions:
-                    self.interpret(self.functions[function_name])
+                    command = 0
+                    while command < len(self.functions[function_name]):
+                        self.interpret(self.functions[function_name][command])
+                        command += 1
                 else:
                     print(f"Function '{function_name}' is not defined.")
             elif line.startswith("/"):
@@ -57,13 +60,14 @@ class PryzmaInterpreter:
                 if len(function_definition) == 2:
                     function_name = function_definition[0].strip()
                     function_body = function_definition[1].strip().rstrip("}")
-                    self.define_function(function_name, function_body)
+                    function_body2 = function_body.split("|")
+                    self.define_function(function_name, function_body2)
                 else:
                     print(f"Invalid function definition: {line}")
             elif line == "STOP":
                 self.stop_program()
             else:
-                if line == "":
+                if line == "" or line.startswith("#"):
                     continue
                 else:
                     print(f"Invalid statement: {line}")
@@ -195,3 +199,4 @@ To show the license type "license" or to run code from file type "file"
         else:
             interpreter.interpret(code)
             print(interpreter.variables)
+            print(interpreter.functions)
