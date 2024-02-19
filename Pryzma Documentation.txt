@@ -53,7 +53,7 @@ Functions:
 
 declare function:
 
-/function_name{function_body}
+/function_name{command|command2|command3}
 
 function body can have only one instruction
 
