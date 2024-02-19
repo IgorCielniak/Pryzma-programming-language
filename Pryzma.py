@@ -198,5 +198,5 @@ To show the license type "license" or to run code from file type "file"
             interpreter.show_license()
         else:
             interpreter.interpret(code)
-            print(interpreter.variables)
-            print(interpreter.functions)
+            print("varibles:", interpreter.variables, "\n")
+            print("functions:", interpreter.functions, "\n")
