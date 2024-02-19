@@ -194,6 +194,8 @@ To show the license type "license" or to run code from file type "file"
             break
         elif code == "file":
             interpreter.interpret_file2()
+            interpreter.functions.clear()
+            interpreter.variables.clear()
         elif code == "license":
             interpreter.show_license()
         else:
