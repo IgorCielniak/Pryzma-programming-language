@@ -5,11 +5,11 @@ b = a + "dd"
 PRINT b
 PRINT a + b
 
-INPUT f
+INPUT f::"f:"
 PRINT f
 
-INPUT age
-PRINT "Your age is:" + age
+INPUT age::"age:"
+PRINT "Your age is" + age
 
 hj = 1
 jh = 2
@@ -18,19 +18,19 @@ dgdgd = hj + jh
 PRINT dgdgd
 
 
-/gg{PRINT "text"|PRINT "more text"|PRINT "text"}
+/gg{PRINT "text"|PRINT "more text"|INPUT func::"func:"|PRINT func}
 
 
-INPUT a
+INPUT a::"a:"
 b = "1"
 IF(a,b,@gg)
 
-INPUT name
+INPUT name::"name:"
 
 PRINT "Hello, " + name
 
-INPUT var1
-INPUT var2
-INPUT operator
+INPUT var1::"var1"
+INPUT var2::"var2"
+INPUT operator::"operator"
 result = var1 + operator + var2
 CPRINT result
