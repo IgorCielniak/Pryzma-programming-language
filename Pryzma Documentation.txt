@@ -26,8 +26,14 @@ Input/Output:
 
 Pryzma allows input from the user and output to the console. Concatenation is used to combine strings and variables for output.
 
-INPUT age
+INPUT age::"age:"
 PRINT "Your age is: " + age
+
+in input age is a varible that input will be asigned to  and "age:" is the prompt, if input will look like that:
+
+INPUT age
+
+then no prompt will be displayied
 
 Flow Control:
 
@@ -43,8 +49,8 @@ Comments in Pryzma start with the # symbol and continue to the end of the line.
 
 If statments:
 
-INPUT varible
-INPUT varible2
+INPUT varible::"var1:"
+INPUT varible2::"var2"
 IF(varible,varible2,PRINT "true")
 
 if both inputs will be for example 1 it will print true
