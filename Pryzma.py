@@ -134,9 +134,18 @@ class PryzmaInterpreter:
                 print(self.evaluate_expression(evaluated_value))
 
     def custom_input(self, variable):
-        prompt = f"Enter a value for {variable}: "
+        if "::" in variable:
+            variable_name, prompt = variable.split("::", 1)
+            variable_name = variable_name.strip()
+            prompt = prompt.strip('"')
+        else:
+            variable_name = variable.strip()
+            prompt = ""
+
         value = self.get_input(prompt)
-        self.variables[variable] = value
+        self.variables[variable_name] = value
+
+
 
     def get_input(self, prompt):
         if sys.stdin.isatty():
@@ -184,7 +193,11 @@ limitations under the License.
 if __name__ == "__main__":
     interpreter = PryzmaInterpreter()
 
-    print("""Pryzma 3.3
+    if len(sys.argv) == 2:
+        file_path = sys.argv[1]
+        interpreter.interpret_file(file_path)
+
+    print("""Pryzma 3.4
 To show the license type "license" or to run code from file type "file"
     """)
 
