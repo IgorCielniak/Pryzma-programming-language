@@ -22,8 +22,9 @@ PRINT dgdgd
 
 
 INPUT a::"a:"
-b = "1"
-IF(a,b,@gg)
+b = 1
+c = b
+IF(a,c,@gg)
 
 INPUT name::"name:"
 
