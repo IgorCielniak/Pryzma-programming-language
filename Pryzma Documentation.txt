@@ -13,6 +13,14 @@ Variables in Pryzma can hold numeric values or strings. Variable names must star
 a = 10
 name = "John"
 
+Type conversion:
+
+varible = INT(varible)
+
+or
+
+varible = STR(1)
+
 Arithmetic Operations:
 
 Pryzma supports basic arithmetic operations including addition, subtraction, multiplication, and division.
