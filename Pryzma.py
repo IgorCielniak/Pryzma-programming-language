@@ -44,7 +44,7 @@ class PryzmaInterpreter:
                 condition = condition_actions[0].strip()
                 value = condition_actions[1].strip()
                 action = condition_actions[2].strip()
-                if self.variables[value] == self.variables[condition]:
+                if str(self.variables[value]) == str(self.variables[condition]):
                     self.interpret(action)
             elif line.startswith("@"):
                 function_name = line[1:].strip()
@@ -76,54 +76,46 @@ class PryzmaInterpreter:
 
 
     def assign_variable(self, variable, expression):
-        self.variables[variable] = expression  # Assign the raw expression to the variable
-
-        # Re-evaluate all expressions that use the updated variable
-        for var in self.variables:
-            for key in self.variables.keys():
-                if self.variables[key] == var:
-                    self.variables[key] = self.evaluate_expression(var)
-
-        value = self.evaluate_expression(expression)  # Re-evaluate the expression
-
-        if value is not None:
-            # Check if both variables are integers
-            if all(isinstance(self.variables[var], int) for var in (variable, expression)):
-                self.variables[variable] = self.variables[variable] + self.variables[expression]
-            else:
-                self.variables[variable] = value
-        else:
-            print(f"Invalid expression: {expression}")
+        self.variables[variable] = self.evaluate_expression(expression)
 
     def evaluate_expression(self, expression):
         if re.match(r"^\d+$", expression):
             return int(expression)
-
-        if expression in self.variables:
-            return self.variables[expression]
-
-        if re.match(r'^".*"$', expression):
+        elif re.match(r'^".*"$', expression):
             return expression[1:-1]
-
-        if "+" in expression:
+        elif expression in self.variables:
+            return self.variables[expression]
+        elif "+" in expression:
             parts = expression.split("+")
             evaluated_parts = [self.evaluate_expression(part.strip()) for part in parts]
             if all(isinstance(part, str) for part in evaluated_parts):
                 return "".join(evaluated_parts)
-
-        try:
-            return eval(expression, {}, self.variables)
-        except NameError:
-            print(f"Unknown variable: {expression}")
-        except:
-            print(f"Invalid expression: {expression}")
+        elif "=" in expression:
+            var, val = expression.split("=")
+            var = var.strip()
+            val = val.strip()
+            if var.startswith("INT(") and var.endswith(")"):
+                return int(self.evaluate_expression(val))
+            elif var.startswith("STR(") and var.endswith(")"):
+                return str(self.evaluate_expression(val))
+            else:
+                return self.evaluate_expression(val)
+        elif expression.startswith("INT(") and expression.endswith(")"):
+            return int(expression[4:-1])
+        elif expression.startswith("STR(") and expression.endswith(")"):
+            return str(expression[4:-1])
+        else:
+            try:
+                return eval(expression, {}, self.variables)
+            except NameError:
+                print(f"Unknown variable or expression: {expression}")
+        return None
 
     def print_value(self, value):
         evaluated_value = self.evaluate_expression(value)
-
         if evaluated_value is not None:
             print(evaluated_value)
-    
+            
     def cprint_value(self, value):
         evaluated_value = self.evaluate_expression(value)
 
@@ -144,8 +136,6 @@ class PryzmaInterpreter:
 
         value = self.get_input(prompt)
         self.variables[variable_name] = value
-
-
 
     def get_input(self, prompt):
         if sys.stdin.isatty():
@@ -197,7 +187,7 @@ if __name__ == "__main__":
         file_path = sys.argv[1]
         interpreter.interpret_file(file_path)
 
-    print("""Pryzma 3.4
+    print("""Pryzma 3.5
 To show the license type "license" or to run code from file type "file"
     """)
 
