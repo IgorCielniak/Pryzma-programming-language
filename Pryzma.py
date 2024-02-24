@@ -187,7 +187,7 @@ if __name__ == "__main__":
         file_path = sys.argv[1]
         interpreter.interpret_file(file_path)
 
-    print("""Pryzma 3.5
+    print("""Pryzma 3.6
 To show the license type "license" or to run code from file type "file"
     """)
 
