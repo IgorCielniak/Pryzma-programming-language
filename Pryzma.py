@@ -66,14 +66,13 @@ class PryzmaInterpreter:
                     print(f"Invalid function definition: {line}")
             elif line == "STOP":
                 self.stop_program()
+            elif line == "EXIT":
+                sys.exit()
             else:
                 if line == "" or line.startswith("#"):
                     continue
                 else:
                     print(f"Invalid statement: {line}")
-
-
-
 
     def assign_variable(self, variable, expression):
         self.variables[variable] = self.evaluate_expression(expression)
@@ -101,9 +100,19 @@ class PryzmaInterpreter:
             else:
                 return self.evaluate_expression(val)
         elif expression.startswith("INT(") and expression.endswith(")"):
-            return int(expression[4:-1])
+            try:
+                return int(expression[4:-1])
+            except ValueError:
+                print(f"Invalid value for INT(): {expression[4:-1]}")
+                return None
         elif expression.startswith("STR(") and expression.endswith(")"):
             return str(expression[4:-1])
+        elif expression.startswith("TYPE(") and expression.endswith(")"):
+            var_name = expression[5:-1].strip()
+            if var_name in self.variables:
+                return type(self.variables[var_name]).__name__
+            else:
+                print(f"Variable '{var_name}' is not defined.")
         else:
             try:
                 return eval(expression, {}, self.variables)
@@ -187,7 +196,7 @@ if __name__ == "__main__":
         file_path = sys.argv[1]
         interpreter.interpret_file(file_path)
 
-    print("""Pryzma 3.6
+    print("""Pryzma 3.7
 To show the license type "license" or to run code from file type "file"
     """)
 
