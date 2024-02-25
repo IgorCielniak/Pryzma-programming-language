@@ -21,6 +21,14 @@ or
 
 varible = STR(1)
 
+to get type of some varible you can do:
+
+a = 1
+b = TYPE(a)
+PRINT b
+
+it will print int
+
 Arithmetic Operations:
 
 Pryzma supports basic arithmetic operations including addition, subtraction, multiplication, and division.
@@ -49,6 +57,8 @@ Pryzma supports simple flow control using the STOP statement. It terminates the 
 
 STOP
 
+or EXIT that exit the program
+
 Comments:
 
 Comments in Pryzma start with the # symbol and continue to the end of the line.
@@ -60,8 +70,6 @@ If statments:
 INPUT varible::"var1:"
 INPUT varible2::"var2"
 IF(varible,varible2,PRINT "true")
-
-if both inputs will be for example 1 it will print true
 
 Functions:
 
