@@ -1,13 +1,14 @@
-import re
-import sys
 import os
+import re
 import subprocess
+import sys
 
 class PryzmaInterpreterConverter:
     def __init__(self):
         pass
 
-    def convert_file(self, file_path, dest_folder):
+    def convert_file(self, file_path):
+        dest_folder = os.path.dirname(os.path.abspath(file_path))
         with open(file_path, 'r') as file:
             program = file.read()
             python_code = self.convert(program)
@@ -63,8 +64,10 @@ class PryzmaInterpreterConverter:
                         python_code.append('    ' + self.convert(body_line.strip()))
                 else:
                     print(f"Invalid function definition: {line}")
-            elif line == "STOP":
+            elif line == "EXIT":
                 python_code.append('import sys\nsys.exit()')
+            elif line == "STOP":
+                python_code.append('input("press Enter to exit...")')
             else:
                 if line == "" or line.startswith("#"):
                     continue
@@ -80,6 +83,8 @@ class PryzmaInterpreterConverter:
             return f'int({expression[4:-1]})'
         elif expression.startswith("STR(") and expression.endswith(")"):
             return f'str({expression[4:-1]})'
+        elif expression.startswith("TYPE(") and expression.endswith(")"):
+            return f'type({expression[5:-1]})'
         else:
             return expression
 
@@ -100,18 +105,15 @@ class PryzmaInterpreterConverter:
 def convert_to_exe(python_file_path):
     subprocess.run(['pyinstaller', '--onefile', python_file_path])
 
-
 if __name__ == "__main__":
-        converter = PryzmaInterpreterConverter()
+    converter = PryzmaInterpreterConverter()
 
-        source_file_path = input("Enter the path of the Pryzma file: ")
-        dest_folder = input("Enter the destination folder for the converted Python file: ")
+    source_file_path = input("Enter the path of the Pryzma file: ")
+    source_file_dir = os.path.dirname(os.path.abspath(source_file_path))
 
-        if not os.path.exists(dest_folder):
-            os.makedirs(dest_folder)
+    python_file_path = converter.convert_file(source_file_path)
+    convert_to_exe(python_file_path)
+    print("Conversion to EXE complete!")
 
-        python_file_path = converter.convert_file(source_file_path, dest_folder)
-        convert_to_exe(python_file_path)
-        print("Conversion to EXE complete!")
-        print("If somethink didn't work, try running the program from command line using the following command: python -m compiler.py")
-        input("Press Enter to exit...")
+    # Keep the program running until the user exits manually
+    input("Press Enter to exit...")
