@@ -20,10 +20,9 @@ PRINT dgdgd
 
 /gg{PRINT "text"|PRINT "more text"|INPUT func::"func:"|PRINT func}
 
-
 INPUT a::"a:"
 b = "1"
-IF(a,b,@gg)
+IF(a,b,PRINT "yes")
 
 INPUT name::"name:"
 
@@ -34,3 +33,11 @@ INPUT var2::"var2"
 INPUT operator::"operator"
 result = var1 + operator + var2
 CPRINT result
+
+
+a = 1
+b = STR(a)
+c = TYPE(b)
+PRINT c
+
+STOP
