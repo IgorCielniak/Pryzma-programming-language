@@ -95,6 +95,19 @@ CPRINT c
 
 and inputs like that 1, 2, + ,c will equal 1+2 and while printing it will be auto calculated and output will be 3
 
+Loops:
+
+FOR i, 1:5, PRINT i
+
+it will print numbers from one to five
+
+a=3
+
+FOR i, a:5, PRINT i
+
+it will print numbers from 3 to 5
+
+
 Examples:
 
 Example 1: Simple Arithmetic
