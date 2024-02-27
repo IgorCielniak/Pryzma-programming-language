@@ -30,6 +30,13 @@ class PryzmaInterpreter:
             elif line.startswith("INPUT"):
                 variable = line[len("INPUT"):].strip()
                 self.custom_input(variable)
+            elif line.startswith("FOR"):
+                loop_statement = line[len("FOR"):].strip()
+                loop_var, range_expr, action = loop_statement.split(",", 2)
+                loop_var = loop_var.strip()
+                range_expr = range_expr.strip()
+                action = action.strip()
+                self.for_loop(loop_var, range_expr, action)
             elif "=" in line:
                 variable, expression = line.split('=')
                 variable = variable.strip()
@@ -66,8 +73,6 @@ class PryzmaInterpreter:
                     print(f"Invalid function definition: {line}")
             elif line == "STOP":
                 self.stop_program()
-            elif line == "EXIT":
-                sys.exit()
             else:
                 if line == "" or line.startswith("#"):
                     continue
@@ -100,19 +105,11 @@ class PryzmaInterpreter:
             else:
                 return self.evaluate_expression(val)
         elif expression.startswith("INT(") and expression.endswith(")"):
-            try:
-                return int(expression[4:-1])
-            except ValueError:
-                print(f"Invalid value for INT(): {expression[4:-1]}")
-                return None
+            return int(expression[4:-1])
         elif expression.startswith("STR(") and expression.endswith(")"):
             return str(expression[4:-1])
         elif expression.startswith("TYPE(") and expression.endswith(")"):
-            var_name = expression[5:-1].strip()
-            if var_name in self.variables:
-                return type(self.variables[var_name]).__name__
-            else:
-                print(f"Variable '{var_name}' is not defined.")
+            return str(type(self.variables[expression[5:-1]]))
         else:
             try:
                 return eval(expression, {}, self.variables)
@@ -145,6 +142,18 @@ class PryzmaInterpreter:
 
         value = self.get_input(prompt)
         self.variables[variable_name] = value
+
+    def for_loop(self, loop_var, range_expr, action):
+        start, end = range_expr.split(":")
+        start_val = self.evaluate_expression(start)
+        end_val = self.evaluate_expression(end)
+        
+        if isinstance(start_val, int) and isinstance(end_val, int):
+            for val in range(start_val, end_val + 1):
+                self.variables[loop_var] = val
+                self.interpret(action)
+        else:
+            print("Invalid range expression for loop.")
 
     def get_input(self, prompt):
         if sys.stdin.isatty():
@@ -196,7 +205,7 @@ if __name__ == "__main__":
         file_path = sys.argv[1]
         interpreter.interpret_file(file_path)
 
-    print("""Pryzma 3.7
+    print("""Pryzma 3.5
 To show the license type "license" or to run code from file type "file"
     """)
 
@@ -212,5 +221,5 @@ To show the license type "license" or to run code from file type "file"
             interpreter.show_license()
         else:
             interpreter.interpret(code)
-            print("varibles:", interpreter.variables, "\n")
+            print("variables:", interpreter.variables, "\n")
             print("functions:", interpreter.functions, "\n")
