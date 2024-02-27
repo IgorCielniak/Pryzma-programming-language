@@ -22,7 +22,7 @@ PRINT dgdgd
 
 INPUT a::"a:"
 b = "1"
-IF(a,b,PRINT "yes")
+IF(a,b,@gg)
 
 INPUT name::"name:"
 
@@ -39,5 +39,10 @@ a = 1
 b = STR(a)
 c = TYPE(b)
 PRINT c
+
+a=3
+
+FOR i, a:5, PRINT i
+
 
 STOP
