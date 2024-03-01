@@ -39,6 +39,9 @@ class PryzmaInterpreterConverter:
                 range_expr = range_expr.strip()
                 action = action.strip()
                 python_code.append(self.convert_for_loop(loop_var, range_expr, action))
+            elif line.startswith("IMPORT"):
+                file_path = line[len("IMPORT"):].strip()
+                python_code.append(self.convert_import(file_path))
             elif "=" in line:
                 variable, expression = line.split('=')
                 variable = variable.strip()
@@ -70,7 +73,7 @@ class PryzmaInterpreterConverter:
                 else:
                     print(f"Invalid function definition: {line}")
             elif line == "STOP":
-                python_code.append('input("Press any key to continue...")')
+                python_code.append('import sys\nsys.exit()')
             else:
                 if line == "" or line.startswith("#"):
                     continue
@@ -82,6 +85,9 @@ class PryzmaInterpreterConverter:
     def convert_expression(self, expression):
         if re.match(r'^".*"$', expression):
             return expression
+        elif expression.startswith("[") and expression.endswith("]"):
+            elements = expression[1:-1].split(",")
+            return f'[{", ".join([self.convert_expression(elem.strip()) for elem in elements])}]'
         elif expression.startswith("INT(") and expression.endswith(")"):
             return f'int({expression[4:-1]})'
         elif expression.startswith("STR(") and expression.endswith(")"):
@@ -105,6 +111,9 @@ class PryzmaInterpreterConverter:
     def convert_for_loop(self, loop_var, range_expr, action):
         start, end = range_expr.split(":")
         return f'for {loop_var} in range({self.convert_expression(start)}, {self.convert_expression(end)} + 1):\n    {self.convert(action)}'
+
+    def convert_import(self, file_path):
+        return f'import {file_path.strip()}'
 
     def convert_function_call(self, function_call):
         return f'{function_call}()'
