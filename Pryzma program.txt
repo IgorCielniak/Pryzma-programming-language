@@ -42,7 +42,9 @@ PRINT c
 
 a=3
 
-FOR i, a:5, PRINT i
+FOR i, 0:a, PRINT i
 
+a = [1,2,3]
+PRINT a[1]
 
 STOP
