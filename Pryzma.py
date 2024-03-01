@@ -37,6 +37,9 @@ class PryzmaInterpreter:
                 range_expr = range_expr.strip()
                 action = action.strip()
                 self.for_loop(loop_var, range_expr, action)
+            elif line.startswith("IMPORT"):
+                file_path = line[len("IMPORT"):].strip()
+                self.import_functions(file_path)
             elif "=" in line:
                 variable, expression = line.split('=')
                 variable = variable.strip()
@@ -89,6 +92,9 @@ class PryzmaInterpreter:
             return expression[1:-1]
         elif expression in self.variables:
             return self.variables[expression]
+        elif expression.startswith("[") and expression.endswith("]"):
+            elements = expression[1:-1].split(",")
+            return [self.evaluate_expression(elem.strip()) for elem in elements]
         elif "+" in expression:
             parts = expression.split("+")
             evaluated_parts = [self.evaluate_expression(part.strip()) for part in parts]
@@ -143,18 +149,6 @@ class PryzmaInterpreter:
         value = self.get_input(prompt)
         self.variables[variable_name] = value
 
-    def for_loop(self, loop_var, range_expr, action):
-        start, end = range_expr.split(":")
-        start_val = self.evaluate_expression(start)
-        end_val = self.evaluate_expression(end)
-        
-        if isinstance(start_val, int) and isinstance(end_val, int):
-            for val in range(start_val, end_val + 1):
-                self.variables[loop_var] = val
-                self.interpret(action)
-        else:
-            print("Invalid range expression for loop.")
-
     def get_input(self, prompt):
         if sys.stdin.isatty():
             return input(prompt)
@@ -197,6 +191,26 @@ limitations under the License.
 
         print(license_text)
 
+    def for_loop(self, loop_var, range_expr, action):
+        if "::" in loop_var:
+            loop_var_name, step = loop_var.split("::", 1)
+            loop_var_name = loop_var_name.strip()
+            step = int(step.strip())
+        else:
+            loop_var_name = loop_var.strip()
+            step = 1
+
+        start, end = map(int, range_expr.split(":"))
+        for i in range(start, end + 1, step):
+            self.variables[loop_var_name] = i
+            self.interpret(action)
+
+    def import_functions(self, file_path):
+        file_path = file_path.strip('"')
+        with open(file_path, 'r') as file:
+            program = file.read()
+            self.interpret(program)
+
 
 if __name__ == "__main__":
     interpreter = PryzmaInterpreter()
@@ -205,7 +219,7 @@ if __name__ == "__main__":
         file_path = sys.argv[1]
         interpreter.interpret_file(file_path)
 
-    print("""Pryzma 3.8
+    print("""Pryzma 3.9
 To show the license type "license" or to run code from file type "file"
     """)
 
