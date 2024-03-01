@@ -1,14 +1,12 @@
 import os
 import re
-import subprocess
 import sys
 
 class PryzmaInterpreterConverter:
     def __init__(self):
         pass
 
-    def convert_file(self, file_path):
-        dest_folder = os.path.dirname(os.path.abspath(file_path))
+    def convert_file(self, file_path, dest_folder):
         with open(file_path, 'r') as file:
             program = file.read()
             python_code = self.convert(program)
@@ -34,6 +32,13 @@ class PryzmaInterpreterConverter:
             elif line.startswith("INPUT"):
                 variable = line[len("INPUT"):].strip()
                 python_code.append(self.convert_input(variable))
+            elif line.startswith("FOR"):
+                loop_statement = line[len("FOR"):].strip()
+                loop_var, range_expr, action = loop_statement.split(",", 2)
+                loop_var = loop_var.strip()
+                range_expr = range_expr.strip()
+                action = action.strip()
+                python_code.append(self.convert_for_loop(loop_var, range_expr, action))
             elif "=" in line:
                 variable, expression = line.split('=')
                 variable = variable.strip()
@@ -64,10 +69,8 @@ class PryzmaInterpreterConverter:
                         python_code.append('    ' + self.convert(body_line.strip()))
                 else:
                     print(f"Invalid function definition: {line}")
-            elif line == "EXIT":
-                python_code.append('import sys\nsys.exit()')
             elif line == "STOP":
-                python_code.append('input("press Enter to exit...")')
+                python_code.append('input("Press any key to continue...")')
             else:
                 if line == "" or line.startswith("#"):
                     continue
@@ -99,21 +102,18 @@ class PryzmaInterpreterConverter:
 
         return f'{variable_name} = input("{prompt}")'
 
+    def convert_for_loop(self, loop_var, range_expr, action):
+        start, end = range_expr.split(":")
+        return f'for {loop_var} in range({self.convert_expression(start)}, {self.convert_expression(end)} + 1):\n    {self.convert(action)}'
+
     def convert_function_call(self, function_call):
         return f'{function_call}()'
-
-def convert_to_exe(python_file_path):
-    subprocess.run(['pyinstaller', '--onefile', python_file_path])
 
 if __name__ == "__main__":
     converter = PryzmaInterpreterConverter()
 
     source_file_path = input("Enter the path of the Pryzma file: ")
-    source_file_dir = os.path.dirname(os.path.abspath(source_file_path))
+    dest_folder = input("Enter the destination folder to save the Python file: ")
 
-    python_file_path = converter.convert_file(source_file_path)
-    convert_to_exe(python_file_path)
-    print("Conversion to EXE complete!")
-
-    # Keep the program running until the user exits manually
-    input("Press Enter to exit...")
+    python_file_path = converter.convert_file(source_file_path, dest_folder)
+    print(f"Conversion complete! Python file saved at: {python_file_path}")
