@@ -13,6 +13,16 @@ Variables in Pryzma can hold numeric values or strings. Variable names must star
 a = 10
 name = "John"
 
+Lists:
+
+a = [1,2,3,4,5]
+
+PRINT a[0]
+
+output will be:
+
+1
+
 Type conversion:
 
 varible = INT(varible)
@@ -58,6 +68,24 @@ Pryzma supports simple flow control using the STOP statement. It terminates the 
 STOP
 
 or EXIT that exit the program
+
+Loops:
+
+FOR i, 1:5, PRINT i
+
+output will be:
+
+1
+2
+3
+4
+5
+
+importing:
+
+IMPORT file_path
+
+after import you can use functions from the imported file
 
 Comments:
 
