@@ -49,41 +49,49 @@ class PryzmaInterpreter:
                     expression = expression.strip()
                     self.assign_variable(variable, expression)
                 elif line.startswith("IF"):
-                    match = re.match(r'IF\(([^,]+),([^,]+),(.+)\)', line)
-                    if match:
-                        condition = match.group(1).strip()
-                        value = match.group(2).strip()
-                        action = match.group(3).strip()
-                        if str(self.variables[value]) == "*":
-                            self.interpret(action)
-                        elif str(self.variables[value]) == str(self.variables[condition]):
-                            self.interpret(action)
-                    else:
+                    _, condition_actions = line.split("(")
+                    condition_actions = condition_actions.rstrip(")").split(",")
+                    if len(condition_actions) != 3:
                         print("Invalid IF instruction. Expected format: IF(condition, value, action)")
+                        continue
+                    condition = condition_actions[0].strip()
+                    value = condition_actions[1].strip()
+                    action = condition_actions[2].strip()
+                    if str(self.variables[value]) == "*":
+                        self.interpret(action)
+                    elif str(self.variables[value]) == str(self.variables[condition]):
+                        self.interpret(action)
                 elif line.startswith("@"):
                     function_name = line[1:].strip()
-                    function_name, args = function_name.split("(") 
-                    args = args.strip(")")
-                    if args:
-                        args = args.split(",")
-                        for i, arg in enumerate(args):
-                            args[i] = arg.strip()
-                            if args[i].startswith('"') and args[i].endswith('"'):
-                                args[i] = args[i][1:-1]
-                            elif args[i] in self.variables:
-                                args[i] = self.variables[args[i]]
-                            else:
-                                print(f"Invalid argument at line {self.current_line}")
-                                break
-                        self.call_function(function_name, args)
+                    if "(" in function_name:
+                        function_name, arg = function_name.split("(") 
+                        arg = arg.strip(")")
+                        if arg:
+                            arg = arg.split(",")
+                            for args in range(len(arg)):
+                                arg[args] = arg[args].lstrip()
+                            for args in range(len(arg)):
+                                if arg[args].startswith('"') and arg[args].endswith('"'):
+                                    self.variables[f'arg{args+1}'] = arg[args][1:-1]
+                                elif arg[args] in self.variables:
+                                    self.variables[f'arg{args+1}'] = self.variables[arg[args]]
+                                else:
+                                    print(f"Invalid argument at line {self.current_line}")
+                                    break
+                    if function_name in self.functions:
+                        command = 0
+                        while command < len(self.functions[function_name]):
+                            self.interpret(self.functions[function_name][command])
+                            command += 1
                     else:
-                        self.call_function(function_name, [])
+                        print(f"Function '{function_name}' is not defined.")
                 elif line.startswith("/"):
                     function_definition = line[1:].split("{")
                     if len(function_definition) == 2:
                         function_name = function_definition[0].strip()
-                        function_body = function_definition[1].strip().rstrip("}").split("|")
-                        self.define_function(function_name, function_body)
+                        function_body = function_definition[1].strip().rstrip("}")
+                        function_body2 = function_body.split("|")
+                        self.define_function(function_name, function_body2)
                     else:
                         print(f"Invalid function definition: {line}")
                 elif line == "STOP":
@@ -240,14 +248,6 @@ limitations under the License.
 
         print(license_text)
 
-    def call_function(self, function_name, args):
-        if function_name in self.functions:
-            command = 0
-            while command < len(self.functions[function_name]):
-                self.interpret(self.functions[function_name][command])
-                command += 1
-        else:
-            print(f"Function '{function_name}' is not defined.")
 
 if __name__ == "__main__":
     interpreter = PryzmaInterpreter()
