@@ -67,9 +67,13 @@ class PryzmaInterpreter:
                     for args in range(len(arg)):
                         arg[args] = arg[args].lstrip()
                     for args in range(len(arg)):
-                        arg[args] = arg[args][1:-1]
-                    for i, string in enumerate(arg):
-                        self.variables[f'arg{i+1}'] = string
+                        if arg[args].startswith('"') and arg[args].endswith('"'):
+                            self.variables[f'arg{args+1}'] = arg[args][1:-1]
+                        elif arg[args] in self.variables:
+                            self.variables[f'arg{args+1}'] = self.variables[arg[args]]
+                        else:
+                            print(f"Invalid argument at line {self.current_line}")
+                            break
                     if function_name in self.functions:
                         command = 0
                         while command < len(self.functions[function_name]):
