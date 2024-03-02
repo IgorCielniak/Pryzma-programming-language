@@ -121,7 +121,7 @@ a = "text"
 
 @add(a)
 
-when calling  a function at least one argument need to be passed even when it is not going to be use other wise you will get an error
+when calling  a function at least one argument need to be passed even when it is not going to be use other wise you will get an error,for now calling a function with arguments in an if statment is impossible
 
 CPRINT:
 
@@ -188,4 +188,4 @@ Pryzma was created by Igor Cielniak.
 
 Support:
 
-For questions, bug reports, and feature requests, please contact me igorcielniak.contact@gmail.com
+For questions, bug reports, and feature requests, please contact me igorcielniak.contact@gmail.com.
