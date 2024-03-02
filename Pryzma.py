@@ -17,70 +17,84 @@ class PryzmaInterpreter:
 
     def interpret(self, program):
         lines = program.split('\n')
+        self.current_line = 0
         
         for line in lines:
+            self.current_line += 1
             line = line.strip()
 
-            if line.startswith("PRINT"):
-                value = line[len("PRINT"):].strip()
-                self.print_value(value)
-            elif line.startswith("CPRINT"):
-                value = line[len("CPRINT"):].strip()
-                self.cprint_value(value)
-            elif line.startswith("INPUT"):
-                variable = line[len("INPUT"):].strip()
-                self.custom_input(variable)
-            elif line.startswith("FOR"):
-                loop_statement = line[len("FOR"):].strip()
-                loop_var, range_expr, action = loop_statement.split(",", 2)
-                loop_var = loop_var.strip()
-                range_expr = range_expr.strip()
-                action = action.strip()
-                self.for_loop(loop_var, range_expr, action)
-            elif line.startswith("IMPORT"):
-                file_path = line[len("IMPORT"):].strip()
-                self.import_functions(file_path)
-            elif "=" in line:
-                variable, expression = line.split('=')
-                variable = variable.strip()
-                expression = expression.strip()
-                self.assign_variable(variable, expression)
-            elif line.startswith("IF"):
-                _, condition_actions = line.split("(")
-                condition_actions = condition_actions.rstrip(")").split(",")
-                if len(condition_actions) != 3:
-                    print("Invalid IF instruction. Expected format: IF(condition, value, action)")
-                    continue
-                condition = condition_actions[0].strip()
-                value = condition_actions[1].strip()
-                action = condition_actions[2].strip()
-                if str(self.variables[value]) == str(self.variables[condition]):
-                    self.interpret(action)
-            elif line.startswith("@"):
-                function_name = line[1:].strip()
-                if function_name in self.functions:
-                    command = 0
-                    while command < len(self.functions[function_name]):
-                        self.interpret(self.functions[function_name][command])
-                        command += 1
+            try:
+                if line.startswith("PRINT"):
+                    value = line[len("PRINT"):].strip()
+                    self.print_value(value)
+                elif line.startswith("CPRINT"):
+                    value = line[len("CPRINT"):].strip()
+                    self.cprint_value(value)
+                elif line.startswith("INPUT"):
+                    variable = line[len("INPUT"):].strip()
+                    self.custom_input(variable)
+                elif line.startswith("FOR"):
+                    loop_statement = line[len("FOR"):].strip()
+                    loop_var, range_expr, action = loop_statement.split(",", 2)
+                    loop_var = loop_var.strip()
+                    range_expr = range_expr.strip()
+                    action = action.strip()
+                    self.for_loop(loop_var, range_expr, action)
+                elif line.startswith("IMPORT"):
+                    file_path = line[len("IMPORT"):].strip()
+                    self.import_functions(file_path)
+                elif "=" in line:
+                    variable, expression = line.split('=')
+                    variable = variable.strip()
+                    expression = expression.strip()
+                    self.assign_variable(variable, expression)
+                elif line.startswith("IF"):
+                    _, condition_actions = line.split("(")
+                    condition_actions = condition_actions.rstrip(")").split(",")
+                    if len(condition_actions) != 3:
+                        print("Invalid IF instruction. Expected format: IF(condition, value, action)")
+                        continue
+                    condition = condition_actions[0].strip()
+                    value = condition_actions[1].strip()
+                    action = condition_actions[2].strip()
+                    if str(self.variables[value]) == str(self.variables[condition]):
+                        self.interpret(action)
+                elif line.startswith("@"):
+                    function_name = line[1:].strip()
+                    function_name, arg = function_name.split("(")
+                    arg = arg.strip(")")
+                    arg = arg.split(",")
+                    for args in range(len(arg)):
+                        arg[args] = arg[args].lstrip()
+                    for args in range(len(arg)):
+                        arg[args] = arg[args][1:-1]
+                    for i, string in enumerate(arg):
+                        self.variables[f'arg{i+1}'] = string
+                    if function_name in self.functions:
+                        command = 0
+                        while command < len(self.functions[function_name]):
+                            self.interpret(self.functions[function_name][command])
+                            command += 1
+                    else:
+                        print(f"Function '{function_name}' is not defined.")
+                elif line.startswith("/"):
+                    function_definition = line[1:].split("{")
+                    if len(function_definition) == 2:
+                        function_name = function_definition[0].strip()
+                        function_body = function_definition[1].strip().rstrip("}")
+                        function_body2 = function_body.split("|")
+                        self.define_function(function_name, function_body2)
+                    else:
+                        print(f"Invalid function definition: {line}")
+                elif line == "STOP":
+                    self.stop_program()
                 else:
-                    print(f"Function '{function_name}' is not defined.")
-            elif line.startswith("/"):
-                function_definition = line[1:].split("{")
-                if len(function_definition) == 2:
-                    function_name = function_definition[0].strip()
-                    function_body = function_definition[1].strip().rstrip("}")
-                    function_body2 = function_body.split("|")
-                    self.define_function(function_name, function_body2)
-                else:
-                    print(f"Invalid function definition: {line}")
-            elif line == "STOP":
-                self.stop_program()
-            else:
-                if line == "" or line.startswith("#"):
-                    continue
-                else:
-                    print(f"Invalid statement: {line}")
+                    if line == "" or line.startswith("#"):
+                        continue
+                    else:
+                        print(f"Invalid statement at line {self.current_line}: {line}")
+            except Exception as e:
+                print(f"Error at line {self.current_line}: {e}")
 
     def assign_variable(self, variable, expression):
         self.variables[variable] = self.evaluate_expression(expression)
@@ -92,9 +106,6 @@ class PryzmaInterpreter:
             return expression[1:-1]
         elif expression in self.variables:
             return self.variables[expression]
-        elif expression.startswith("[") and expression.endswith("]"):
-            elements = expression[1:-1].split(",")
-            return [self.evaluate_expression(elem.strip()) for elem in elements]
         elif "+" in expression:
             parts = expression.split("+")
             evaluated_parts = [self.evaluate_expression(part.strip()) for part in parts]
@@ -149,6 +160,44 @@ class PryzmaInterpreter:
         value = self.get_input(prompt)
         self.variables[variable_name] = value
 
+    def for_loop(self, loop_var, range_expr, action):
+        start, end = range_expr.split(":")
+        start_val = self.evaluate_expression(start)
+        end_val = self.evaluate_expression(end)
+        
+        if isinstance(start_val, int) and isinstance(end_val, int):
+            for val in range(start_val, end_val + 1):
+                self.variables[loop_var] = val
+                self.interpret(action)
+        else:
+            print("Invalid range expression for loop.")
+
+    def import_functions(self, file_path):
+        file_path = file_path.strip('"')
+        with open(file_path, 'r') as file:
+            program = file.read()
+            lines = program.split('\n')
+            function_def = False
+            function_name = ""
+            function_body = []
+            for line in lines:
+                line = line.strip()
+                if line.startswith("/"):
+                    if function_def:
+                        self.define_function(function_name, function_body)
+                        function_def = False
+                    function_definition = line[1:].split("{")
+                    if len(function_definition) == 2:
+                        function_name = function_definition[0].strip()
+                        function_body = function_definition[1].strip().rstrip("}").split("|")
+                        function_def = True
+                    else:
+                        print(f"Invalid function definition: {line}")
+                else:
+                    print(f"Invalid statement in imported file: {line}")
+            if function_def:
+                self.define_function(function_name, function_body)
+
     def get_input(self, prompt):
         if sys.stdin.isatty():
             return input(prompt)
@@ -191,26 +240,6 @@ limitations under the License.
 
         print(license_text)
 
-    def for_loop(self, loop_var, range_expr, action):
-        if "::" in loop_var:
-            loop_var_name, step = loop_var.split("::", 1)
-            loop_var_name = loop_var_name.strip()
-            step = int(step.strip())
-        else:
-            loop_var_name = loop_var.strip()
-            step = 1
-
-        start, end = map(int, range_expr.split(":"))
-        for i in range(start, end + 1, step):
-            self.variables[loop_var_name] = i
-            self.interpret(action)
-
-    def import_functions(self, file_path):
-        file_path = file_path.strip('"')
-        with open(file_path, 'r') as file:
-            program = file.read()
-            self.interpret(program)
-
 
 if __name__ == "__main__":
     interpreter = PryzmaInterpreter()
@@ -219,7 +248,7 @@ if __name__ == "__main__":
         file_path = sys.argv[1]
         interpreter.interpret_file(file_path)
 
-    print("""Pryzma 3.9
+    print("""Pryzma 4.0
 To show the license type "license" or to run code from file type "file"
     """)
 
