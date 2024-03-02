@@ -111,7 +111,17 @@ calling functions:
 
 @function_name("text")
 
-string text will be automaticly assigned to varible arg1
+string text will be automaticly assigned to varible arg1,varibles also can be used as arguments like that:
+
+
+
+/add{PRINT arg1}
+
+a = "text"
+
+@add(a)
+
+when calling  a function at least one argument need to be passed even when it is not going to be use other wise you will get an error
 
 CPRINT:
 
@@ -178,4 +188,4 @@ Pryzma was created by Igor Cielniak.
 
 Support:
 
-For questions, bug reports, and feature requests, please contact me igorcielniak.contact@gmail.com.
+For questions, bug reports, and feature requests, please contact me igorcielniak.contact@gmail.com
