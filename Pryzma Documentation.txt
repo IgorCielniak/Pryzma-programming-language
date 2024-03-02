@@ -109,7 +109,9 @@ function body can have only one instruction
 
 calling functions:
 
-@function_name
+@function_name("text")
+
+string text will be automaticly assigned to varible arg1
 
 CPRINT:
 
