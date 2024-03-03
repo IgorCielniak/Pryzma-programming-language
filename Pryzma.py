@@ -40,8 +40,8 @@ class PryzmaInterpreter:
                     range_expr = range_expr.strip()
                     action = action.strip()
                     self.for_loop(loop_var, range_expr, action)
-                elif line.startswith("IMPORT"):
-                    file_path = line[len("IMPORT"):].strip()
+                elif line.startswith("USE"):
+                    file_path = line[len("USE"):].strip()
                     self.import_functions(file_path)
                 elif "=" in line:
                     variable, expression = line.split('=')
