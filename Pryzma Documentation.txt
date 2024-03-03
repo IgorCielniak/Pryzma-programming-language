@@ -97,7 +97,7 @@ If statments:
 
 INPUT varible::"var1:"
 INPUT varible2::"var2"
-IF(varible,varible2,PRINT "true")
+IF varible, varible2, PRINT "true"
 
 Functions:
 
