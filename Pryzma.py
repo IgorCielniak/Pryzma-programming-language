@@ -48,11 +48,20 @@ class PryzmaInterpreter:
                     variable = variable.strip()
                     expression = expression.strip()
                     self.assign_variable(variable, expression)
-                elif line.startswith("IF"):
-                    _, condition_actions = line.split("(")
-                    condition_actions = condition_actions.rstrip(")").split(",")
+                elif line.startswith("IFN"):
+                    condition_actions = line[len("IFN"):].split(",")
                     if len(condition_actions) != 3:
-                        print("Invalid IF instruction. Expected format: IF(condition, value, action)")
+                        print("Invalid IFN instruction. Expected format: IFN condition, value, action")
+                        continue
+                    condition = condition_actions[0].strip()
+                    value = condition_actions[1].strip()
+                    action = condition_actions[2].strip()
+                    if str(self.variables[value]) != str(self.variables[condition]):
+                        self.interpret(action)
+                elif line.startswith("IF"):
+                    condition_actions = line[len("IF"):].split(",")
+                    if len(condition_actions) != 3:
+                        print("Invalid IF instruction. Expected format: IF condition, value, action")
                         continue
                     condition = condition_actions[0].strip()
                     value = condition_actions[1].strip()
@@ -94,6 +103,16 @@ class PryzmaInterpreter:
                         self.define_function(function_name, function_body2)
                     else:
                         print(f"Invalid function definition: {line}")
+                elif line.startswith("APPEND"):
+                    list_name, value = line[len("APPEND"):].split(",")
+                    list_name = list_name.strip()
+                    value = value.strip()
+                    self.append_to_list(list_name, value)
+                elif line.startswith("POP"):
+                    list_name, index = line[len("POP"):].split(",")
+                    list_name = list_name.strip()
+                    index = int(index.strip())
+                    self.pop_from_list(list_name, index)
                 elif line == "STOP":
                     self.stop_program()
                 else:
@@ -247,7 +266,22 @@ limitations under the License.
         """
 
         print(license_text)
+    
+    def append_to_list(self, list_name, value):
+        if list_name in self.variables:
+            self.variables[list_name].append(self.evaluate_expression(value))
+        else:
+            print(f"List '{list_name}' does not exist.")
 
+    def pop_from_list(self, list_name, index):
+        if list_name in self.variables:
+            try:
+                popped_value = self.variables[list_name].pop(index)
+            except IndexError:
+                print(f"Index {index} out of range for list '{list_name}'.")
+                return
+        else:
+            print(f"List '{list_name}' does not exist.")
 
 if __name__ == "__main__":
     interpreter = PryzmaInterpreter()
