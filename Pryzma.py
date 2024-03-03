@@ -115,6 +115,7 @@ class PryzmaInterpreter:
                     self.pop_from_list(list_name, index)
                 elif line == "STOP":
                     self.stop_program()
+                    break
                 else:
                     if line == "" or line.startswith("#"):
                         continue
