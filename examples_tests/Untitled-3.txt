@@ -1,0 +1,9 @@
+
+
+/add{PRINT arg1}
+
+a = "text"
+
+b = "*"
+
+IF a, b, @add(a)

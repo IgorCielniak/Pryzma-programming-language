@@ -1,0 +1,7 @@
+INPUT p::"password:"
+
+/login{INPUT pass::"password"|IF p, pass, PRINT "correct password"|IFN p, pass, @incorrect}
+
+/incorrect{PRINT "incorretc password"|@login}
+
+@login

@@ -1,0 +1,50 @@
+PRINT "hello"
+a = "ff"
+PRINT a
+b = a + "dd"
+PRINT b
+PRINT a + b
+
+INPUT f::"f:"
+PRINT f
+
+INPUT age::"age:"
+PRINT "Your age is" + age
+
+hj = 1
+jh = 2
+dgdgd = hj + jh
+
+PRINT dgdgd
+
+
+/gg{PRINT "text"|PRINT "more text"|INPUT func::"func:"|PRINT func}
+
+INPUT a::"a:"
+b = "1"
+IF a,b,@gg()
+
+INPUT name::"name:"
+
+PRINT "Hello, " + name
+
+INPUT var1::"var1"
+INPUT var2::"var2"
+INPUT operator::"operator"
+result = var1 + operator + var2
+CPRINT result
+
+
+a = 1
+b = STR(a)
+c = TYPE(b)
+PRINT c
+
+a=3
+
+FOR i, 0:a, PRINT i
+
+a = [1,2,3]
+PRINT a[1]
+
+STOP
