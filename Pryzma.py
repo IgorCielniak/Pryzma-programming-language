@@ -114,7 +114,6 @@ class PryzmaInterpreter:
                     index = int(index.strip())
                     self.pop_from_list(list_name, index)
                 elif line == "STOP":
-                    self.stop_program()
                     break
                 else:
                     if line == "" or line.startswith("#"):
@@ -233,9 +232,6 @@ class PryzmaInterpreter:
             sys.stdout.write(prompt)
             sys.stdout.flush()
             return sys.stdin.readline().rstrip('\n')
-
-    def stop_program(self):
-        input("Press Enter to exit...")
 
     def evaluate_condition(self, condition):
         if condition in self.variables:
