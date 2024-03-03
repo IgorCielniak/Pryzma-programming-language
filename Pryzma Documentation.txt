@@ -95,7 +95,7 @@ output will be:
 
 importing:
 
-IMPORT file_path
+USE file_path
 
 after import you can use functions from the imported file
 
