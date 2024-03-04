@@ -1,9 +1,9 @@
 
 
-/add{PRINT arg1}
+/add{print arg1}
 
 a = "text"
 
 b = "*"
 
-IF a, b, @add(a)
+if a, b, @add(a)
