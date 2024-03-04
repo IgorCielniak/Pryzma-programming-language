@@ -279,6 +279,18 @@ limitations under the License.
                 return
         else:
             print(f"List '{list_name}' does not exist.")
+    
+    def print_help(self):
+        print("""
+commands:
+        file - run a program from a file
+        cls - clear the functions and varibles dictionaries
+        clst - set clearing functions and varibles dictionaries after program execution to true
+        clsf - set clearing functions and varibles dictionaries after program execution to false
+        exit - exit the interpreter
+        help - show this help
+        license - show the license
+""")
 
 if __name__ == "__main__":
     interpreter = PryzmaInterpreter()
@@ -288,17 +300,29 @@ if __name__ == "__main__":
         interpreter.interpret_file(file_path)
 
     print("""Pryzma 4.1
-To show the license type "license" or to run code from file type "file"
+To show the license type "license" or "help" to get help.
     """)
+
+    cls_state = True
 
     while True:
         code = input("/// ")
         if code == "exit":
             break
+        if code == "help":
+            interpreter.print_help()
+        elif code == "cls":
+            interpreter.variables.clear()
+        elif code == "clst":
+            interpreter.variables.clear()
+            cls_state = True
+        elif code == "clsf":
+            cls_state = False
         elif code == "file":
             interpreter.interpret_file2()
             interpreter.functions.clear()
-            interpreter.variables.clear()
+            if cls_state == True:
+                interpreter.variables.clear()
         elif code == "license":
             interpreter.show_license()
         else:
