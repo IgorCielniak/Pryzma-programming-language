@@ -1,50 +1,50 @@
-PRINT "hello"
+print "hello"
 a = "ff"
-PRINT a
+print a
 b = a + "dd"
-PRINT b
-PRINT a + b
+print b
+print a + b
 
-INPUT f::"f:"
-PRINT f
+input f::"f:"
+print f
 
-INPUT age::"age:"
-PRINT "Your age is" + age
+input age::"age:"
+print "Your age is" + age
 
 hj = 1
 jh = 2
 dgdgd = hj + jh
 
-PRINT dgdgd
+print dgdgd
 
 
-/gg{PRINT "text"|PRINT "more text"|INPUT func::"func:"|PRINT func}
+/gg{print "text"|print "more text"|input func::"func:"|print func}
 
-INPUT a::"a:"
+input a::"a:"
 b = "1"
-IF a,b,@gg()
+if a,b,@gg()
 
-INPUT name::"name:"
+input name::"name:"
 
-PRINT "Hello, " + name
+print "Hello, " + name
 
-INPUT var1::"var1"
-INPUT var2::"var2"
-INPUT operator::"operator"
+input var1::"var1"
+input var2::"var2"
+input operator::"operator"
 result = var1 + operator + var2
-CPRINT result
+cprint result
 
 
 a = 1
-b = STR(a)
-c = TYPE(b)
-PRINT c
+b = str(a)
+c = type(b)
+print c
 
 a=3
 
-FOR i, 0:a, PRINT i
+for i, 0:a, print i
 
 a = [1,2,3]
-PRINT a[1]
+print a[1]
 
-STOP
+stop
