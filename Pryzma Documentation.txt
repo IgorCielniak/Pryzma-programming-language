@@ -2,7 +2,7 @@ Pryzma Programing Language Documentation
 
 Introduction:
 
-Pryzma is a simple programming language designed for ease of use and readability. It supports basic arithmetic operations, variable assignments, input/output operations, simple if statments, and simple flow control.
+Pryzma is a simple programming language designed for ease of use and readability.
 
 Syntax:
 
