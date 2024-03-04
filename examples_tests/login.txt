@@ -1,7 +1,7 @@
-INPUT p::"password:"
+input p::"password:"
 
-/login{INPUT pass::"password"|IF p, pass, PRINT "correct password"|IFN p, pass, @incorrect}
+/login{input pass::"password"|if p, pass, print "correct password"|ifn p, pass, @incorrect}
 
-/incorrect{PRINT "incorretc password"|@login}
+/incorrect{print "incorretc password"|@login}
 
 @login
