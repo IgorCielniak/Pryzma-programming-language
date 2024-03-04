@@ -24,32 +24,32 @@ class PryzmaInterpreter:
             line = line.strip()
 
             try:
-                if line.startswith("PRINT"):
-                    value = line[len("PRINT"):].strip()
+                if line.startswith("print"):
+                    value = line[len("print"):].strip()
                     self.print_value(value)
-                elif line.startswith("CPRINT"):
-                    value = line[len("CPRINT"):].strip()
+                elif line.startswith("cprint"):
+                    value = line[len("cprint"):].strip()
                     self.cprint_value(value)
-                elif line.startswith("INPUT"):
-                    variable = line[len("INPUT"):].strip()
+                elif line.startswith("input"):
+                    variable = line[len("input"):].strip()
                     self.custom_input(variable)
-                elif line.startswith("FOR"):
-                    loop_statement = line[len("FOR"):].strip()
+                elif line.startswith("for"):
+                    loop_statement = line[len("for"):].strip()
                     loop_var, range_expr, action = loop_statement.split(",", 2)
                     loop_var = loop_var.strip()
                     range_expr = range_expr.strip()
                     action = action.strip()
                     self.for_loop(loop_var, range_expr, action)
-                elif line.startswith("USE"):
-                    file_path = line[len("USE"):].strip()
+                elif line.startswith("use"):
+                    file_path = line[len("use"):].strip()
                     self.import_functions(file_path)
                 elif "=" in line:
                     variable, expression = line.split('=')
                     variable = variable.strip()
                     expression = expression.strip()
                     self.assign_variable(variable, expression)
-                elif line.startswith("IFN"):
-                    condition_actions = line[len("IFN"):].split(",")
+                elif line.startswith("ifn"):
+                    condition_actions = line[len("ifn"):].split(",")
                     if len(condition_actions) != 3:
                         print("Invalid IFN instruction. Expected format: IFN condition, value, action")
                         continue
@@ -58,8 +58,8 @@ class PryzmaInterpreter:
                     action = condition_actions[2].strip()
                     if str(self.variables[value]) != str(self.variables[condition]):
                         self.interpret(action)
-                elif line.startswith("IF"):
-                    condition_actions = line[len("IF"):].split(",")
+                elif line.startswith("if"):
+                    condition_actions = line[len("if"):].split(",")
                     if len(condition_actions) != 3:
                         print("Invalid IF instruction. Expected format: IF condition, value, action")
                         continue
@@ -103,17 +103,17 @@ class PryzmaInterpreter:
                         self.define_function(function_name, function_body2)
                     else:
                         print(f"Invalid function definition: {line}")
-                elif line.startswith("APPEND"):
-                    list_name, value = line[len("APPEND"):].split(",")
+                elif line.startswith("append"):
+                    list_name, value = line[len("append"):].split(",")
                     list_name = list_name.strip()
                     value = value.strip()
                     self.append_to_list(list_name, value)
-                elif line.startswith("POP"):
-                    list_name, index = line[len("POP"):].split(",")
+                elif line.startswith("pop"):
+                    list_name, index = line[len("pop"):].split(",")
                     list_name = list_name.strip()
                     index = int(index.strip())
                     self.pop_from_list(list_name, index)
-                elif line == "STOP":
+                elif line == "stop":
                     break
                 else:
                     if line == "" or line.startswith("#"):
@@ -142,17 +142,17 @@ class PryzmaInterpreter:
             var, val = expression.split("=")
             var = var.strip()
             val = val.strip()
-            if var.startswith("INT(") and var.endswith(")"):
+            if var.startswith("int(") and var.endswith(")"):
                 return int(self.evaluate_expression(val))
-            elif var.startswith("STR(") and var.endswith(")"):
+            elif var.startswith("str(") and var.endswith(")"):
                 return str(self.evaluate_expression(val))
             else:
                 return self.evaluate_expression(val)
-        elif expression.startswith("INT(") and expression.endswith(")"):
+        elif expression.startswith("int(") and expression.endswith(")"):
             return int(expression[4:-1])
-        elif expression.startswith("STR(") and expression.endswith(")"):
+        elif expression.startswith("str(") and expression.endswith(")"):
             return str(expression[4:-1])
-        elif expression.startswith("TYPE(") and expression.endswith(")"):
+        elif expression.startswith("type(") and expression.endswith(")"):
             return str(type(self.variables[expression[5:-1]]))
         else:
             try:
