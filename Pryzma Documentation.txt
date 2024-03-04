@@ -17,9 +17,9 @@ Lists:
 
 a = [1,2,3,4,5]
 
-PRINT a[0]
+print a[0]
 
-APPEND a, "text"
+append a, "text"
 
 it will appedn text to list a
 
@@ -27,27 +27,19 @@ POP a, "text"
 
 it will pop text from list a
 
-index = INDEX a, "text"
-
-it will asign index of varible text from list a to varible index
-
-output will be:
-
-1
-
 Type conversion:
 
-varible = INT(varible)
+varible = int(varible)
 
 or
 
-varible = STR(1)
+varible = str(1)
 
 to get type of some varible you can do:
 
 a = 1
-b = TYPE(a)
-PRINT b
+b = type(a)
+print b
 
 it will print int
 
@@ -64,12 +56,12 @@ Input/Output:
 
 Pryzma allows input from the user and output to the console. Concatenation is used to combine strings and variables for output.
 
-INPUT age::"age:"
-PRINT "Your age is: " + age
+input age::"age:"
+print "Your age is: " + age
 
 in input age is a varible that input will be asigned to  and "age:" is the prompt, if input will look like that:
 
-INPUT age
+input age
 
 then no prompt will be displayied
 
@@ -77,13 +69,11 @@ Flow Control:
 
 Pryzma supports simple flow control using the STOP statement. It terminates the program execution.
 
-STOP
-
-or EXIT that exit the program
+stop
 
 Loops:
 
-FOR i, 1:5, PRINT i
+for i, 1:5, print i
 
 output will be:
 
@@ -95,7 +85,7 @@ output will be:
 
 importing:
 
-USE file_path
+use file_path
 
 after import you can use functions from the imported file
 
@@ -107,15 +97,15 @@ Comments in Pryzma start with the # symbol and continue to the end of the line.
 
 If statments:
 
-INPUT varible::"var1:"
-INPUT varible2::"var2"
-IF varible, varible2, PRINT "true"
+input varible::"var1:"
+input varible2::"var2"
+if varible, varible2, print "true"
 
 if varible one is the same as varible2 it will print true
 
-INPUT varible::"var1:"
-INPUT varible2::"var2"
-IFN varible, varible2, PRINT "true"
+input varible::"var1:"
+input varible2::"var2"
+IFN varible, varible2, print "true"
 ^^^
 if varible will not equal varible2it will print true
 
@@ -135,7 +125,7 @@ string text will be automaticly assigned to varible arg1,varibles also can be us
 
 
 
-/add{PRINT arg1}
+/add{print arg1}
 
 a = "text"
 
@@ -146,27 +136,27 @@ to call a function without argument you can do
 
 @add
 
-CPRINT:
+cprint:
 
 for example with program like that:
 
-INPUT a
-INPUT b
-INPUT operator
+input a
+input b
+input operator
 c = a + operator + b
-CPRINT c
+cprint c
 
 and inputs like that 1, 2, + ,c will equal 1+2 and while printing it will be auto calculated and output will be 3
 
 Loops:
 
-FOR i, 1:5, PRINT i
+for i, 1:5, print i
 
 it will print numbers from one to five
 
 a=3
 
-FOR i, a:5, PRINT i
+for i, a:5, print i
 
 it will print numbers from 3 to 5
 
@@ -183,16 +173,16 @@ difference = a - b
 product = a * b
 quotient = a / b
 
-PRINT sum
-PRINT difference
-PRINT product
-PRINT quotient
+print sum
+print difference
+print product
+print quotient
 
 Example 2: Input and Output
 
-INPUT name
+input name
 
-PRINT "Hello, " + name
+print "Hello, " + name
 
 Running Programs:
 
