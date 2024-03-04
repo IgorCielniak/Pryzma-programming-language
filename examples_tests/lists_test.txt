@@ -1,11 +1,11 @@
 a = [1,2,3]
 
 
-APPEND a, "text"
+append a, "text"
 
-PRINT a
+print a
 
-POP a, 2
+pop a, 2
 
-PRINT a
+print a
 
