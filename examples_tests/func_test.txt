@@ -1,4 +1,4 @@
-/func1{PRINT arg1}
+/func1{print arg1}
 
 /func2{@func1("text")}
 
