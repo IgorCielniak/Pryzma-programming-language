@@ -43,6 +43,31 @@ print b
 
 it will print int
 
+Len:
+you also can do len like that:
+
+a = "text"
+
+print len(a)
+
+it will print 4 ,you can also do:
+
+a = [1,2,3,4,5]
+
+print len(a)
+
+it will print 5
+
+Split:
+
+b = "text text2"
+
+print split(b)
+
+it will print list of all works like that:
+
+["text", "text2"]
+
 Arithmetic Operations:
 
 Pryzma supports basic arithmetic operations including addition, subtraction, multiplication, and division.
@@ -59,11 +84,20 @@ Pryzma allows input from the user and output to the console. Concatenation is us
 input age::"age:"
 print "Your age is: " + age
 
-in input age is a varible that input will be asigned to  and "age:" is the prompt, if input will look like that:
+in input age is a varible that input will be asigned to it and "age:" is the prompt, if input will look like that:
 
 input age
 
 then no prompt will be displayied
+
+if there is \n in line it will print new line like in python,you can also do somethink like that:
+
+a = "text"
+
+print a[1:-1]
+
+it will print ex becouse it will remove one character form right and one from left
+
 
 Flow Control:
 
@@ -107,7 +141,7 @@ input varible::"var1:"
 input varible2::"var2"
 IFN varible, varible2, print "true"
 ^^^
-if varible will not equal varible2it will print true
+if varible will not equal varible2 it will print true
 
 Functions:
 
@@ -159,6 +193,14 @@ a=3
 for i, a:5, print i
 
 it will print numbers from 3 to 5
+
+Exec function:
+
+exec bash command
+
+can be used like that:
+
+exec echo Hello
 
 
 Examples:
