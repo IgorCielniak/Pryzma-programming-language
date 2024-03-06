@@ -1,7 +1,11 @@
 import re
 import sys
+import os
 
 class PryzmaInterpreter:
+
+    varible_definition_in_function_body = "no"
+    
     def __init__(self):
         self.variables = {}
         self.functions = {}
@@ -43,15 +47,10 @@ class PryzmaInterpreter:
                 elif line.startswith("use"):
                     file_path = line[len("use"):].strip()
                     self.import_functions(file_path)
-                elif "=" in line:
-                    variable, expression = line.split('=')
-                    variable = variable.strip()
-                    expression = expression.strip()
-                    self.assign_variable(variable, expression)
                 elif line.startswith("ifn"):
                     condition_actions = line[len("ifn"):].split(",")
                     if len(condition_actions) != 3:
-                        print("Invalid IFN instruction. Expected format: IFN condition, value, action")
+                        print("Invalid ifn instruction. Expected format: ifn condition, value, action")
                         continue
                     condition = condition_actions[0].strip()
                     value = condition_actions[1].strip()
@@ -61,7 +60,7 @@ class PryzmaInterpreter:
                 elif line.startswith("if"):
                     condition_actions = line[len("if"):].split(",")
                     if len(condition_actions) != 3:
-                        print("Invalid IF instruction. Expected format: IF condition, value, action")
+                        print("Invalid if instruction. Expected format: if condition, value, action")
                         continue
                     condition = condition_actions[0].strip()
                     value = condition_actions[1].strip()
@@ -70,6 +69,22 @@ class PryzmaInterpreter:
                         self.interpret(action)
                     elif str(self.variables[value]) == str(self.variables[condition]):
                         self.interpret(action)
+                elif line.startswith("/"):
+                    self.varible_definition_in_function_body = "no"
+                    function_definition = line[1:].split("{")
+                    if len(function_definition) == 2:
+                        function_name = function_definition[0].strip()
+                        function_body = function_definition[1].strip().rstrip("}")
+                        function_body2 = function_body.split("|")
+                        for body_element in function_body2:
+                            if "=" in body_element:
+                                self.varible_definition_in_function_body = "yes"
+                                body_element = body_element.split("=")
+                                varible_inside_function = body_element[0].strip()
+                                value_inside_function = body_element[1].strip()
+                        self.define_function(function_name, function_body2)
+                    else:
+                        print(f"Invalid function definition: {line}")
                 elif line.startswith("@"):
                     function_name = line[1:].strip()
                     if "(" in function_name:
@@ -84,9 +99,13 @@ class PryzmaInterpreter:
                                     self.variables[f'arg{args+1}'] = arg[args][1:-1]
                                 elif arg[args] in self.variables:
                                     self.variables[f'arg{args+1}'] = self.variables[arg[args]]
+                                elif arg[args].isdigit():
+                                    self.variables[f'arg{args+1}'] = int(arg[args])
                                 else:
                                     print(f"Invalid argument at line {self.current_line}")
                                     break
+                    if self.varible_definition_in_function_body == "yes":
+                        self.assign_variable(varible_inside_function, value_inside_function)
                     if function_name in self.functions:
                         command = 0
                         while command < len(self.functions[function_name]):
@@ -94,15 +113,11 @@ class PryzmaInterpreter:
                             command += 1
                     else:
                         print(f"Function '{function_name}' is not defined.")
-                elif line.startswith("/"):
-                    function_definition = line[1:].split("{")
-                    if len(function_definition) == 2:
-                        function_name = function_definition[0].strip()
-                        function_body = function_definition[1].strip().rstrip("}")
-                        function_body2 = function_body.split("|")
-                        self.define_function(function_name, function_body2)
-                    else:
-                        print(f"Invalid function definition: {line}")
+                elif "=" in line:
+                    variable, expression = line.split('=')
+                    variable = variable.strip()
+                    expression = expression.strip()
+                    self.assign_variable(variable, expression)
                 elif line.startswith("append"):
                     list_name, value = line[len("append"):].split(",")
                     list_name = list_name.strip()
@@ -113,6 +128,9 @@ class PryzmaInterpreter:
                     list_name = list_name.strip()
                     index = int(index.strip())
                     self.pop_from_list(list_name, index)
+                elif line.startswith("exec"):
+                    line = line[5:]
+                    os.system(line)
                 elif line == "stop":
                     break
                 else:
@@ -136,7 +154,9 @@ class PryzmaInterpreter:
         elif "+" in expression:
             parts = expression.split("+")
             evaluated_parts = [self.evaluate_expression(part.strip()) for part in parts]
-            if all(isinstance(part, str) for part in evaluated_parts):
+            if all(isinstance(part, int) for part in evaluated_parts):
+                return sum(evaluated_parts)
+            elif all(isinstance(part, str) for part in evaluated_parts):
                 return "".join(evaluated_parts)
         elif "=" in expression:
             var, val = expression.split("=")
@@ -154,6 +174,10 @@ class PryzmaInterpreter:
             return str(expression[4:-1])
         elif expression.startswith("type(") and expression.endswith(")"):
             return str(type(self.variables[expression[5:-1]]))
+        elif expression.startswith("len(") and expression.endswith(")"):
+            return len(self.variables[expression[4:-1]])
+        elif expression.startswith("split(") and expression.endswith(")"):
+            return self.variables[expression[6:-1]].split()
         else:
             try:
                 return eval(expression, {}, self.variables)
@@ -164,13 +188,18 @@ class PryzmaInterpreter:
     def print_value(self, value):
         evaluated_value = self.evaluate_expression(value)
         if evaluated_value is not None:
-            print(evaluated_value)
+            if isinstance(evaluated_value, str) and '\\n' in evaluated_value:
+                print(evaluated_value.replace('\\n', '\n'))
+            else:
+                print(evaluated_value)
             
     def cprint_value(self, value):
         evaluated_value = self.evaluate_expression(value)
 
         if evaluated_value is not None:
-            if re.match(r"^\d+$", str(evaluated_value)):
+            if isinstance(evaluated_value, str) and '\\n' in evaluated_value:
+                print(evaluated_value.replace('\\n', '\n'))
+            elif re.match(r"^\d+$", str(evaluated_value)):
                 print(evaluated_value)
             else:
                 print(self.evaluate_expression(evaluated_value))
@@ -298,6 +327,7 @@ if __name__ == "__main__":
     if len(sys.argv) == 2:
         file_path = sys.argv[1]
         interpreter.interpret_file(file_path)
+        sys.exit()
 
     print("""Pryzma 4.1
 To show the license type "license" or "help" to get help.
