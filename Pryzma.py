@@ -329,7 +329,7 @@ if __name__ == "__main__":
         interpreter.interpret_file(file_path)
         sys.exit()
 
-    print("""Pryzma 4.1
+    print("""Pryzma 4.2
 To show the license type "license" or "help" to get help.
     """)
 
