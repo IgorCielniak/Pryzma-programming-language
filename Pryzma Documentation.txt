@@ -202,6 +202,25 @@ can be used like that:
 
 exec echo Hello
 
+Read and write:
+
+content = read(C:\Users\User\Desktop\Untitled-1.txt)
+
+content of file C:\Users\User\Desktop\Untitled-1.txt will be asigned to varible content
+
+write(C:\Users\User\Desktop\Untitled-1.txt,content)
+
+iw will write value of varible content to file C:\Users\User\Desktop\Untitled-1.txt
+
+In:
+
+a = [1,2,3]
+
+b = in(a, 2)
+
+print b
+
+output will be True, you can also check if some string appear in list or if some word apear in string
 
 Examples:
 
