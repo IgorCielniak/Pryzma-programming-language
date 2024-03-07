@@ -1,4 +1,4 @@
-Pryzma Programing Language Documentation
+Pryzma Programming Language Documentation
 
 Introduction:
 
@@ -21,7 +21,7 @@ print a[0]
 
 append a, "text"
 
-it will appedn text to list a
+it will append text to list a
 
 POP a, "text"
 
@@ -29,13 +29,13 @@ it will pop text from list a
 
 Type conversion:
 
-varible = int(varible)
+variable = int(variable)
 
 or
 
-varible = str(1)
+variable = str(1)
 
-to get type of some varible you can do:
+to get type of some variable you can do:
 
 a = 1
 b = type(a)
@@ -84,19 +84,19 @@ Pryzma allows input from the user and output to the console. Concatenation is us
 input age::"age:"
 print "Your age is: " + age
 
-in input age is a varible that input will be asigned to it and "age:" is the prompt, if input will look like that:
+in input age is a variable that input will be assigned to it and "age:" is the prompt, if input will look like that:
 
 input age
 
-then no prompt will be displayied
+then no prompt will be displayed
 
-if there is \n in line it will print new line like in python,you can also do somethink like that:
+if there is \n in line it will print new line like in python,you can also do some think like that:
 
 a = "text"
 
 print a[1:-1]
 
-it will print ex becouse it will remove one character form right and one from left
+it will print ex because it will remove one character form right and one from left
 
 
 Flow Control:
@@ -129,19 +129,19 @@ Comments in Pryzma start with the # symbol and continue to the end of the line.
 
 #This is a comment
 
-If statments:
+If statement:
 
-input varible::"var1:"
-input varible2::"var2"
-if varible, varible2, print "true"
+input variable::"var1:"
+input variable2::"var2"
+if variable, variable2, print "true"
 
-if varible one is the same as varible2 it will print true
+if variable one is the same as variable2 it will print true
 
-input varible::"var1:"
-input varible2::"var2"
-IFN varible, varible2, print "true"
+input variable::"var1:"
+input variable2::"var2"
+IFN variable, variable2, print "true"
 ^^^
-if varible will not equal varible2 it will print true
+if variable will not equal variable2 it will print true
 
 Functions:
 
@@ -155,7 +155,7 @@ calling functions:
 
 @function_name("text")
 
-string text will be automaticly assigned to varible arg1,varibles also can be used as arguments like that:
+string text will be automatically assigned to variable arg1,variables also can be used as arguments like that:
 
 
 
@@ -206,11 +206,11 @@ Read and write:
 
 content = read(C:\Users\User\Desktop\Untitled-1.txt)
 
-content of file C:\Users\User\Desktop\Untitled-1.txt will be asigned to varible content
+content of file C:\Users\User\Desktop\Untitled-1.txt will be assigned to variable content
 
 write(C:\Users\User\Desktop\Untitled-1.txt,content)
 
-iw will write value of varible content to file C:\Users\User\Desktop\Untitled-1.txt
+iw will write value of variable content to file C:\Users\User\Desktop\Untitled-1.txt
 
 In:
 
@@ -220,7 +220,7 @@ b = in(a, 2)
 
 print b
 
-output will be True, you can also check if some string appear in list or if some word apear in string
+output will be True, you can also check if some string appear in list or if some word appear in string
 
 Examples:
 
@@ -248,7 +248,7 @@ print "Hello, " + name
 Running Programs:
 
 To run a Pryzma program, save the code in a text file execute it by lunching the
-Pryzma interpreterand writing "file" command and providing a file path, or by lunching it from command line and  providing a file path sorunded  with " like that:
+Pryzma interpreter and writing "file" command and providing a file path, or by lunching it from command line and  providing a file path sorunded  with " like that:
 
 python Pryzma.py "file_path"
 
