@@ -4,7 +4,7 @@ import os
 
 class PryzmaInterpreter:
 
-    varible_definition_in_function_body = "no"
+    variable_definition_in_function_body = "no"
     
     def __init__(self):
         self.variables = {}
@@ -70,7 +70,7 @@ class PryzmaInterpreter:
                     elif str(self.variables[value]) == str(self.variables[condition]):
                         self.interpret(action)
                 elif line.startswith("/"):
-                    self.varible_definition_in_function_body = "no"
+                    self.variable_definition_in_function_body = "no"
                     function_definition = line[1:].split("{")
                     if len(function_definition) == 2:
                         function_name = function_definition[0].strip()
@@ -78,9 +78,9 @@ class PryzmaInterpreter:
                         function_body2 = function_body.split("|")
                         for body_element in function_body2:
                             if "=" in body_element:
-                                self.varible_definition_in_function_body = "yes"
+                                self.variable_definition_in_function_body = "yes"
                                 body_element = body_element.split("=")
-                                varible_inside_function = body_element[0].strip()
+                                variable_inside_function = body_element[0].strip()
                                 value_inside_function = body_element[1].strip()
                         self.define_function(function_name, function_body2)
                     else:
@@ -104,8 +104,8 @@ class PryzmaInterpreter:
                                 else:
                                     print(f"Invalid argument at line {self.current_line}")
                                     break
-                    if self.varible_definition_in_function_body == "yes":
-                        self.assign_variable(self.varible_inside_function, self.value_inside_function)
+                    if self.variable_definition_in_function_body == "yes":
+                        self.assign_variable(self.variable_inside_function, self.value_inside_function)
                     if function_name in self.functions:
                         command = 0
                         while command < len(self.functions[function_name]):
@@ -353,9 +353,9 @@ limitations under the License.
         print("""
 commands:
         file - run a program from a file
-        cls - clear the functions and varibles dictionaries
-        clst - set clearing functions and varibles dictionaries after program execution to true
-        clsf - set clearing functions and varibles dictionaries after program execution to false
+        cls - clear the functions and variables dictionaries
+        clst - set clearing functions and variables dictionaries after program execution to true
+        clsf - set clearing functions and variables dictionaries after program execution to false
         exit - exit the interpreter
         help - show this help
         license - show the license
@@ -369,7 +369,7 @@ if __name__ == "__main__":
         interpreter.interpret_file(file_path)
         sys.exit()
 
-    print("""Pryzma 4.2
+    print("""Pryzma 4.3
 To show the license type "license" or "help" to get help.
     """)
 
