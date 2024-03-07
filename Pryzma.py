@@ -105,7 +105,7 @@ class PryzmaInterpreter:
                                     print(f"Invalid argument at line {self.current_line}")
                                     break
                     if self.varible_definition_in_function_body == "yes":
-                        self.assign_variable(varible_inside_function, value_inside_function)
+                        self.assign_variable(self.varible_inside_function, self.value_inside_function)
                     if function_name in self.functions:
                         command = 0
                         while command < len(self.functions[function_name]):
@@ -131,6 +131,16 @@ class PryzmaInterpreter:
                 elif line.startswith("exec"):
                     line = line[5:]
                     os.system(line)
+                elif line.startswith("write(") and line.endswith(")"):
+                    file_path, content = line[6:-1].split(",")
+                    file_path = file_path.strip()
+                    content = content.strip()
+                    if content.startswith('"') and content.endswith('"'):
+                        self.write_to_file(content[1:-1], file_path)
+                    elif content in self.variables:
+                        self.write_to_file(str(self.variables[content]), file_path)
+                    else:
+                        print(f"Invalid content at line {self.current_line}: {content}")
                 elif line == "stop":
                     break
                 else:
@@ -140,6 +150,13 @@ class PryzmaInterpreter:
                         print(f"Invalid statement at line {self.current_line}: {line}")
             except Exception as e:
                 print(f"Error at line {self.current_line}: {e}")
+
+    def write_to_file(self, content, file_path):
+        try:
+            with open(file_path, 'w') as file:
+                file.write(content)
+        except Exception as e:
+            print(f"Error writing to file '{file_path}': {e}")
 
     def assign_variable(self, variable, expression):
         self.variables[variable] = self.evaluate_expression(expression)
@@ -178,6 +195,27 @@ class PryzmaInterpreter:
             return len(self.variables[expression[4:-1]])
         elif expression.startswith("split(") and expression.endswith(")"):
             return self.variables[expression[6:-1]].split()
+        elif expression.startswith("read(") and expression.endswith(")"):
+            file_path = expression[5:-1]
+            try:
+                with open(file_path, 'r') as file:
+                    return file.read()
+            except FileNotFoundError:
+                print(f"File '{file_path}' not found.")
+                return ""
+        elif expression.startswith("in(") and expression.endswith(")"):
+            list_name, value = expression[3:-1].split(",")
+            list_name = list_name.strip()
+            value = value.strip()
+            if value.startswith('"') and value.endswith('"'):
+                value = value[1:-1]
+                return value in self.variables[list_name]
+            elif value.isnumeric():
+                return int(value) in self.variables[list_name]
+            elif value in self.variables:
+                return self.variables[value] in self.variables[list_name]
+            else:
+                print(f"Variable '{value}' is not defined.")
         else:
             try:
                 return eval(expression, {}, self.variables)
@@ -249,6 +287,8 @@ class PryzmaInterpreter:
                         function_def = True
                     else:
                         print(f"Invalid function definition: {line}")
+                elif line.startswith("") or line.startswith("#"):
+                    continue
                 else:
                     print(f"Invalid statement in imported file: {line}")
             if function_def:
