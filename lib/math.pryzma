@@ -1,0 +1,5 @@
+/add{result = arg1+arg2}
+/subtract{result = arg1-arg2}
+/multiply{result = arg1*arg2}
+/divide{result = arg1/arg2}
+/sqrt{result = arg1*arg1}
