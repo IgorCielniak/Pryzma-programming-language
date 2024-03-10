@@ -11,8 +11,8 @@ class PryzmaInterpreter:
         self.functions = {}
 
     def interpret_file(self, file_path):
-        file_path = file_path.strip('"')
-        with open(file_path, 'r') as file:
+        self.file_path = file_path.strip('"')
+        with open(self.file_path, 'r') as file:
             program = file.read()
             self.interpret(program)
 
@@ -141,6 +141,9 @@ class PryzmaInterpreter:
                         self.write_to_file(str(self.variables[content]), file_path)
                     else:
                         print(f"Invalid content at line {self.current_line}: {content}")
+                elif line.startswith("del(") and line.endswith(")"):
+                    variable = line[4:-1]
+                    self.variables.pop(variable)
                 elif line == "stop":
                     break
                 else:
@@ -268,31 +271,63 @@ class PryzmaInterpreter:
 
     def import_functions(self, file_path):
         file_path = file_path.strip('"')
-        with open(file_path, 'r') as file:
-            program = file.read()
-            lines = program.split('\n')
-            function_def = False
-            function_name = ""
-            function_body = []
-            for line in lines:
-                line = line.strip()
-                if line.startswith("/"):
-                    if function_def:
-                        self.define_function(function_name, function_body)
-                        function_def = False
-                    function_definition = line[1:].split("{")
-                    if len(function_definition) == 2:
-                        function_name = function_definition[0].strip()
-                        function_body = function_definition[1].strip().rstrip("}").split("|")
-                        function_def = True
+        if file_path.startswith("./"):
+            # Get the directory of the current Pryzma file
+            current_directory = os.path.dirname(self.file_path)
+            # Construct the absolute path of the file to import
+            absolute_file_path = os.path.join(current_directory, file_path[2:])
+            with open(absolute_file_path, 'r') as file:
+                program = file.read()
+                lines = program.split('\n')
+                function_def = False
+                function_name = ""
+                function_body = []
+                for line in lines:
+                    line = line.strip()
+                    if line.startswith("/"):
+                        if function_def:
+                            self.define_function(function_name, function_body)
+                            function_def = False
+                        function_definition = line[1:].split("{")
+                        if len(function_definition) == 2:
+                            function_name = function_definition[0].strip()
+                            function_body = function_definition[1].strip().rstrip("}").split("|")
+                            function_def = True
+                        else:
+                            print(f"Invalid function definition: {line}")
+                    elif line.startswith("") or line.startswith("#"):
+                        continue
                     else:
-                        print(f"Invalid function definition: {line}")
-                elif line.startswith("") or line.startswith("#"):
-                    continue
-                else:
-                    print(f"Invalid statement in imported file: {line}")
-            if function_def:
-                self.define_function(function_name, function_body)
+                        print(f"Invalid statement in imported file: {line}")
+                if function_def:
+                    self.define_function(function_name, function_body)
+        else:
+            # The file path does not start with "./", so treat it as a regular file path
+            with open(file_path, 'r') as file:
+                program = file.read()
+                lines = program.split('\n')
+                function_def = False
+                function_name = ""
+                function_body = []
+                for line in lines:
+                    line = line.strip()
+                    if line.startswith("/"):
+                        if function_def:
+                            self.define_function(function_name, function_body)
+                            function_def = False
+                        function_definition = line[1:].split("{")
+                        if len(function_definition) == 2:
+                            function_name = function_definition[0].strip()
+                            function_body = function_definition[1].strip().rstrip("}").split("|")
+                            function_def = True
+                        else:
+                            print(f"Invalid function definition: {line}")
+                    elif line.startswith("") or line.startswith("#"):
+                        continue
+                    else:
+                        print(f"Invalid statement in imported file: {line}")
+                if function_def:
+                    self.define_function(function_name, function_body)
 
     def get_input(self, prompt):
         if sys.stdin.isatty():
@@ -310,8 +345,8 @@ class PryzmaInterpreter:
             return False
 
     def interpret_file2(self):
-        file_path = input("Enter the file path of the program: ")
-        self.interpret_file(file_path)
+        self.file_path = input("Enter the file path of the program: ")
+        self.interpret_file(self.file_path)
 
     def show_license(self):
         license_text = """
@@ -369,7 +404,7 @@ if __name__ == "__main__":
         interpreter.interpret_file(file_path)
         sys.exit()
 
-    print("""Pryzma 4.3
+    print("""Pryzma 4.4
 To show the license type "license" or "help" to get help.
     """)
 
