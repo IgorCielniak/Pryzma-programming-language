@@ -1,2 +1,0 @@
-/startswith{split_arg1 = split(arg1)|arg1 = split_arg1[0]|if arg1, arg2, result = True|ifn arg1, arg2, result = False}
-/endswith{split_arg1 = split(arg1)|arg_len = len(split_arg1)|arg1 = split_arg1[arg_len- 1]|if arg1, arg2, result = True|ifn arg1, arg2, result = False}
