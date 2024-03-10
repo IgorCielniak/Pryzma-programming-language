@@ -123,6 +123,8 @@ use file_path
 
 after import you can use functions from the imported file
 
+if you add ./ before the file path it will look for the given file in the same folder as the file.
+
 Comments:
 
 Comments in Pryzma start with the # symbol and continue to the end of the line.
@@ -221,6 +223,20 @@ b = in(a, 2)
 print b
 
 output will be True, you can also check if some string appear in list or if some word appear in string
+
+Del:
+
+you can use del to delete a variable like that:
+
+a = "text"
+
+print a
+
+del(a)
+
+print a
+
+it will print text and then it will give error that will  say that variable a doesn't exist
 
 Examples:
 
