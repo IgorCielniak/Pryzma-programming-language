@@ -68,6 +68,8 @@ it will print list of all works like that:
 
 ["text", "text2"]
 
+splitlines() works nearly tes same but it split by lines not by words
+
 Arithmetic Operations:
 
 Pryzma supports basic arithmetic operations including addition, subtraction, multiplication, and division.
