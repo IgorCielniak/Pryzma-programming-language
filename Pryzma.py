@@ -198,8 +198,12 @@ class PryzmaInterpreter:
             return len(self.variables[expression[4:-1]])
         elif expression.startswith("split(") and expression.endswith(")"):
             return self.variables[expression[6:-1]].split()
+        elif expression.startswith("splitlines(") and expression.endswith(")"):
+            return self.variables[expression[11:-1]].splitlines()
         elif expression.startswith("read(") and expression.endswith(")"):
             file_path = expression[5:-1]
+            if file_path.startswith('"') and file_path.endswith('"'):
+                file_path = file_path[1:-1]
             try:
                 with open(file_path, 'r') as file:
                     return file.read()
