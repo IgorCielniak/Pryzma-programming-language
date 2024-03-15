@@ -136,7 +136,16 @@ class PryzmaInterpreter:
                     file_path = file_path.strip()
                     content = content.strip()
                     if content.startswith('"') and content.endswith('"'):
-                        self.write_to_file(content[1:-1], file_path)
+                        content = content[1:-1]
+                        if file_path.startswith('"') and file_path.endswith('"'):
+                            file_path = file_path[1:-1]
+                        self.write_to_file(content, file_path)
+                    elif file_path.startswith('"') and file_path.endswith('"'):
+                        file_path = file_path[1:-1]
+                        if content.startswith('"') and content.endswith('"'):
+                            content = content[1:-1]
+                            self.write_to_file(content, file_path)
+                        self.write_to_file(self.variables[content], file_path)
                     elif content in self.variables:
                         self.write_to_file(str(self.variables[content]), file_path)
                     else:
@@ -157,6 +166,9 @@ class PryzmaInterpreter:
     def write_to_file(self, content, file_path):
         try:
             with open(file_path, 'w') as file:
+                file.write(content)
+        except FileNotFoundError:
+            with open(file_path, 'x') as file:
                 file.write(content)
         except Exception as e:
             print(f"Error writing to file '{file_path}': {e}")
@@ -196,6 +208,23 @@ class PryzmaInterpreter:
             return str(type(self.variables[expression[5:-1]]))
         elif expression.startswith("len(") and expression.endswith(")"):
             return len(self.variables[expression[4:-1]])
+        elif expression.startswith("splitby(") and expression.endswith(")"):
+            args = expression[8:-1].split(",")
+            if len(args) != 2:
+                print("Invalid number of arguments for splitby function.")
+                return None
+            char_to_split = args[0].strip()
+            string_to_split = args[1].strip()
+            if string_to_split in self.variables:
+                string_to_split = self.variables[string_to_split]
+            if char_to_split in self.variables:
+                char_to_split = self.variables[char_to_split]
+            if char_to_split.startswith('"') and char_to_split.endswith('"'):
+                char_to_split = char_to_split[1:-1]
+            if string_to_split.startswith('"') and string_to_split.endswith('"'):
+                string_to_split = string_to_split[1:-1]
+            return string_to_split.split(char_to_split)
+            return self.variables[string.split(char)]
         elif expression.startswith("split(") and expression.endswith(")"):
             return self.variables[expression[6:-1]].split()
         elif expression.startswith("splitlines(") and expression.endswith(")"):
