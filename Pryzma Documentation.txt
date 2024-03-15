@@ -68,7 +68,27 @@ it will print list of all works like that:
 
 ["text", "text2"]
 
-splitlines() works nearly tes same but it split by lines not by words
+splitlines() works nearly tes same but it split by lines not by words, there is also splitby(),
+that split by some character for example if i have string "textMtext" and i want to split it by the M i can do it like that:
+
+a = "textMtext"
+b = splitby("M", a)
+print b
+
+output will be a list that will look like that:
+
+["text", "text"]
+
+if you want to split by "," because hot its working you will need to do some think like that:
+
+a = "text,text"
+f = ","
+b = splitby(f, a)
+print(b)
+
+Output will be:
+
+['text', 'text']
 
 Arithmetic Operations:
 
@@ -214,7 +234,7 @@ content of file C:\Users\User\Desktop\Untitled-1.txt will be assigned to variabl
 
 write(C:\Users\User\Desktop\Untitled-1.txt,content)
 
-iw will write value of variable content to file C:\Users\User\Desktop\Untitled-1.txt
+iw will write value of variable content to file C:\Users\User\Desktop\Untitled-1.txt, if file doesn't exist it will create it.
 
 In:
 
