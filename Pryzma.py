@@ -195,15 +195,15 @@ class PryzmaInterpreter:
             var = var.strip()
             val = val.strip()
             if var.startswith("int(") and var.endswith(")"):
+                if self.var in self.variables:
+                    return int(self.variables[var])
                 return int(self.evaluate_expression(val))
             elif var.startswith("str(") and var.endswith(")"):
+                if self.var in self.variables:
+                    return str(self.variables[var])
                 return str(self.evaluate_expression(val))
             else:
                 return self.evaluate_expression(val)
-        elif expression.startswith("int(") and expression.endswith(")"):
-            return int(expression[4:-1])
-        elif expression.startswith("str(") and expression.endswith(")"):
-            return str(expression[4:-1])
         elif expression.startswith("type(") and expression.endswith(")"):
             return str(type(self.variables[expression[5:-1]]))
         elif expression.startswith("len(") and expression.endswith(")"):
