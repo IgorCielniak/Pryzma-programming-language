@@ -10,11 +10,18 @@ class PryzmaInterpreter:
         self.variables = {}
         self.functions = {}
 
-    def interpret_file(self, file_path):
+    def interpret_file(self, file_path, *args):
         self.file_path = file_path.strip('"')
-        with open(self.file_path, 'r') as file:
-            program = file.read()
-            self.interpret(program)
+        arg_count = 0
+        for arguments in args:
+            self.variables[f"parg{arg_count}"] = args[arg_count]
+            arg_count += 1
+        try:
+            with open(self.file_path, 'r') as file:
+                program = file.read()
+                self.interpret(program)
+        except FileNotFoundError:
+            print(f"File '{self.file_path}' not found.")
 
     def define_function(self, name, body):
         self.functions[name] = body
@@ -429,12 +436,14 @@ commands:
 if __name__ == "__main__":
     interpreter = PryzmaInterpreter()
 
-    if len(sys.argv) == 2:
+    if len(sys.argv) >= 2:
         file_path = sys.argv[1]
-        interpreter.interpret_file(file_path)
+        arguments = sys.argv[2:]
+        print(arguments)
+        interpreter.interpret_file(file_path, *arguments)
         sys.exit()
 
-    print("""Pryzma 4.4
+    print("""Pryzma 4.5
 To show the license type "license" or "help" to get help.
     """)
 
