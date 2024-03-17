@@ -260,6 +260,14 @@ print a
 
 it will print text and then it will give error that will  say that variable a doesn't exist
 
+Cli arguments:
+by running:
+
+python Pryzma.py file_path d df
+
+two variables will be created and accessible from code, in this example parg0 that will be 'd' and parg1 that will be 'df',
+you can pass as many arguments as you wish
+
 Examples:
 
 Example 1: Simple Arithmetic
