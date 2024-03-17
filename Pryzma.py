@@ -165,10 +165,7 @@ class PryzmaInterpreter:
 
     def write_to_file(self, content, file_path):
         try:
-            with open(file_path, 'w') as file:
-                file.write(content)
-        except FileNotFoundError:
-            with open(file_path, 'x') as file:
+            with open(file_path, 'w+') as file:
                 file.write(content)
         except Exception as e:
             print(f"Error writing to file '{file_path}': {e}")
