@@ -388,7 +388,7 @@ class PryzmaInterpreter:
     def show_license(self):
         license_text = """
 Pryzma
-Copyright 2024 Igor Cielnaik
+Copyright 2024 Igor Cielniak
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
