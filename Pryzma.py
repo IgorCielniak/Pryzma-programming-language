@@ -3,8 +3,6 @@ import sys
 import os
 
 class PryzmaInterpreter:
-
-    variable_definition_in_function_body = "no"
     
     def __init__(self):
         self.variables = {}
@@ -85,10 +83,10 @@ class PryzmaInterpreter:
                         function_body2 = function_body.split("|")
                         for body_element in function_body2:
                             if "=" in body_element:
-                                self.variable_definition_in_function_body = "yes"
                                 body_element = body_element.split("=")
                                 variable_inside_function = body_element[0].strip()
                                 value_inside_function = body_element[1].strip()
+                                self.variables[variable_inside_function] = value_inside_function
                         self.define_function(function_name, function_body2)
                     else:
                         print(f"Invalid function definition: {line}")
@@ -111,8 +109,6 @@ class PryzmaInterpreter:
                                 else:
                                     print(f"Invalid argument at line {self.current_line}")
                                     break
-                    if self.variable_definition_in_function_body == "yes":
-                        self.assign_variable(self.variable_inside_function, self.value_inside_function)
                     if function_name in self.functions:
                         command = 0
                         while command < len(self.functions[function_name]):
@@ -443,7 +439,7 @@ if __name__ == "__main__":
         interpreter.interpret_file(file_path, *arguments)
         sys.exit()
 
-    print("""Pryzma 4.5
+    print("""Pryzma 4.6
 To show the license type "license" or "help" to get help.
     """)
 
