@@ -81,12 +81,6 @@ class PryzmaInterpreter:
                         function_name = function_definition[0].strip()
                         function_body = function_definition[1].strip().rstrip("}")
                         function_body2 = function_body.split("|")
-                        for body_element in function_body2:
-                            if "=" in body_element:
-                                body_element = body_element.split("=")
-                                variable_inside_function = body_element[0].strip()
-                                value_inside_function = body_element[1].strip()
-                                self.variables[variable_inside_function] = value_inside_function
                         self.define_function(function_name, function_body2)
                     else:
                         print(f"Invalid function definition: {line}")
@@ -156,6 +150,20 @@ class PryzmaInterpreter:
                 elif line.startswith("del(") and line.endswith(")"):
                     variable = line[4:-1]
                     self.variables.pop(variable)
+                elif line.startswith("while"):
+                    condition_action = line[len("while"):].split(",", 2)
+                    if len(condition_action) != 3:
+                        print("Invalid while loop syntax. Expected format: while condition, value, action")
+                        continue
+                    condition = condition_action[0].strip()
+                    value = condition_action[1].strip()
+                    action = condition_action[2].strip()
+                    if (condition.startswith('"') and condition.endswith('"')) or (value.startswith('"') and value.endswith('"')):
+                        while str(self.evaluate_expression(condition)) == str(self.evaluate_expression(value)):
+                            self.interpret(action)
+                    else:
+                        while str(self.variables[condition]) == str(self.variables[value]):
+                            self.interpret(action)
                 elif line == "stop":
                     break
                 else:
@@ -224,7 +232,6 @@ class PryzmaInterpreter:
             if string_to_split.startswith('"') and string_to_split.endswith('"'):
                 string_to_split = string_to_split[1:-1]
             return string_to_split.split(char_to_split)
-            return self.variables[string.split(char)]
         elif expression.startswith("split(") and expression.endswith(")"):
             return self.variables[expression[6:-1]].split()
         elif expression.startswith("splitlines(") and expression.endswith(")"):
@@ -439,7 +446,7 @@ if __name__ == "__main__":
         interpreter.interpret_file(file_path, *arguments)
         sys.exit()
 
-    print("""Pryzma 4.6
+    print("""Pryzma 4.7
 To show the license type "license" or "help" to get help.
     """)
 
