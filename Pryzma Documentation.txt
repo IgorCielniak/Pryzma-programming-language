@@ -218,6 +218,10 @@ for i, a:5, print i
 
 it will print numbers from 3 to 5
 
+while a, b, @func
+
+as long as variable a will equal variable b it will call function func you can use string instead of a variable
+
 Exec function:
 
 exec bash command
