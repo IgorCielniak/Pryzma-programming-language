@@ -1,315 +1,94 @@
-Pryzma Programming Language Documentation
+# Pryzma Test Program
 
-Introduction:
-
-Pryzma is a simple programming language designed for ease of use and readability.
-
-Syntax:
-
-Variables:
-
-Variables in Pryzma can hold numeric values or strings. Variable names must start with a letter and can contain letters, numbers, and underscores.
-
+# Variables
 a = 10
 name = "John"
 
-Lists:
-
+# Lists
 a = [1,2,3,4,5]
-
 print a[0]
 
+# Append to list
 append a, "text"
 
-it will append text to list a
+# Pop from list
+pop a, 5
 
-POP a, "text"
 
-it will pop text from list a
-
-Type conversion:
+variable = "1"
 
 variable = int(variable)
-
-or
-
 variable = str(1)
-
-to get type of some variable you can do:
-
 a = 1
 b = type(a)
 print b
 
-it will print int
-
-Len:
-you also can do len like that:
-
+# Len
 a = "text"
-
 print len(a)
-
-it will print 4 ,you can also do:
 
 a = [1,2,3,4,5]
-
 print len(a)
 
-it will print 5
-
-Split:
-
+# Split
 b = "text text2"
-
 print split(b)
 
-it will print list of all works like that:
-
-["text", "text2"]
-
-splitlines() works nearly tes same but it split by lines not by words, there is also splitby(),
-that split by some character for example if i have string "textMtext" and i want to split it by the M i can do it like that:
-
-a = "textMtext"
-b = splitby("M", a)
-print b
-
-output will be a list that will look like that:
-
-["text", "text"]
-
-if you want to split by "," because hot its working you will need to do some think like that:
-
-a = "text,text"
-f = ","
-b = splitby(f, a)
-print(b)
-
-Output will be:
-
-['text', 'text']
-
-Arithmetic Operations:
-
-Pryzma supports basic arithmetic operations including addition, subtraction, multiplication, and division.
-
+# Arithmetic Operations
 result = 10 + 5
 total = 2 * 3
 difference = 8 - 4
 quotient = 10 / 2
 
-Input/Output:
+print result
+print total
+print difference
+print quotient
 
-Pryzma allows input from the user and output to the console. Concatenation is used to combine strings and variables for output.
-
+# Input/Output
 input age::"age:"
 print "Your age is: " + age
 
-in input age is a variable that input will be assigned to it and "age:" is the prompt, if input will look like that:
-
-input age
-
-then no prompt will be displayed
-
-if there is \n in line it will print new line like in python,you can also do some think like that:
-
-a = "text"
-
-print a[1:-1]
-
-it will print ex because it will remove one character form right and one from left
-
-
-Flow Control:
-
-Pryzma supports simple flow control using the STOP statement. It terminates the program execution.
-
-stop
-
-Loops:
-
+# Loops
 for i, 1:5, print i
 
-output will be:
 
-1
-2
-3
-4
-5
+# Comments
+# This is a comment
 
-importing:
-
-use file_path
-
-after import you can use functions from the imported file
-
-if you add ./ before the file path it will look for the given file in the same folder as the file.
-
-Comments:
-
-Comments in Pryzma start with the # symbol and continue to the end of the line.
-
-#This is a comment
-
-If statement:
-
+# If statement
 input variable::"var1:"
-input variable2::"var2"
+input variable2::"var2:"
 if variable, variable2, print "true"
 
-if variable one is the same as variable2 it will print true
-
 input variable::"var1:"
-input variable2::"var2"
+input variable2::"var2:"
 ifn variable, variable2, print "true"
-^^^
-if variable will not equal variable2 it will print true
 
-Functions:
-
-declare function:
-
-/function_name{command|command2|command3}
-
-function body can have only one instruction
-
-calling functions:
-
+# Functions
+/function_name{print arg1}
 @function_name("text")
 
-string text will be automatically assigned to variable arg1,variables also can be used as arguments like that:
-
-
-
-/add{print arg1}
-
-a = "text"
-
-@add(a)
-
-when calling a function at least one argument need to be passed even when it is not going to be use other wise you will get an error,for now calling a function with arguments in an if statment is impossible
-to call a function without argument you can do
-
-@add
-
-cprint:
-
-for example with program like that:
-
-input a
-input b
-input operator
+# Cprint
+input a::"a:"
+input b::"b:"
+input operator::"operator:"
 c = a + operator + b
 cprint c
 
-and inputs like that 1, 2, + ,c will equal 1+2 and while printing it will be auto calculated and output will be 3
-
-Loops:
-
-for i, 1:5, print i
-
-it will print numbers from one to five
-
-a=3
-
-for i, a:5, print i
-
-it will print numbers from 3 to 5
-
-while a, b, @func
-
-as long as variable a will equal variable b it will call function func you can use string instead of a variable
-
-Exec function:
-
-exec bash command
-
-can be used like that:
-
+# Exec command
 exec echo Hello
 
-Read and write:
-
-content = read(C:\Users\User\Desktop\Untitled-1.txt)
-
-content of file C:\Users\User\Desktop\Untitled-1.txt will be assigned to variable content
-
-write(C:\Users\User\Desktop\Untitled-1.txt,content)
-
-iw will write value of variable content to file C:\Users\User\Desktop\Untitled-1.txt, if file doesn't exist it will create it.
-
-In:
-
+# In
 a = [1,2,3]
-
 b = in(a, 2)
-
 print b
 
-output will be True, you can also check if some string appear in list or if some word appear in string
-
-Del:
-
-you can use del to delete a variable like that:
-
+# Del
 a = "text"
-
 print a
-
 del(a)
-
 print a
 
-it will print text and then it will give error that will  say that variable a doesn't exist
-
-Cli arguments:
-by running:
-
-python Pryzma.py file_path d df
-
-two variables will be created and accessible from code, in this example parg0 that will be 'd' and parg1 that will be 'df',
-you can pass as many arguments as you wish
-
-Examples:
-
-Example 1: Simple Arithmetic
-
-a = 10
-b = 5
-
-sum = a + b
-difference = a - b
-product = a * b
-quotient = a / b
-
-print sum
-print difference
-print product
-print quotient
-
-Example 2: Input and Output
-
-input name
-
-print "Hello, " + name
-
-Running Programs:
-
-To run a Pryzma program, save the code in a text file execute it by lunching the
-Pryzma interpreter and writing "file" command and providing a file path, or by lunching it from command line and  providing a file path sorunded  with " like that:
-
-python Pryzma.py "file_path"
-
-License:
-
-Pryzma is open-source software released under the Apache license. See the license.txt file for more details.
-
-Author:
-
-Pryzma was created by Igor Cielniak.
-
-Support:
-
-For questions, bug reports, and feature requests, please contact me igorcielniak.contact@gmail.com.
+# Flow Control
+stop
