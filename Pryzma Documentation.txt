@@ -163,7 +163,7 @@ if variable one is the same as variable2 it will print true
 
 input variable::"var1:"
 input variable2::"var2"
-IFN variable, variable2, print "true"
+ifn variable, variable2, print "true"
 ^^^
 if variable will not equal variable2 it will print true
 
