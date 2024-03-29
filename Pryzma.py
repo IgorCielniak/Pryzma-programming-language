@@ -165,6 +165,7 @@ class PryzmaInterpreter:
                         while str(self.variables[condition]) == str(self.variables[value]):
                             self.interpret(action)
                 elif line == "stop":
+                    input("Press any key to continue...")
                     break
                 else:
                     if line == "" or line.startswith("#"):
