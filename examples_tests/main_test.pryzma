@@ -1,50 +1,94 @@
-print "hello"
-a = "ff"
-print a
-b = a + "dd"
-print b
-print a + b
+# Pryzma Test Program
 
-input f::"f:"
-print f
+# Variables
+a = 10
+name = "John"
 
-input age::"age:"
-print "Your age is" + age
+# Lists
+a = [1,2,3,4,5]
+print a[0]
 
-hj = 1
-jh = 2
-dgdgd = hj + jh
+# Append to list
+append a, "text"
 
-print dgdgd
+# Pop from list
+pop a, 5
 
 
-/gg{print "text"|print "more text"|input func::"func:"|print func}
+variable = "1"
 
-input a::"a:"
-b = "1"
-if a,b,@gg()
-
-input name::"name:"
-
-print "Hello, " + name
-
-input var1::"var1"
-input var2::"var2"
-input operator::"operator"
-result = var1 + operator + var2
-cprint result
-
-
+variable = int(variable)
+variable = str(1)
 a = 1
-b = str(a)
-c = type(b)
-print c
+b = type(a)
+print b
 
-a=3
+# Len
+a = "text"
+print len(a)
 
-for i, 0:a, print i
+a = [1,2,3,4,5]
+print len(a)
 
+# Split
+b = "text text2"
+print split(b)
+
+# Arithmetic Operations
+result = 10 + 5
+total = 2 * 3
+difference = 8 - 4
+quotient = 10 / 2
+
+print result
+print total
+print difference
+print quotient
+
+# Input/Output
+input age::"age:"
+print "Your age is: " + age
+
+# Loops
+for i, 1:5, print i
+
+
+# Comments
+# This is a comment
+
+# If statement
+input variable::"var1:"
+input variable2::"var2:"
+if variable, variable2, print "true"
+
+input variable::"var1:"
+input variable2::"var2:"
+ifn variable, variable2, print "true"
+
+# Functions
+/function_name{print arg1}
+@function_name("text")
+
+# Cprint
+input a::"a:"
+input b::"b:"
+input operator::"operator:"
+c = a + operator + b
+cprint c
+
+# Exec command
+exec echo Hello
+
+# In
 a = [1,2,3]
-print a[1]
+b = in(a, 2)
+print b
 
+# Del
+a = "text"
+print a
+del(a)
+print a
+
+# Flow Control
 stop
