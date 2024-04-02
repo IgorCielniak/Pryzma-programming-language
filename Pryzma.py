@@ -164,6 +164,9 @@ class PryzmaInterpreter:
                     else:
                         while str(self.variables[condition]) == str(self.variables[value]):
                             self.interpret(action)
+                elif "++" in line:
+                    variable = line.replace("++", "").strip()
+                    self.increment_variable(variable)
                 elif line == "stop":
                     input("Press any key to continue...")
                     break
@@ -174,6 +177,16 @@ class PryzmaInterpreter:
                         print(f"Invalid statement at line {self.current_line}: {line}")
             except Exception as e:
                 print(f"Error at line {self.current_line}: {e}")
+
+    def increment_variable(self, variable):
+        if variable in self.variables:
+            if isinstance(self.variables[variable], int):
+                self.variables[variable] += 1
+            else:
+                print(f"Error: Cannot increment non-integer variable '{variable}'.")
+        else:
+            print(f"Error: Variable '{variable}' not found.")
+
 
     def write_to_file(self, content, file_path):
         try:
