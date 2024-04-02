@@ -58,6 +58,15 @@ print len(a)
 
 it will print 5
 
+index:
+
+a = [1,2,3,4,5]
+b = index(a, 3)
+print b
+
+output will be 2
+index() returns index of value in some list or error if id isn't in the list
+
 Split:
 
 b = "text text2"
