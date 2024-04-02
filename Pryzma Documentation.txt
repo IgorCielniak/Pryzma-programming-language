@@ -139,6 +139,17 @@ output will be:
 4
 5
 
+while a, b, print if
+
+while value of a equals value of b value of i will be printed
+
+incrementing by one:
+
+i = 0
+i++
+print i
+output will be 1 , ++ increment by one
+
 importing:
 
 use file_path
@@ -164,7 +175,7 @@ if variable one is the same as variable2 it will print true
 input variable::"var1:"
 input variable2::"var2"
 ifn variable, variable2, print "true"
-^^^
+
 if variable will not equal variable2 it will print true
 
 Functions:
