@@ -164,6 +164,20 @@ class PryzmaInterpreter:
                     else:
                         while str(self.variables[condition]) == str(self.variables[value]):
                             self.interpret(action)
+                elif line.startswith("whilen"):
+                    condition_action = line[len("whilen"):].split(",", 2)
+                    if len(condition_action) != 3:
+                        print("Invalid while loop syntax. Expected format: while condition, value, action")
+                        continue
+                    condition = condition_action[0].strip()
+                    value = condition_action[1].strip()
+                    action = condition_action[2].strip()
+                    if (condition.startswith('"') and condition.endswith('"')) or (value.startswith('"') and value.endswith('"')):
+                        while str(self.evaluate_expression(condition)) == str(self.evaluate_expression(value)):
+                            self.interpret(action)
+                    else:
+                        while str(self.variables[condition]) != str(self.variables[value]):
+                            self.interpret(action)
                 elif "++" in line:
                     variable = line.replace("++", "").strip()
                     self.increment_variable(variable)
@@ -273,6 +287,28 @@ class PryzmaInterpreter:
                 return self.variables[value] in self.variables[list_name]
             else:
                 print(f"Variable '{value}' is not defined.")
+        elif expression.startswith("index(") and expression.endswith(")"):
+            args = expression[6:-1].split(",")
+            if len(args) != 2:
+                print("Invalid number of arguments for index function.")
+                return None
+            list_name = args[0].strip()
+            value = args[1].strip()
+            if list_name in self.variables and isinstance(self.variables[list_name], list):
+                if value.startswith('"') and value.endswith('"'):
+                    value = value[1:-1]
+                else:
+                    if value in self.variables:
+                        value = self.variables[value]
+                    else:
+                        value = int(value)
+                try:
+                    index_value = self.variables[list_name].index(value)
+                    return index_value
+                except ValueError:
+                    print(f"Value '{value}' not found in list '{list_name}'.")
+            else:
+                print(f"Variable '{list_name}' is not a list.")
         else:
             try:
                 return eval(expression, {}, self.variables)
