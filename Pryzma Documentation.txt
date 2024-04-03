@@ -152,6 +152,8 @@ while a, b, print if
 
 while value of a equals value of b value of i will be printed
 
+there is also whilen that execute the action as long as value a doesn't equal value b
+
 incrementing by one:
 
 i = 0
