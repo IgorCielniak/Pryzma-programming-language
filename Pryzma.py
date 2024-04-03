@@ -261,7 +261,12 @@ class PryzmaInterpreter:
                 string_to_split = string_to_split[1:-1]
             return string_to_split.split(char_to_split)
         elif expression.startswith("split(") and expression.endswith(")"):
-            return self.variables[expression[6:-1]].split()
+            expression = expression[6:-1]
+            if expression in self.variables:
+                expression = self.variables[expression]
+            if expression.startswith('"') and expression.endswith('"'):
+                expression = expression[1:-1]
+            return expression.split()
         elif expression.startswith("splitlines(") and expression.endswith(")"):
             return self.variables[expression[11:-1]].splitlines()
         elif expression.startswith("read(") and expression.endswith(")"):
