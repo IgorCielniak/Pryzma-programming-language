@@ -70,9 +70,17 @@ class PryzmaInterpreter:
                     condition = condition_actions[0].strip()
                     value = condition_actions[1].strip()
                     action = condition_actions[2].strip()
-                    if str(self.variables[value]) == "*":
+                    if condition.startswith('"') and condition.endswith('"'):
+                        condition = condition[1:-1]
+                    if value.startswith('"') and value.endswith('"'):
+                        value = value[1:-1]
+                    if value in self.variables:
+                        value = self.variables[value]
+                    if condition in self.variables:
+                        condition = self.variables[condition]
+                    if condition == "*" or action == "*":
                         self.interpret(action)
-                    elif str(self.variables[value]) == str(self.variables[condition]):
+                    elif value == condition:
                         self.interpret(action)
                 elif line.startswith("/"):
                     self.variable_definition_in_function_body = "no"
@@ -123,7 +131,7 @@ class PryzmaInterpreter:
                 elif line.startswith("pop"):
                     list_name, index = line[len("pop"):].split(",")
                     list_name = list_name.strip()
-                    index = int(index.strip())
+                    index = index.strip()
                     self.pop_from_list(list_name, index)
                 elif line.startswith("exec"):
                     line = line[5:]
@@ -472,7 +480,11 @@ limitations under the License.
     def pop_from_list(self, list_name, index):
         if list_name in self.variables:
             try:
-                popped_value = self.variables[list_name].pop(index)
+                if index.isnumeric():
+                    index = index
+                else:
+                    index = self.variables[index]
+                self.variables[list_name].pop(index)
             except IndexError:
                 print(f"Index {index} out of range for list '{list_name}'.")
                 return
