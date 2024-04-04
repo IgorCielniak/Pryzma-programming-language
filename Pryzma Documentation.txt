@@ -21,9 +21,19 @@ print a[0]
 
 append a, "text"
 
-it will append text to list a
+it will append text to list a, you can also do appendft that append elements from one list to another:
 
-POP a, "text"
+a = [1,2]
+
+b = [3,4]
+
+appendft b,a
+
+print a
+
+output will be [1,2,3,4]
+
+pop a, "text"
 
 it will pop text from list a
 
