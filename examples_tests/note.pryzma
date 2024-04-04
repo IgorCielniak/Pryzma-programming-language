@@ -12,6 +12,6 @@ tasks = []
 
 /save{write("E:\\pryzmanotes", tasks)|print "Tasks saved to file: E:\\pryzmanotes"}
 
-/load{readed_tasks = read("E:\\pryzmanotes")|readed_tasks = splitlines(readed_tasks)|appendft readed_tasks, tasks|print "Tasks loaded from file: E:\\pryzmanotes"}
+/load{readed_tasks = read("E:\\pryzmanotes")|readed_tasks = splitlines(readed_tasks)|copy readed_tasks, tasks|print "Tasks loaded from file: E:\\pryzmanotes"}
 
 while "True", "True", @main
