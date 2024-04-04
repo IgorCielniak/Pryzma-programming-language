@@ -21,13 +21,13 @@ print a[0]
 
 append a, "text"
 
-it will append text to list a, you can also do appendft that append elements from one list to another:
+it will append text to list a, you can also do copy that append elements from one list to another:
 
 a = [1,2]
 
 b = [3,4]
 
-appendft b,a
+copy b,a
 
 print a
 
