@@ -123,6 +123,12 @@ class PryzmaInterpreter:
                     variable = variable.strip()
                     expression = expression.strip()
                     self.assign_variable(variable, expression)
+                elif line.startswith("appendft"):
+                    list1, list2 = line[len("appendft"):].split(",")
+                    list1 = list1.strip()
+                    list2 = list2.strip()
+                    for element in self.variables[list1]:
+                        self.variables[list2].append(element)
                 elif line.startswith("append"):
                     list_name, value = line[len("append"):].split(",")
                     list_name = list_name.strip()
