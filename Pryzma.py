@@ -213,7 +213,11 @@ class PryzmaInterpreter:
     def write_to_file(self, content, file_path):
         try:
             with open(file_path, 'w+') as file:
-                file.write(content)
+                if isinstance(content, list):
+                    for line in content:
+                        file.write(f"{line}\n")
+                else:
+                    file.write(content)
         except Exception as e:
             print(f"Error writing to file '{file_path}': {e}")
 
