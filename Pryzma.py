@@ -123,8 +123,8 @@ class PryzmaInterpreter:
                     variable = variable.strip()
                     expression = expression.strip()
                     self.assign_variable(variable, expression)
-                elif line.startswith("appendft"):
-                    list1, list2 = line[len("appendft"):].split(",")
+                elif line.startswith("copy"):
+                    list1, list2 = line[len("copy"):].split(",")
                     list1 = list1.strip()
                     list2 = list2.strip()
                     for element in self.variables[list1]:
@@ -385,9 +385,7 @@ class PryzmaInterpreter:
     def import_functions(self, file_path):
         file_path = file_path.strip('"')
         if file_path.startswith("./"):
-            # Get the directory of the current Pryzma file
             current_directory = os.path.dirname(self.file_path)
-            # Construct the absolute path of the file to import
             absolute_file_path = os.path.join(current_directory, file_path[2:])
             with open(absolute_file_path, 'r') as file:
                 program = file.read()
@@ -415,7 +413,6 @@ class PryzmaInterpreter:
                 if function_def:
                     self.define_function(function_name, function_body)
         else:
-            # The file path does not start with "./", so treat it as a regular file path
             with open(file_path, 'r') as file:
                 program = file.read()
                 lines = program.split('\n')
