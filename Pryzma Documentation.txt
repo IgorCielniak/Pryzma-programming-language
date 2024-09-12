@@ -205,16 +205,28 @@ Comments in Pryzma start with the # symbol and continue to the end of the line.
 If statement:
 
 input variable::"var1:"
-input variable2::"var2"
+input variable2::"var2:"
 if variable, variable2, print "true"
 
 if variable one is the same as variable2 it will print true
 
 input variable::"var1:"
-input variable2::"var2"
+input variable2::"var2:"
 ifn variable, variable2, print "true"
 
 if variable will not equal variable2 it will print true
+
+input variable::"var1:"
+input variable2::"var2:"
+ifs variable, variable2, print "true"
+
+if variable will be smaller than variable2 it will print true
+
+input variable::"var1:"
+input variable2::"var2:"
+ifb variable, variable2, print "true"
+
+if variable will be bigger than variable2 it will print true
 
 Functions:
 
