@@ -73,9 +73,9 @@ class PryzmaInterpreter:
                     elif value > condition:
                         self.interpret(action)
                 elif line.startswith("ifb"):
-                    condition_actions = line[len("ifs"):].split(",")
+                    condition_actions = line[len("ifb"):].split(",")
                     if len(condition_actions) != 3:
-                        print("Invalid if instruction. Expected format: ifs condition, value, action")
+                        print("Invalid if instruction. Expected format: ifb condition, value, action")
                         continue
                     condition = condition_actions[0].strip()
                     value = condition_actions[1].strip()
