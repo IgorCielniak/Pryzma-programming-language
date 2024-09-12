@@ -37,6 +37,16 @@ pop a, "text"
 
 it will pop text from list a
 
+you can move objects on a list by using the move instruction like that:
+
+a = [1,2,3,4,5]
+
+move(0, 1, a)
+
+print a
+
+output will be [2, 1, 3, 4, 5]
+
 Type conversion:
 
 variable = int(variable)
@@ -169,7 +179,14 @@ incrementing by one:
 i = 0
 i++
 print i
-output will be 1 , ++ increment by one
+output will be 1 , ++ increments by one
+
+decrementing by one:
+
+i = 1
+i--
+print i
+output will be 0 , -- increments by one
 
 importing:
 
