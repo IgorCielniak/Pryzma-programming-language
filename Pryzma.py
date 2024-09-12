@@ -261,6 +261,18 @@ class PryzmaInterpreter:
                         self.variables[list_name].insert(new_index, value)
                     except ValueError:
                         print("Invalid index")
+                elif line.startswith("swap(") and line.endswith(")"):
+                    instructions = line[5:-1].split(",")
+                    if len(instructions) != 3:
+                        print("Invalid swap instruction syntax. Expected format: swap(index 1, index 2, list name)")
+                        continue
+                    list_name = instructions[2].strip()
+                    try:
+                        index_1 = int(instructions[0])
+                        index_2 = int(instructions[1])
+                        self.variables[list_name][index_1], self.variables[list_name][index_2] = self.variables[list_name][index_2], self.variables[list_name][index_1]
+                    except ValueError:
+                        print("Invalid index")
                 elif line == "stop":
                     input("Press any key to continue...")
                     break
