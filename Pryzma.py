@@ -195,6 +195,22 @@ class PryzmaInterpreter:
                 elif "++" in line:
                     variable = line.replace("++", "").strip()
                     self.increment_variable(variable)
+                elif "--" in line:
+                    variable = line.replace("--", "").strip()
+                    self.decrement_variable(variable)
+                elif line.startswith("move(") and line.endswith(")"):
+                    instructions = line[5:-1].split(",")
+                    if len(instructions) != 3:
+                        print("Invalid move instruction syntax. Expected format: move(old index, new index, list name)")
+                        continue
+                    list_name = instructions[2].strip()
+                    try:
+                        old_index = int(instructions[0])
+                        new_index = int(instructions[1])
+                        value = self.variables[list_name].pop(old_index)
+                        self.variables[list_name].insert(new_index, value)
+                    except ValueError:
+                        print("Invalid index")
                 elif line == "stop":
                     input("Press any key to continue...")
                     break
@@ -205,6 +221,15 @@ class PryzmaInterpreter:
                         print(f"Invalid statement at line {self.current_line}: {line}")
             except Exception as e:
                 print(f"Error at line {self.current_line}: {e}")
+
+    def decrement_variable(self, variable):
+        if variable in self.variables:
+            if isinstance(self.variables[variable], int):
+                self.variables[variable] -= 1
+            else:
+                print(f"Error: Cannot decrement non-integer variable '{variable}'.")
+        else:
+            print(f"Error: Variable '{variable}' not found.")
 
     def increment_variable(self, variable):
         if variable in self.variables:
