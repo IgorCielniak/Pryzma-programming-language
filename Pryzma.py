@@ -93,9 +93,9 @@ class PryzmaInterpreter:
                     elif value < condition:
                         self.interpret(action)
                 elif line.startswith("ifn"):
-                    condition_actions = line[len("if"):].split(",")
+                    condition_actions = line[len("ifn"):].split(",")
                     if len(condition_actions) != 3:
-                        print("Invalid if instruction. Expected format: if condition, value, action")
+                        print("Invalid if instruction. Expected format: ifn condition, value, action")
                         continue
                     condition = condition_actions[0].strip()
                     value = condition_actions[1].strip()
@@ -214,20 +214,6 @@ class PryzmaInterpreter:
                 elif line.startswith("del(") and line.endswith(")"):
                     variable = line[4:-1]
                     self.variables.pop(variable)
-                elif line.startswith("while"):
-                    condition_action = line[len("while"):].split(",", 2)
-                    if len(condition_action) != 3:
-                        print("Invalid while loop syntax. Expected format: while condition, value, action")
-                        continue
-                    condition = condition_action[0].strip()
-                    value = condition_action[1].strip()
-                    action = condition_action[2].strip()
-                    if (condition.startswith('"') and condition.endswith('"')) or (value.startswith('"') and value.endswith('"')):
-                        while str(self.evaluate_expression(condition)) == str(self.evaluate_expression(value)):
-                            self.interpret(action)
-                    else:
-                        while str(self.variables[condition]) == str(self.variables[value]):
-                            self.interpret(action)
                 elif line.startswith("whilen"):
                     condition_action = line[len("whilen"):].split(",", 2)
                     if len(condition_action) != 3:
@@ -241,6 +227,20 @@ class PryzmaInterpreter:
                             self.interpret(action)
                     else:
                         while str(self.variables[condition]) != str(self.variables[value]):
+                            self.interpret(action)
+                elif line.startswith("while"):
+                    condition_action = line[len("while"):].split(",", 2)
+                    if len(condition_action) != 3:
+                        print("Invalid while loop syntax. Expected format: while condition, value, action")
+                        continue
+                    condition = condition_action[0].strip()
+                    value = condition_action[1].strip()
+                    action = condition_action[2].strip()
+                    if (condition.startswith('"') and condition.endswith('"')) or (value.startswith('"') and value.endswith('"')):
+                        while str(self.evaluate_expression(condition)) == str(self.evaluate_expression(value)):
+                            self.interpret(action)
+                    else:
+                        while str(self.variables[condition]) == str(self.variables[value]):
                             self.interpret(action)
                 elif "++" in line:
                     variable = line.replace("++", "").strip()
@@ -267,9 +267,13 @@ class PryzmaInterpreter:
                         print("Invalid swap instruction syntax. Expected format: swap(index 1, index 2, list name)")
                         continue
                     list_name = instructions[2].strip()
+                    index_1 = instructions[0].strip()
+                    index_2 = instructions[1].strip()
+                    if index_1 in self.variables:
+                        index_1 = self.variables[index_1]
+                    if index_2 in self.variables:
+                        index_2 = self.variables[index_2]
                     try:
-                        index_1 = int(instructions[0])
-                        index_2 = int(instructions[1])
                         self.variables[list_name][index_1], self.variables[list_name][index_2] = self.variables[list_name][index_2], self.variables[list_name][index_1]
                     except ValueError:
                         print("Invalid index")
@@ -419,6 +423,21 @@ class PryzmaInterpreter:
                     print(f"Value '{value}' not found in list '{list_name}'.")
             else:
                 print(f"Variable '{list_name}' is not a list.")
+        elif expression.startswith("all(") and expression.endswith(")"):
+            list_name = expression[4:-1]
+            if list_name in self.variables and isinstance(self.variables[list_name], list):
+                return " ".join(map(str, self.variables[list_name]))
+            else:
+                print(f"List '{list_name}' is not defined.")
+                return None
+        elif expression.startswith("isanumber(") and expression.endswith(")"):
+            expression = expression[10:-1]
+            if expression in self.variables:
+                expression = self.variables[expression]
+                return str(expression).isnumeric()
+            else:
+                print(f"Variable '{expression}' is not defined.")
+                return None
         else:
             try:
                 return eval(expression, {}, self.variables)
@@ -575,7 +594,7 @@ limitations under the License.
         if list_name in self.variables:
             try:
                 if index.isnumeric():
-                    index = index
+                    index = int(index)
                 else:
                     index = self.variables[index]
                 self.variables[list_name].pop(index)
