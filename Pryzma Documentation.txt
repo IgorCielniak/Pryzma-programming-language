@@ -73,6 +73,18 @@ print b
 
 it will print int
 
+you can also check if a variable is a number like this:
+
+
+a = 1
+
+b = isanumber(a)
+
+print b
+
+output will be True
+
+
 Len:
 you also can do len like that:
 
@@ -118,7 +130,7 @@ output will be a list that will look like that:
 
 ["text", "text"]
 
-if you want to split by "," because hot its working you will need to do some think like that:
+if you want to split by "," because its not working you will need to do some think like that:
 
 a = "text,text"
 f = ","
