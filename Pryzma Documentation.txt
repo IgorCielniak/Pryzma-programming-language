@@ -347,6 +347,14 @@ print a
 
 it will print text and then it will give error that will  say that variable a doesn't exist
 
+Running python code from pryzma:
+
+python(python code)
+
+example:
+
+python(print("This is python!"))
+
 Cli arguments:
 by running:
 
