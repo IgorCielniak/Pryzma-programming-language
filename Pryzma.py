@@ -277,6 +277,12 @@ class PryzmaInterpreter:
                         self.variables[list_name][index_1], self.variables[list_name][index_2] = self.variables[list_name][index_2], self.variables[list_name][index_1]
                     except ValueError:
                         print("Invalid index")
+                elif line.startswith("python(") and line.endswith(")"):
+                    line = line[7:-1]
+                    try:
+                        exec(line)
+                    except Exception as e:
+                        print(f"Error in Python expression: {e}")
                 elif line == "stop":
                     input("Press any key to continue...")
                     break
