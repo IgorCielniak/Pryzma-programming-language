@@ -1,12 +1,14 @@
 import re
 import sys
 import os
+import tkinter as tk
 
 class PryzmaInterpreter:
     
     def __init__(self):
         self.variables = {}
         self.functions = {}
+        self.tk_vars = {}
 
     def interpret_file(self, file_path, *args):
         self.file_path = file_path.strip('"')
@@ -277,6 +279,53 @@ class PryzmaInterpreter:
                         self.variables[list_name][index_1], self.variables[list_name][index_2] = self.variables[list_name][index_2], self.variables[list_name][index_1]
                     except ValueError:
                         print("Invalid index")
+                elif line.startswith("tk"):
+                    command = line[2:].strip()
+                    if command.startswith("window(") and command.endswith(")"):
+                        command = command[7:-1]
+                        self.tk_vars[command] = tk.Tk()
+                    elif command.startswith("mainloop(") and command.endswith(")"):
+                        command = command[9:-1]
+                        self.tk_vars[command].mainloop()
+                    elif command.startswith("create_button(") and command.endswith(")"):
+                        command = command[14:-1]
+                        command = command.split(",")
+                        window = command[1].lstrip()
+                        button_name = command[0].lstrip()
+                        button_text = command[2].lstrip()
+                        button_text = button_text.lstrip()
+                        button_command = command[3].lstrip()
+                        if button_text.startswith('"') and button_text.endswith('"'):
+                            button_text = button_text[1:-1]
+                        else:
+                            button_text = self.variables[button_text]
+                        if len(command) == 2:
+                            self.tk_vars[button_name] = tk.Button(self.tk_vars[window])
+                        elif len(command) == 3:
+                            self.tk_vars[button_name] = tk.Button(self.tk_vars[window],text = button_text)
+                        elif len(command) == 4:
+                            self.tk_vars[button_name] = tk.Button(self.tk_vars[window],text = button_text,command = lambda: self.button_command_exec(button_command))
+                        else:
+                            print(f"Invalid create_button command")
+                        self.tk_vars[button_name].pack()
+                    elif command.startswith("create_label(") and command.endswith(")"):
+                        command = command[13:-1]
+                        command = command.split(",")
+                        window = command[1].lstrip()
+                        label_name = command[0].lstrip()
+                        label_text = command[2].lstrip()
+                        label_text = label_text.lstrip()
+                        if label_text.startswith('"') and label_text.endswith('"'):
+                            label_text = label_text[1:-1]
+                        else:
+                            label_text = self.variables[label_text]
+                        if len(command) == 2:
+                            self.tk_vars[label_name] = tk.Label(self.tk_vars[window])
+                        elif len(command) == 3:
+                            self.tk_vars[label_name] = tk.Label(self.tk_vars[window],text = label_text)
+                        else:
+                            print(f"Invalid create_label command")
+                        self.tk_vars[label_name].pack()
                 elif line == "stop":
                     input("Press any key to continue...")
                     break
@@ -287,6 +336,9 @@ class PryzmaInterpreter:
                         print(f"Invalid statement at line {self.current_line}: {line}")
             except Exception as e:
                 print(f"Error at line {self.current_line}: {e}")
+
+    def button_command_exec(self, button_command):
+        self.interpret(button_command)
 
     def decrement_variable(self, variable):
         if variable in self.variables:
