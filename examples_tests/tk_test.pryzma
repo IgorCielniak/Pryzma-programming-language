@@ -1,0 +1,18 @@
+tk window(root)
+
+text = "sss"
+
+tk title(root,text)
+
+text2 = "s"
+
+/a{tk get_entry_text(entry_1, text2)|print text2}
+
+tk create_button(button_1, root, text, @a)
+
+tk create_label(label_1, root, text)
+
+tk create_entry(entry_1, root, text)
+
+
+tk mainloop(root)
