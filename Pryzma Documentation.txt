@@ -230,6 +230,10 @@ tk get_entry_text(entry_name, variable_name)
 
 this gets the text from the entry with the given name and assigns it th the variable given
 
+tk title(name_of_the_window, text_to_display_as_the_title)
+
+this sets the title of the window to the given text
+
 importing:
 
 use file_path
