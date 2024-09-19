@@ -226,6 +226,10 @@ tk create_button(name_of_the_button, name_of_the_window, text_to_display, comman
 
 this creates a button with the given name, parent window, text to display, and command to execute when clicked
 
+tk get_entry_text(entry_name, variable_name)
+
+this gets the text from the entry with the given name and assigns it th the variable given
+
 importing:
 
 use file_path
