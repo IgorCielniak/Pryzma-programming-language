@@ -326,6 +326,33 @@ class PryzmaInterpreter:
                         else:
                             print(f"Invalid create_label command")
                         self.tk_vars[label_name].pack()
+                    elif command.startswith("create_entry(") and command.endswith(")"):
+                        command = command[13:-1]
+                        command = command.split(",")
+                        window = command[1].lstrip()
+                        entry_name = command[0].lstrip()
+                        entry_text = command[2].lstrip()
+                        entry_text = entry_text.lstrip()
+                        if entry_text.startswith('"') and entry_text.endswith('"'):
+                            entry_text = entry_text[1:-1]
+                        else:
+                            entry_text = self.variables[entry_text]
+                        if len(command) == 2:
+                            self.tk_vars[entry_name] = tk.Entry(self.tk_vars[window])
+                        elif len(command) == 3:
+                            self.tk_vars[entry_name] = tk.Entry(self.tk_vars[window],text = entry_text)
+                        else:
+                            print(f"Invalid create_entry command")
+                        self.tk_vars[entry_name].pack()
+                    elif command.startswith("get_entry_text(") and command.endswith(")"):
+                        command = command[15:-1]
+                        command = command.split(",")
+                        entry_name = command[0].lstrip()
+                        variable_name = command[1].lstrip()
+                        if entry_name in self.tk_vars:
+                            self.variables[variable_name] = self.tk_vars[entry_name].get()
+                        else:
+                            print(f"Invalid get_entry_text command")
                 elif line == "stop":
                     input("Press any key to continue...")
                     break
