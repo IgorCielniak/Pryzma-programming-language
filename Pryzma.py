@@ -1,7 +1,6 @@
 import re
 import sys
 import os
-import tkinter as tk
 
 class PryzmaInterpreter:
     
@@ -280,79 +279,93 @@ class PryzmaInterpreter:
                     except ValueError:
                         print("Invalid index")
                 elif line.startswith("tk"):
-                    command = line[2:].strip()
-                    if command.startswith("window(") and command.endswith(")"):
-                        command = command[7:-1]
-                        self.tk_vars[command] = tk.Tk()
-                    elif command.startswith("mainloop(") and command.endswith(")"):
-                        command = command[9:-1]
-                        self.tk_vars[command].mainloop()
-                    elif command.startswith("create_button(") and command.endswith(")"):
-                        command = command[14:-1]
-                        command = command.split(",")
-                        window = command[1].lstrip()
-                        button_name = command[0].lstrip()
-                        button_text = command[2].lstrip()
-                        button_text = button_text.lstrip()
-                        button_command = command[3].lstrip()
-                        if button_text.startswith('"') and button_text.endswith('"'):
-                            button_text = button_text[1:-1]
-                        else:
-                            button_text = self.variables[button_text]
-                        if len(command) == 2:
-                            self.tk_vars[button_name] = tk.Button(self.tk_vars[window])
-                        elif len(command) == 3:
-                            self.tk_vars[button_name] = tk.Button(self.tk_vars[window],text = button_text)
-                        elif len(command) == 4:
-                            self.tk_vars[button_name] = tk.Button(self.tk_vars[window],text = button_text,command = lambda: self.button_command_exec(button_command))
-                        else:
-                            print(f"Invalid create_button command")
-                        self.tk_vars[button_name].pack()
-                    elif command.startswith("create_label(") and command.endswith(")"):
-                        command = command[13:-1]
-                        command = command.split(",")
-                        window = command[1].lstrip()
-                        label_name = command[0].lstrip()
-                        label_text = command[2].lstrip()
-                        label_text = label_text.lstrip()
-                        if label_text.startswith('"') and label_text.endswith('"'):
-                            label_text = label_text[1:-1]
-                        else:
-                            label_text = self.variables[label_text]
-                        if len(command) == 2:
-                            self.tk_vars[label_name] = tk.Label(self.tk_vars[window])
-                        elif len(command) == 3:
-                            self.tk_vars[label_name] = tk.Label(self.tk_vars[window],text = label_text)
-                        else:
-                            print(f"Invalid create_label command")
-                        self.tk_vars[label_name].pack()
-                    elif command.startswith("create_entry(") and command.endswith(")"):
-                        command = command[13:-1]
-                        command = command.split(",")
-                        window = command[1].lstrip()
-                        entry_name = command[0].lstrip()
-                        entry_text = command[2].lstrip()
-                        entry_text = entry_text.lstrip()
-                        if entry_text.startswith('"') and entry_text.endswith('"'):
-                            entry_text = entry_text[1:-1]
-                        else:
-                            entry_text = self.variables[entry_text]
-                        if len(command) == 2:
-                            self.tk_vars[entry_name] = tk.Entry(self.tk_vars[window])
-                        elif len(command) == 3:
-                            self.tk_vars[entry_name] = tk.Entry(self.tk_vars[window],text = entry_text)
-                        else:
-                            print(f"Invalid create_entry command")
-                        self.tk_vars[entry_name].pack()
-                    elif command.startswith("get_entry_text(") and command.endswith(")"):
-                        command = command[15:-1]
-                        command = command.split(",")
-                        entry_name = command[0].lstrip()
-                        variable_name = command[1].lstrip()
-                        if entry_name in self.tk_vars:
-                            self.variables[variable_name] = self.tk_vars[entry_name].get()
-                        else:
-                            print(f"Invalid get_entry_text command")
+                    if tkinter_enabled == True:
+                        import tkinter as tk
+                        command = line[2:].strip()
+                        if command.startswith("window(") and command.endswith(")"):
+                            command = command[7:-1]
+                            self.tk_vars[command] = tk.Tk()
+                        elif command.startswith("title(") and command.endswith(")"):
+                            command = command[6:-1]
+                            command = command.split(",")
+                            window = command[0].lstrip()
+                            title = command[1].lstrip()
+                            if title.startswith('"') and title.endswith('"'):
+                                title = title[1:-1]
+                            else:
+                                title = self.variables[title]
+                            self.tk_vars[window].title(title)
+                        elif command.startswith("mainloop(") and command.endswith(")"):
+                            command = command[9:-1]
+                            self.tk_vars[command].mainloop()
+                        elif command.startswith("create_button(") and command.endswith(")"):
+                            command = command[14:-1]
+                            command = command.split(",")
+                            window = command[1].lstrip()
+                            button_name = command[0].lstrip()
+                            button_text = command[2].lstrip()
+                            button_text = button_text.lstrip()
+                            button_command = command[3].lstrip()
+                            if button_text.startswith('"') and button_text.endswith('"'):
+                                button_text = button_text[1:-1]
+                            else:
+                                button_text = self.variables[button_text]
+                            if len(command) == 2:
+                                self.tk_vars[button_name] = tk.Button(self.tk_vars[window])
+                            elif len(command) == 3:
+                                self.tk_vars[button_name] = tk.Button(self.tk_vars[window],text = button_text)
+                            elif len(command) == 4:
+                                self.tk_vars[button_name] = tk.Button(self.tk_vars[window],text = button_text,command = lambda: self.button_command_exec(button_command))
+                            else:
+                                print(f"Invalid create_button command")
+                            self.tk_vars[button_name].pack()
+                        elif command.startswith("create_label(") and command.endswith(")"):
+                            command = command[13:-1]
+                            command = command.split(",")
+                            window = command[1].lstrip()
+                            label_name = command[0].lstrip()
+                            label_text = command[2].lstrip()
+                            label_text = label_text.lstrip()
+                            if label_text.startswith('"') and label_text.endswith('"'):
+                                label_text = label_text[1:-1]
+                            else:
+                                label_text = self.variables[label_text]
+                            if len(command) == 2:
+                                self.tk_vars[label_name] = tk.Label(self.tk_vars[window])
+                            elif len(command) == 3:
+                                self.tk_vars[label_name] = tk.Label(self.tk_vars[window],text = label_text)
+                            else:
+                                print(f"Invalid create_label command")
+                            self.tk_vars[label_name].pack()
+                        elif command.startswith("create_entry(") and command.endswith(")"):
+                            command = command[13:-1]
+                            command = command.split(",")
+                            window = command[1].lstrip()
+                            entry_name = command[0].lstrip()
+                            entry_text = command[2].lstrip()
+                            entry_text = entry_text.lstrip()
+                            if entry_text.startswith('"') and entry_text.endswith('"'):
+                                entry_text = entry_text[1:-1]
+                            else:
+                                entry_text = self.variables[entry_text]
+                            if len(command) == 2:
+                                self.tk_vars[entry_name] = tk.Entry(self.tk_vars[window])
+                            elif len(command) == 3:
+                                self.tk_vars[entry_name] = tk.Entry(self.tk_vars[window],text = entry_text)
+                            else:
+                                print(f"Invalid create_entry command")
+                            self.tk_vars[entry_name].pack()
+                        elif command.startswith("get_entry_text(") and command.endswith(")"):
+                            command = command[15:-1]
+                            command = command.split(",")
+                            entry_name = command[0].lstrip()
+                            variable_name = command[1].lstrip()
+                            if entry_name in self.tk_vars:
+                                self.variables[variable_name] = self.tk_vars[entry_name].get()
+                            else:
+                                print(f"Invalid get_entry_text command")
+                    else:
+                        print("tkinter isn't enabled")
                 elif line == "stop":
                     input("Press any key to continue...")
                     break
@@ -701,7 +714,6 @@ if __name__ == "__main__":
     if len(sys.argv) >= 2:
         file_path = sys.argv[1]
         arguments = sys.argv[2:]
-        print(arguments)
         interpreter.interpret_file(file_path, *arguments)
         sys.exit()
 
@@ -710,6 +722,7 @@ To show the license type "license" or "help" to get help.
     """)
 
     cls_state = True
+    tkinter_enabled = False
 
     while True:
         code = input("/// ")
@@ -731,6 +744,10 @@ To show the license type "license" or "help" to get help.
                 interpreter.variables.clear()
         elif code == "license":
             interpreter.show_license()
+        elif code == "enabletk":
+            tkinter_enabled = True
+        elif code == "disabletk":
+            tkinter_enabled = False
         else:
             interpreter.interpret(code)
             print("variables:", interpreter.variables, "\n")
