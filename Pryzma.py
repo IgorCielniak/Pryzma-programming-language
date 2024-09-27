@@ -364,6 +364,16 @@ class PryzmaInterpreter:
                                 self.variables[variable_name] = self.tk_vars[entry_name].get()
                             else:
                                 print(f"Invalid get_entry_text command")
+                        elif command.startswith("set_entry_text(") and command.endswith(")"):
+                            command = command[15:-1]
+                            command = command.split(",")
+                            entry_name = command[0].lstrip()
+                            variable_name = command[1].lstrip()
+                            if entry_name in self.tk_vars:
+                                self.tk_vars[entry_name].delete(0, tk.END)
+                                self.tk_vars[entry_name].insert(0, self.variables[variable_name])
+                            else:
+                                print(f"Invalid set_entry_text command")
                     else:
                         print("tkinter isn't enabled")
                 elif line == "stop":
