@@ -484,6 +484,8 @@ class PryzmaInterpreter:
             file_path = expression[5:-1]
             if file_path.startswith('"') and file_path.endswith('"'):
                 file_path = file_path[1:-1]
+            else:
+                file_path = self.variables[file_path]
             try:
                 with open(file_path, 'r') as file:
                     return file.read()
