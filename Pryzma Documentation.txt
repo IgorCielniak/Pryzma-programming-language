@@ -305,17 +305,6 @@ to call a function without argument you can do
 
 @add
 
-cprint:
-
-for example with program like that:
-
-input a
-input b
-input operator
-c = a + operator + b
-cprint c
-
-and inputs like that 1, 2, + ,c will equal 1+2 and while printing it will be auto calculated and output will be 3
 
 Loops:
 
