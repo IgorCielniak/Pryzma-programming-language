@@ -37,9 +37,6 @@ class PryzmaInterpreter:
                 if line.startswith("print"):
                     value = line[len("print"):].strip()
                     self.print_value(value)
-                elif line.startswith("cprint"):
-                    value = line[len("cprint"):].strip()
-                    self.cprint_value(value)
                 elif line.startswith("input"):
                     variable = line[len("input"):].strip()
                     self.custom_input(variable)
@@ -556,17 +553,6 @@ class PryzmaInterpreter:
                 print(evaluated_value.replace('\\n', '\n'))
             else:
                 print(evaluated_value)
-            
-    def cprint_value(self, value):
-        evaluated_value = self.evaluate_expression(value)
-
-        if evaluated_value is not None:
-            if isinstance(evaluated_value, str) and '\\n' in evaluated_value:
-                print(evaluated_value.replace('\\n', '\n'))
-            elif re.match(r"^\d+$", str(evaluated_value)):
-                print(evaluated_value)
-            else:
-                print(self.evaluate_expression(evaluated_value))
 
     def custom_input(self, variable):
         if "::" in variable:
@@ -749,6 +735,8 @@ To show the license type "license" or "help" to get help.
             cls_state = True
         elif code == "clsf":
             cls_state = False
+        elif code == "clear":
+            os.system('cls')
         elif code == "file":
             interpreter.interpret_file2()
             interpreter.functions.clear()
