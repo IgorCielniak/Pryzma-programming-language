@@ -424,13 +424,7 @@ class PryzmaInterpreter:
         self.variables[variable] = self.evaluate_expression(expression)
 
     def evaluate_expression(self, expression):
-        if re.match(r"^\d+$", expression):
-            return int(expression)
-        elif re.match(r'^".*"$', expression):
-            return expression[1:-1]
-        elif expression in self.variables:
-            return self.variables[expression]
-        elif "+" in expression:
+        if "+" in expression:
             parts = expression.split("+")
             evaluated_parts = [self.evaluate_expression(part.strip()) for part in parts]
             if all(isinstance(part, int) for part in evaluated_parts):
@@ -542,6 +536,12 @@ class PryzmaInterpreter:
             else:
                 print(f"Variable '{expression}' is not defined.")
                 return None
+        elif re.match(r"^\d+$", expression):
+            return int(expression)
+        elif re.match(r'^".*"$', expression):
+            return expression[1:-1]
+        elif expression in self.variables:
+            return self.variables[expression]
         else:
             try:
                 return eval(expression, {}, self.variables)
