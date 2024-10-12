@@ -276,9 +276,12 @@ class PryzmaInterpreter:
                     except ValueError:
                         print("Invalid index")
                 elif line.startswith("tk"):
-                    if tkinter_enabled == True:
+                    global tkinter_enabled
+                    command = line[2:].strip()
+                    if command.strip().startswith("enable"):
+                        tkinter_enabled = True
+                    elif tkinter_enabled == True:
                         import tkinter as tk
-                        command = line[2:].strip()
                         if command.startswith("window(") and command.endswith(")"):
                             command = command[7:-1]
                             self.tk_vars[command] = tk.Tk()
@@ -701,6 +704,9 @@ commands:
         cls - clear the functions and variables dictionaries
         clst - set clearing functions and variables dictionaries after program execution to true
         clsf - set clearing functions and variables dictionaries after program execution to false
+        clear - clear the console
+        enabletk - enable tkinter support
+        disabletk - disable tkinter support
         exit - exit the interpreter
         help - show this help
         license - show the license
