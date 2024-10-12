@@ -212,6 +212,10 @@ output will be 0 , -- increments by one
 
 Tkinter for Pryzma:
 
+to enable the use of tkinter from the code you can do some think like that:
+
+tk enable
+
 now you can use basic tkinter functions in Pryzma, for example:
 
 tk window(name_of_the_window)
