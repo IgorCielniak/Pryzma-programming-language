@@ -707,10 +707,43 @@ commands:
         clear - clear the console
         enabletk - enable tkinter support
         disabletk - disable tkinter support
+        debug - start debugging mode
         exit - exit the interpreter
         help - show this help
         license - show the license
 """)
+
+
+    
+    def debug_interpreter(interpreter, file_path):
+        global current_line
+        with open(file_path, 'r') as file:
+            lines = file.readlines()
+        
+        while current_line < len(lines):
+            line = lines[current_line].strip()
+            
+            if line == "exit":
+                break
+            elif line.startswith("#"):
+                current_line += 1
+                continue
+            
+            print(f"Debug: Executing line {current_line + 1}: {line}")
+            interpreter.interpret(line)
+            print("Variables:", interpreter.variables)
+            print("Functions:", interpreter.functions)
+            
+            current_line += 1
+            command = input("Press Enter to continue, 'c' to continue to next breakpoint or 'exit' to stop debugging: ")
+            if command == "c":
+                continue
+            elif command == "exit":
+                break
+
+
+
+
 
 if __name__ == "__main__":
     interpreter = PryzmaInterpreter()
@@ -727,6 +760,8 @@ To show the license type "license" or "help" to get help.
 
     cls_state = True
     tkinter_enabled = False
+    DEBUG_MODE = False
+    current_line = 0
 
     while True:
         code = input("/// ")
@@ -754,6 +789,12 @@ To show the license type "license" or "help" to get help.
             tkinter_enabled = True
         elif code == "disabletk":
             tkinter_enabled = False
+        elif code == "debug":
+            DEBUG_MODE = True
+            file_path = input("Path to the file to debug: ")
+            interpreter.debug_interpreter(file_path)
+            DEBUG_MODE = False
+            current_line = 0
         else:
             interpreter.interpret(code)
             print("variables:", interpreter.variables, "\n")
