@@ -760,6 +760,7 @@ if __name__ == "__main__":
                 if arg == "--d":
                     DEBUG_MODE = True
                     interpreter.debug_interpreter(file_path)
+                    DEBUG_MODE = False
         interpreter.interpret_file(file_path, *arguments)
         sys.exit()
 
@@ -793,10 +794,6 @@ To show the license type "license" or "help" to get help.
                 interpreter.variables.clear()
         elif code == "license":
             interpreter.show_license()
-        elif code == "enabletk":
-            tkinter_enabled = True
-        elif code == "disabletk":
-            tkinter_enabled = False
         elif code == "debug":
             DEBUG_MODE = True
             file_path = input("Path to the file to debug: ")
