@@ -783,8 +783,8 @@ if __name__ == "__main__":
         file_path = sys.argv[1]
         arguments = sys.argv[2:]
         for arg in arguments:
-            if arg.startswith("--"):
-                if arg == "--d":
+            if arg.startswith("-"):
+                if arg == "-d":
                     DEBUG_MODE = True
                     interpreter.debug_interpreter(file_path)
                     DEBUG_MODE = False
