@@ -465,13 +465,6 @@ class PryzmaInterpreter:
             if string_to_split.startswith('"') and string_to_split.endswith('"'):
                 string_to_split = string_to_split[1:-1]
             return string_to_split.split(char_to_split)
-        elif expression.startswith("splitwords(") and expression.endswith(")"):
-            expression = expression[6:-1]
-            if expression in self.variables:
-                expression = self.variables[expression]
-            if expression.startswith('"') and expression.endswith('"'):
-                expression = expression[1:-1]
-            return expression.split()
         elif expression.startswith("split(") and expression.endswith(")"):
             expression = expression[6:-1]
             if expression in self.variables:
