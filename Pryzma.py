@@ -781,7 +781,7 @@ if __name__ == "__main__":
 
     if len(sys.argv) >= 2:
         file_path = sys.argv[1]
-        arguments = sys.argv[2:]
+        arguments = sys.argv[1:]
         for arg in arguments:
             if arg.startswith("-"):
                 if arg == "-d":
