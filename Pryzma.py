@@ -465,13 +465,20 @@ class PryzmaInterpreter:
             if string_to_split.startswith('"') and string_to_split.endswith('"'):
                 string_to_split = string_to_split[1:-1]
             return string_to_split.split(char_to_split)
-        elif expression.startswith("split(") and expression.endswith(")"):
+        elif expression.startswith("splitwords(") and expression.endswith(")"):
             expression = expression[6:-1]
             if expression in self.variables:
                 expression = self.variables[expression]
             if expression.startswith('"') and expression.endswith('"'):
                 expression = expression[1:-1]
             return expression.split()
+        elif expression.startswith("split(") and expression.endswith(")"):
+            expression = expression[6:-1]
+            if expression in self.variables:
+                expression = self.variables[expression]
+            if expression.startswith('"') and expression.endswith('"'):
+                expression = expression[1:-1]
+            return list(expression)
         elif expression.startswith("splitlines(") and expression.endswith(")"):
             return self.variables[expression[11:-1]].splitlines()
         elif expression.startswith("read(") and expression.endswith(")"):
@@ -611,7 +618,34 @@ class PryzmaInterpreter:
                         print(f"Invalid statement in imported file: {line}")
                 if function_def:
                     self.define_function(function_name, function_body)
+        elif "/" in file_path:
+            with open(file_path, 'r') as file:
+                program = file.read()
+                lines = program.split('\n')
+                function_def = False
+                function_name = ""
+                function_body = []
+                for line in lines:
+                    line = line.strip()
+                    if line.startswith("/"):
+                        if function_def:
+                            self.define_function(function_name, function_body)
+                            function_def = False
+                        function_definition = line[1:].split("{")
+                        if len(function_definition) == 2:
+                            function_name = function_definition[0].strip()
+                            function_body = function_definition[1].strip().rstrip("}").split("|")
+                            function_def = True
+                        else:
+                            print(f"Invalid function definition: {line}")
+                    elif line.startswith("") or line.startswith("#"):
+                        continue
+                    else:
+                        print(f"Invalid statement in imported file: {line}")
+                if function_def:
+                    self.define_function(function_name, function_body)
         else:
+            file_path = f"C:/packages/{file_path}/{file_path}.pryzma"
             with open(file_path, 'r') as file:
                 program = file.read()
                 lines = program.split('\n')
