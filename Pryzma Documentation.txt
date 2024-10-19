@@ -121,11 +121,6 @@ it will print:
 
 b = "text text2"
 
-print splitwords(b)
-
-it will print list of all works like that:
-
-["text", "text2"]
 
 splitlines() works nearly the same but it split by lines not by words, there is also splitby(),
 that split by some character for example if i have string "textMtext" and i want to split it by the M i can do it like that:
