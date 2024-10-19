@@ -716,30 +716,34 @@ commands:
 
     
     def debug_interpreter(interpreter, file_path):
-        global current_line
-        with open(file_path, 'r') as file:
-            lines = file.readlines()
-        
-        while current_line < len(lines):
-            line = lines[current_line].strip()
-            
-            if line == "exit":
-                break
-            elif line.startswith("#"):
+        current_line = 0
+        try:
+            with open(file_path, 'r') as file:
+                lines = file.readlines()
+
+            while current_line < len(lines):
+                line = lines[current_line].strip()
+                
+                if line == "exit":
+                    break
+                elif line.startswith("#") or line == "":
+                    current_line += 1
+                    continue
+                
+                print(f"Debug: Executing line {current_line + 1}: {line}")
+                interpreter.interpret(line)
+                print("Variables:", interpreter.variables)
+                print("Functions:", interpreter.functions)
+                
                 current_line += 1
-                continue
-            
-            print(f"Debug: Executing line {current_line + 1}: {line}")
-            interpreter.interpret(line)
-            print("Variables:", interpreter.variables)
-            print("Functions:", interpreter.functions)
-            
-            current_line += 1
-            command = input("Press Enter to continue, 'c' to continue to next breakpoint or 'exit' to stop debugging: ")
-            if command == "c":
-                continue
-            elif command == "exit":
-                break
+                command = input("Press Enter to continue, 'c' to continue to next breakpoint or 'exit' to stop debugging: ")
+                if command == "c":
+                    continue
+                elif command == "exit":
+                    break
+                
+        except FileNotFoundError:
+            print(f"File '{file_path}' not found.")
 
 
 
@@ -751,6 +755,11 @@ if __name__ == "__main__":
     if len(sys.argv) >= 2:
         file_path = sys.argv[1]
         arguments = sys.argv[2:]
+        for arg in arguments:
+            if arg.startswith("--"):
+                if arg == "--d":
+                    DEBUG_MODE = True
+                    interpreter.debug_interpreter(file_path)
         interpreter.interpret_file(file_path, *arguments)
         sys.exit()
 
@@ -761,7 +770,6 @@ To show the license type "license" or "help" to get help.
     cls_state = True
     tkinter_enabled = False
     DEBUG_MODE = False
-    current_line = 0
 
     while True:
         code = input("/// ")
@@ -794,7 +802,6 @@ To show the license type "license" or "help" to get help.
             file_path = input("Path to the file to debug: ")
             interpreter.debug_interpreter(file_path)
             DEBUG_MODE = False
-            current_line = 0
         else:
             interpreter.interpret(code)
             print("variables:", interpreter.variables, "\n")
