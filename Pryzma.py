@@ -593,9 +593,12 @@ class PryzmaInterpreter:
         file_path = file_path.strip('"')
         
         if file_path.startswith("./"):
-            current_directory = os.path.dirname(self.file_path)
-            absolute_file_path = os.path.join(current_directory, file_path[2:])
-            self.load_functions_from_file(absolute_file_path)
+            if running_from_file == True:
+                current_directory = os.path.dirname(self.file_path)
+                absolute_file_path = os.path.join(current_directory, file_path[2:])
+                self.load_functions_from_file(absolute_file_path)
+            else:
+                print("Cannot import functions from a relative path when running from the interpreter.")
         elif '/' in file_path or '\\' in file_path:
             self.load_functions_from_file(file_path)
         else:
@@ -960,6 +963,7 @@ if __name__ == "__main__":
     tkinter_enabled = False
     DEBUG_MODE = False
     history = []
+    running_from_file = False
 
     if len(sys.argv) >= 2:
         file_path = sys.argv[1]
@@ -997,10 +1001,12 @@ To show the license type "license" or "help" to get help.
         elif code == "clear":
             os.system('cls')
         elif code == "file":
+            running_from_file = True
             interpreter.interpret_file2()
             if cls_state == True:
                 interpreter.variables.clear()
                 interpreter.functions.clear()
+            running_from_file = False
         elif code == "license":
             interpreter.show_license()
         elif code == "debug":
