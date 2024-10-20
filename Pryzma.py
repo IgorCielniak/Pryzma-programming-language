@@ -948,6 +948,7 @@ commands:
         history clear - clear the commands history
         history <term> - search the commands history for a term
         cmd <command> - execute a command in the operating system shell
+        cmd - start the operating system shell
         exit - exit the interpreter
         help - show this help
         license - show the license
@@ -1208,11 +1209,18 @@ To show the license type "license" or "help" to get help.
             else:
                 print("Invalid command. Usage: history [search_term | index | clear]")
         elif code.startswith("cmd"):
-            code = code[len("cmd"):].strip()
-            if code:
-                os.system(code)
+            if code == "cmd":
+                while True:
+                    command = input("Command ('exit' to exit): ")
+                    if command == "exit":
+                        break
+                    os.system(command)
             else:
-                print("No command specified.")
+                code = code[len("cmd"):].strip()
+                if code:
+                    os.system(code)
+                else:
+                    print("No command specified.")
         elif code == "ppm":
             if not os.path.exists(PackageManager.user_packages_path):
                 os.makedirs(PackageManager.user_packages_path)
