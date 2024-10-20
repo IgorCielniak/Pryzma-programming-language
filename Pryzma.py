@@ -682,22 +682,6 @@ limitations under the License.
                 return
         else:
             print(f"List '{list_name}' does not exist.")
-    
-    def print_help(self):
-        print("""
-commands:
-        file - run a program from a file
-        cls - clear the functions and variables dictionaries
-        clst - set clearing functions and variables dictionaries after program execution to true
-        clsf - set clearing functions and variables dictionaries after program execution to false
-        clear - clear the console
-        enabletk - enable tkinter support
-        disabletk - disable tkinter support
-        debug - start debugging mode
-        exit - exit the interpreter
-        help - show this help
-        license - show the license
-""")
 
 
     def execute_function_from_file(self):
@@ -893,7 +877,21 @@ commands:
                 else:
                     print("Unknown command. Type 'help' for a list of commands.")
 
-
+    def print_help(self):
+        print("""
+commands:
+        file - run a program from a file
+        cls - clear the functions and variables dictionaries
+        clst - set clearing functions and variables dictionaries after program execution to true
+        clsf - set clearing functions and variables dictionaries after program execution to false
+        clear - clear the console
+        debug - start debugging mode
+        func - execute a function from a file
+        history - show the commands history
+        exit - exit the interpreter
+        help - show this help
+        license - show the license
+""")
 
 
 
