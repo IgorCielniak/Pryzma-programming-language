@@ -950,6 +950,7 @@ commands:
         history - show the commands history
         history <number> - execute the command from the history by number
         clearhistory - clear the commands history
+        cmd <command> - execute a command in the operating system shell
         exit - exit the interpreter
         help - show this help
         license - show the license
@@ -1030,6 +1031,12 @@ To show the license type "license" or "help" to get help.
                 history.clear()
             elif code[1].isnumeric():
                 interpreter.interpret(history[int(code[1])-1])
+        elif code.startswith("cmd"):
+            code = code[len("cmd"):].strip()
+            if code:
+                os.system(code)
+            else:
+                print("No command specified.")
         else:
             interpreter.interpret(code)
             print("variables:", interpreter.variables, "\n")
