@@ -3,6 +3,10 @@ import sys
 import os
 import importlib.util
 import datetime
+import json
+import urllib.request
+import shutil
+import zipfile
 
 class PryzmaInterpreter:
     
@@ -957,6 +961,171 @@ commands:
 """)
 
 
+class PackageManager:
+    user_packages_path = "C:/packages"
+    package_urls = {
+        "math": "https://github.com/IgorCielniak/Pryzma-packages/archive/refs/heads/math.zip",
+        "std": "https://github.com/IgorCielniak/Pryzma-packages/archive/refs/heads/std.zip"
+    }
+
+    def initialize_repository(self):
+        if not os.path.exists(self.user_packages_path):
+            os.makedirs(self.user_packages_path)
+            print("Repository initialized at:", self.user_packages_path)
+        else:
+            print("Repository already exists at:", self.user_packages_path)
+
+    def add_package(self, package_name, package_version, package_files):
+        package_dir = os.path.join(self.user_packages_path, package_name)
+        package_metadata = {
+            "name": package_name,
+            "version": package_version,
+            "files": package_files
+        }
+
+        if not os.path.exists(package_dir):
+            os.makedirs(package_dir)
+        with open(os.path.join(package_dir, "metadata.json"), "w") as metadata_file:
+            json.dump(package_metadata, metadata_file)
+        for file in package_files:
+            with open(os.path.join(package_dir, file), "w") as f:
+                pass
+        print("Package", package_name, "added successfully.")
+
+    def remove_package(self, package_name):
+        package_dir = os.path.join(self.user_packages_path, package_name)
+        if os.path.exists(package_dir):
+            shutil.rmtree(package_dir)
+            print("Package", package_name, "removed successfully.")
+        else:
+            print("Package", package_name, "not found.")
+
+    def list_packages(self):
+        packages = os.listdir(self.user_packages_path)
+        print("Available packages:")
+        for package in packages:
+            print("-", package)
+
+    def install_package(self, package_name):
+        package_url = self.package_urls.get(package_name)
+        if package_url:
+            print("Downloading package:", package_name)
+            package_file_path = os.path.join(self.user_packages_path, package_name + ".zip")
+            urllib.request.urlretrieve(package_url, package_file_path)
+            with zipfile.ZipFile(package_file_path, 'r') as zip_ref:
+                zip_ref.extractall(self.user_packages_path)
+            os.remove(package_file_path)
+            print("Package", package_name, "downloaded and installed successfully.")
+        else:
+            print("Package", package_name, "not found in the repository.")
+
+    def update_package(self, package_name=None):
+        if package_name:
+            self.install_package(PackageManager,package_name)
+        else:
+            packages = os.listdir(self.user_packages_path)
+            for package in packages:
+                self.install_package(PackageManager,package)
+
+    def prompt_download_dependencies(self, dependencies):
+        print("This package has the following dependencies:")
+        for dependency in dependencies:
+            print("-", dependency)
+        response = input("Do you want to download these dependencies? (yes/no): ").lower()
+        if response == "yes":
+            for dependency in dependencies:
+                self.install_package(PackageManager,dependency)
+        else:
+            print("Dependencies not downloaded.")
+
+    def get_package_index_url(self, package_name):
+        package_url = self.package_urls.get(package_name)
+        if package_url:
+            return package_url
+        else:
+            print("Failed to determine package index URL for package", package_name)
+            return None
+        
+    def delete_prefix(self, directory_path):
+        if not os.path.exists(directory_path):
+            return
+        
+        directories = os.listdir(directory_path)
+        
+        for dir_name in directories:
+            if dir_name.startswith("Pryzma-packages-"):
+                full_path = os.path.join(directory_path, dir_name)
+                new_name = dir_name[16:]
+                new_full_path = os.path.join(directory_path, new_name)
+                
+                if os.path.isdir(full_path):
+                    if os.path.exists(new_full_path):
+                        shutil.rmtree(new_full_path)
+                    
+                    os.rename(full_path, new_full_path)
+
+    def display_help(self):
+        help_text = """
+        Available commands:
+        - init: Initialize the package repository.
+        - add <package_name> <package_version> <file1> <file2> ...: Add a new package with specified files.
+        - remove <package_name>: Remove a package from the repository.
+        - list: List all installed packages.
+        - install <package_name>: Install a package from the repository.
+        - update [package_name]: Update a specific package or all packages if no name is provided.
+        - help: Show this help message.
+        - exit: Exit the Pryzma package manager.
+        """
+        print(help_text)
+
+    def shell_mode(self):
+        print("Entering shell mode. Type ' exit' to quit.")
+        while True:
+            user_input = input("> ").split()
+            if user_input[0] == "exit":
+                break
+            elif user_input[0] == "help":
+                self.display_help(PackageManager)
+            elif user_input[0] == "init":
+                self.initialize_repository(PackageManager)
+            elif user_input[0] == "add":
+                if len(user_input) < 4:
+                    print("Error: You need to specify package version and files.")
+                else:
+                    self.add_package(PackageManager,user_input[1], user_input[2], user_input[3:])
+            elif user_input[0] == "remove":
+                self.remove_package(PackageManager,user_input[1])
+                self.delete_prefix(PackageManager,"C:/packages/")
+            elif user_input[0] == "list":
+                self.list_packages(PackageManager)
+            elif user_input[0] == "install":
+                self.install_package(PackageManager,user_input[1])
+                self.delete_prefix(PackageManager,"C:/packages/")
+            elif user_input[0] == "update":
+                if len(user_input) > 1:
+                    self.update_package(PackageManager,user_input[1])
+                else:
+                    self.update_package(PackageManager)
+                self.delete_prefix(PackageManager,"C:/packages/")
+            else:
+                print("Unknown command. Type 'exit' to quit.")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 if __name__ == "__main__":
     interpreter = PryzmaInterpreter()
 
@@ -981,7 +1150,7 @@ if __name__ == "__main__":
         interpreter.interpret_file(file_path, *arguments)
         sys.exit()
 
-    print("""Pryzma 5.1
+    print("""Pryzma 5.2
 To show the license type "license" or "help" to get help.
     """)
 
@@ -1038,6 +1207,8 @@ To show the license type "license" or "help" to get help.
                 os.system(code)
             else:
                 print("No command specified.")
+        elif code == "ppm":
+            PackageManager.shell_mode(PackageManager)
         else:
             interpreter.interpret(code)
             print("variables:", interpreter.variables, "\n")
