@@ -1200,6 +1200,8 @@ To show the license type "license" or "help" to get help.
             else:
                 print("No command specified.")
         elif code == "ppm":
+            if not os.path.exists(PackageManager.user_packages_path):
+                os.makedirs(PackageManager.user_packages_path)
             PackageManager.shell_mode(PackageManager)
         else:
             interpreter.interpret(code)
