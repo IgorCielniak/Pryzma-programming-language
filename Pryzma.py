@@ -945,6 +945,7 @@ commands:
         debug - start debugging mode
         func - execute a function from a file
         history - show the commands history
+        history <number> - execute the command from the history by number
         clearhistory - clear the commands history
         exit - exit the interpreter
         help - show this help
@@ -1012,13 +1013,17 @@ To show the license type "license" or "help" to get help.
                 interpreter.functions.clear()
         elif code == "func":
             interpreter.execute_function_from_file()
-        elif code == "history":
-            commands = 0
-            for command in history:
-                print(f"{commands+1}.{history[commands]}")
-                commands += 1
-        elif code == "clearhistory":
-            history.clear()
+        elif code.startswith("history"):
+            code = code.split()
+            if len(code) == 1 and code[0] == "history":
+                commands = 0
+                for command in history:
+                    print(f"{commands+1}.{history[commands]}")
+                    commands += 1
+            elif code[1] == "clear":
+                history.clear()
+            elif code[1].isnumeric():
+                interpreter.interpret(history[int(code[1])-1])
         else:
             interpreter.interpret(code)
             print("variables:", interpreter.variables, "\n")
