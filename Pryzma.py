@@ -885,22 +885,6 @@ limitations under the License.
                 else:
                     print("Unknown command. Type 'help' for a list of commands.")
 
-    def print_help(self):
-        print("""
-commands:
-        file - run a program from a file
-        cls - clear the functions and variables dictionaries
-        clst - set clearing functions and variables dictionaries after program execution to true
-        clsf - set clearing functions and variables dictionaries after program execution to false
-        clear - clear the console
-        debug - start debugging mode
-        func - execute a function from a file
-        history - show the commands history
-        exit - exit the interpreter
-        help - show this help
-        license - show the license
-""")
-
 
     def parse_call_statement(self, statement):
         if statement.startswith("(") and statement.endswith(")"):
@@ -946,6 +930,26 @@ commands:
 
 
 
+
+
+
+
+    def print_help(self):
+        print("""
+commands:
+        file - run a program from a file
+        cls - clear the functions and variables dictionaries
+        clst - set clearing functions and variables dictionaries after program execution to true
+        clsf - set clearing functions and variables dictionaries after program execution to false
+        clear - clear the console
+        debug - start debugging mode
+        func - execute a function from a file
+        history - show the commands history
+        clearhistory - clear the commands history
+        exit - exit the interpreter
+        help - show this help
+        license - show the license
+""")
 
 
 if __name__ == "__main__":
@@ -1013,6 +1017,8 @@ To show the license type "license" or "help" to get help.
             for command in history:
                 print(f"{commands+1}.{history[commands]}")
                 commands += 1
+        elif code == "clearhistory":
+            history.clear()
         else:
             interpreter.interpret(code)
             print("variables:", interpreter.variables, "\n")
