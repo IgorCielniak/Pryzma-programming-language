@@ -587,14 +587,14 @@ class PryzmaInterpreter:
         if file_path.startswith("./"):
             current_directory = os.path.dirname(self.file_path)
             absolute_file_path = os.path.join(current_directory, file_path[2:])
-            self._load_functions_from_file(absolute_file_path)
+            self.load_functions_from_file(absolute_file_path)
         elif '/' in file_path or '\\' in file_path:
-            self._load_functions_from_file(file_path)
+            self.load_functions_from_file(file_path)
         else:
             file_path = f"C:/packages/{file_path}/{file_path}.pryzma"
-            self._load_functions_from_file(file_path)
+            self.load_functions_from_file(file_path)
 
-    def _load_functions_from_file(self, file_path):
+    def load_functions_from_file(self, file_path):
         try:
             with open(file_path, 'r') as file:
                 program = file.read()
@@ -700,103 +700,6 @@ commands:
 """)
 
 
-    
-    def debug_interpreter(interpreter, file_path):
-        current_line = 0
-        breakpoints = set()
-        
-        try:
-            with open(file_path, 'r') as file:
-                lines = file.readlines()
-        except FileNotFoundError:
-            print(f"File '{file_path}' not found.")
-            return
-        
-        commands_info = {
-            's': 'Step to the next line',
-            'c': 'Continue to the next breakpoint',
-            'b <line>': 'Add a breakpoint at the specified line number',
-            'r <line>': 'Remove a breakpoint at the specified line number',
-            'l': 'List all current breakpoints',
-            'v': 'View all variables',
-            'f': 'View all functions',
-            'exit': 'Exit the debugger',
-            'help': 'Show this help message'
-        }
-
-        def print_help():
-            print("Available commands:")
-            for cmd, desc in commands_info.items():
-                print(f"{cmd}: {desc}")
-
-        while current_line < len(lines):
-            line = lines[current_line].strip()
-            
-            if line.startswith("#") or line == "":
-                current_line += 1
-                continue
-
-            print(f"Debug: Executing line {current_line + 1}: {line}")
-            
-            try:
-                interpreter.interpret(line)
-            except Exception as e:
-                print(f"Error executing line {current_line + 1}: {e}")
-            
-            print("Variables:", interpreter.variables)
-            print("Functions:", interpreter.functions)
-            
-            current_line += 1
-
-            if current_line in breakpoints:
-                print(f"Breakpoint hit at line {current_line}.")
-            
-            while True:
-                command = input("Debugger> ").strip()
-                
-                if command == 's':
-                    break
-                elif command == 'c':
-                    while current_line < len(lines) and current_line not in breakpoints:
-                        line = lines[current_line].strip()
-                        print(f"Debug: Executing line {current_line + 1}: {line}")
-                        try:
-                            interpreter.interpret(line)
-                        except Exception as e:
-                            print(f"Error executing line {current_line + 1}: {e}")
-                        print("Variables:", interpreter.variables)
-                        print("Functions:", interpreter.functions)
-                        current_line += 1
-                    break
-                elif command.startswith('b '):
-                    try:
-                        line_num = int(command.split()[1])
-                        breakpoints.add(line_num)
-                        print(f"Breakpoint added at line {line_num}.")
-                    except ValueError:
-                        print("Invalid line number. Usage: b <line_number>")
-                elif command.startswith('r '):
-                    try:
-                        line_num = int(command.split()[1])
-                        breakpoints.discard(line_num)
-                        print(f"Breakpoint removed at line {line_num}.")
-                    except ValueError:
-                        print("Invalid line number. Usage: r <line_number>")
-                elif command == 'l':
-                    print("Breakpoints:", sorted(breakpoints))
-                elif command == 'v':
-                    print("Variables:", interpreter.variables)
-                elif command == 'f':
-                    print("Functions:", interpreter.functions)
-                elif command == 'exit':
-                    print("Exiting debugger.")
-                    return
-                elif command == 'help':
-                    print_help()
-                else:
-                    print("Unknown command. Type 'help' for a list of commands.")
-
-
     def execute_function_from_file(self):
         file_path = input("Enter the file path of the function: ")
         function_name = input("Enter the function name: ")
@@ -806,6 +709,190 @@ commands:
                 self.interpret(line)
         else:
             print(f"Function '{function_name}' is not defined in '{file_path}'.")
+
+    def debug_interpreter(interpreter, file_path):
+        current_line = 0
+        breakpoints = set()
+        log_file = None
+
+        try:
+            with open(file_path, 'r') as file:
+                lines = file.readlines()
+        except FileNotFoundError:
+            print(f"File '{file_path}' not found.")
+            return
+
+        commands_info = {
+            's': 'Step to the next line',
+            'c': 'Continue to the next breakpoint',
+            'b <line>': 'Add a breakpoint at the specified line number',
+            'r <line>': 'Remove a breakpoint at the specified line number',
+            'l': 'List all current breakpoints',
+            'v': 'View all variables',
+            'f': 'View all functions',
+            'log': 'Set the log file name (default is log.txt)',
+            'exit': 'Exit the debugger',
+            'help': 'Show this help message'
+        }
+
+        def print_help():
+            print("Available commands:")
+            for cmd, desc in commands_info.items():
+                print(f"{cmd}: {desc}")
+
+        def log_message(message):
+            """Logs a message to the log file if logging is enabled."""
+            if log_file:
+                with open(log_file, 'a') as f:
+                    f.write(message + '\n')
+
+        # Initial prompt before executing any line
+        print("Debugger started. Type 'help' for a list of commands.")
+        log_message("Debugger started.")
+
+        while True:
+            command = input("Debugger> ").strip()
+
+            if command == 's':
+                log_message("User chose to step.")
+                break
+            elif command == 'c':
+                log_message("User chose to continue to the next breakpoint.")
+                break
+            elif command.startswith('b '):
+                try:
+                    line_num = int(command.split()[1])
+                    breakpoints.add(line_num)
+                    print(f"Breakpoint added at line {line_num}.")
+                    log_message(f"Breakpoint added at line {line_num}.")
+                except ValueError:
+                    print("Invalid line number. Usage: b <line_number>")
+            elif command.startswith('r '):
+                try:
+                    line_num = int(command.split()[1])
+                    breakpoints.discard(line_num)
+                    print(f"Breakpoint removed at line {line_num}.")
+                    log_message(f"Breakpoint removed at line {line_num}.")
+                except ValueError:
+                    print("Invalid line number. Usage: r <line_number>")
+            elif command == 'l':
+                print("Breakpoints:", sorted(breakpoints))
+                log_message(f"Breakpoints listed: {sorted(breakpoints)}")
+            elif command == 'v':
+                print("Variables:", interpreter.variables)
+                log_message(f"Variables: {interpreter.variables}")
+            elif command == 'f':
+                print("Functions:", interpreter.functions)
+                log_message(f"Functions: {interpreter.functions}")
+            elif command == 'log':
+                log_file = input("Enter log file name (press Enter for 'log.txt'): ").strip() or 'log.txt'
+                print(f"Logging to {log_file}")
+                log_message(f"Log file set to: {log_file}")
+            elif command == 'exit':
+                print("Exiting debugger.")
+                log_message("Debugger exited.")
+                return
+            elif command == 'help':
+                print_help()
+            else:
+                print("Unknown command. Type 'help' for a list of commands.")
+
+        # Main debugging loop
+        while current_line < len(lines):
+            line = lines[current_line].strip()
+
+            # Check if the current line is a breakpoint
+            if current_line in breakpoints:
+                print(f"Breakpoint hit at line {current_line + 1}.")
+                log_message(f"Breakpoint hit at line {current_line + 1}.")
+            
+            # Execute the current line if it's not empty or a comment
+            if not line.startswith("#") and line != "":
+                print(f"Debug: Executing line {current_line + 1}: {line}")
+                log_message(f"Executing line {current_line + 1}: {line}")
+
+                try:
+                    interpreter.interpret(line)
+                except Exception as e:
+                    error_message = f"Error executing line {current_line + 1}: {e}"
+                    print(error_message)
+                    log_message(error_message)
+
+                # Show variables and functions after each line
+                print("Variables:", interpreter.variables)
+                print("Functions:", interpreter.functions)
+                log_message(f"Variables: {interpreter.variables}")
+                log_message(f"Functions: {interpreter.functions}")
+
+            # Increment the line number
+            current_line += 1
+
+            # Prompt for the next action
+            while True:
+                command = input("Debugger> ").strip()
+
+                if command == 's':
+                    log_message("User chose to step.")
+                    break
+                elif command == 'c':
+                    log_message("User chose to continue to the next breakpoint.")
+                    while current_line < len(lines) and current_line not in breakpoints:
+                        line = lines[current_line].strip()
+                        if not line.startswith("#") and line != "":
+                            print(f"Debug: Executing line {current_line + 1}: {line}")
+                            log_message(f"Executing line {current_line + 1}: {line}")
+
+                            try:
+                                interpreter.interpret(line)
+                            except Exception as e:
+                                error_message = f"Error executing line {current_line + 1}: {e}"
+                                print(error_message)
+                                log_message(error_message)
+
+                            print("Variables:", interpreter.variables)
+                            print("Functions:", interpreter.functions)
+                            log_message(f"Variables: {interpreter.variables}")
+                            log_message(f"Functions: {interpreter.functions}")
+                        current_line += 1
+                    break
+                elif command.startswith('b '):
+                    try:
+                        line_num = int(command.split()[1])
+                        breakpoints.add(line_num)
+                        print(f"Breakpoint added at line {line_num}.")
+                        log_message(f"Breakpoint added at line {line_num}.")
+                    except ValueError:
+                        print("Invalid line number. Usage: b <line_number>")
+                elif command.startswith('r '):
+                    try:
+                        line_num = int(command.split()[1])
+                        breakpoints.discard(line_num)
+                        print(f"Breakpoint removed at line {line_num}.")
+                        log_message(f"Breakpoint removed at line {line_num}.")
+                    except ValueError:
+                        print("Invalid line number. Usage: r <line_number>")
+                elif command == 'l':
+                    print("Breakpoints:", sorted(breakpoints))
+                    log_message(f"Breakpoints listed: {sorted(breakpoints)}")
+                elif command == 'v':
+                    print("Variables:", interpreter.variables)
+                    log_message(f"Variables: {interpreter.variables}")
+                elif command == 'f':
+                    print("Functions:", interpreter.functions)
+                    log_message(f"Functions: {interpreter.functions}")
+                elif command == 'log':
+                    log_file = input("Enter log file name (press Enter for 'log.txt'): ").strip() or 'log.txt'
+                    print(f"Logging to {log_file}")
+                    log_message(f"Log file set to: {log_file}")
+                elif command == 'exit':
+                    print("Exiting debugger.")
+                    log_message("Debugger exited.")
+                    return
+                elif command == 'help':
+                    print_help()
+                else:
+                    print("Unknown command. Type 'help' for a list of commands.")
+
 
 
 
