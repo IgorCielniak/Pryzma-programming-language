@@ -1,6 +1,7 @@
 import re
 import sys
 import os
+import importlib.util
 
 class PryzmaInterpreter:
     
@@ -376,6 +377,10 @@ class PryzmaInterpreter:
                                 print(f"Invalid set_entry_text command")
                     else:
                         print("tkinter isn't enabled")
+                elif line.startswith("call"):
+                    call_statement = line[len("call"):].strip()
+                    file_name, function_name = self.parse_call_statement(call_statement)
+                    self.call_function_from_file(file_name, function_name)
                 elif line == "stop":
                     input("Press any key to continue...")
                     break
@@ -892,6 +897,49 @@ commands:
         help - show this help
         license - show the license
 """)
+
+
+    def parse_call_statement(self, statement):
+        if statement.startswith("(") and statement.endswith(")"):
+            statement = statement[1:-1]
+            file_name, function_name = statement.split(",")
+            file_name = file_name.strip()
+            function_name = function_name.strip()
+            if file_name.startswith('"') and file_name.endswith('"'):
+                file_name = file_name[1:-1]
+            if function_name.startswith('"') and function_name.endswith('"'):
+                function_name = function_name[1:-1]
+            return file_name.strip(), function_name.strip()
+        else:
+            raise ValueError("Invalid call statement format. Expected format: call(file_name, function_name)")
+
+    def call_function_from_file(self, file_name, function_name):
+        if not os.path.isfile(file_name):
+            print(f"File '{file_name}' does not exist.")
+            return
+
+        spec = importlib.util.spec_from_file_location("module.name", file_name)
+        
+        if spec is None:
+            print(f"Could not load the module from '{file_name}'.")
+            return
+        
+        module = importlib.util.module_from_spec(spec)
+        
+        try:
+            spec.loader.exec_module(module)
+        except Exception as e:
+            print(f"Error loading module '{file_name}': {e}")
+            return
+
+        if hasattr(module, function_name):
+            func = getattr(module, function_name)
+            if callable(func):
+                func()
+            else:
+                print(f"'{function_name}' is not callable in '{file_name}'.")
+        else:
+            print(f"Function '{function_name}' is not defined in '{file_name}'.")
 
 
 
