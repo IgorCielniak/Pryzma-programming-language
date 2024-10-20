@@ -905,6 +905,7 @@ if __name__ == "__main__":
     cls_state = True
     tkinter_enabled = False
     DEBUG_MODE = False
+    history = []
 
     if len(sys.argv) >= 2:
         file_path = sys.argv[1]
@@ -921,12 +922,13 @@ if __name__ == "__main__":
         interpreter.interpret_file(file_path, *arguments)
         sys.exit()
 
-    print("""Pryzma 5.0
+    print("""Pryzma 5.1
 To show the license type "license" or "help" to get help.
     """)
 
     while True:
         code = input("/// ")
+        history.append(code)
         if code == "exit":
             break
         if code == "help":
@@ -957,6 +959,11 @@ To show the license type "license" or "help" to get help.
                 interpreter.functions.clear()
         elif code == "func":
             interpreter.execute_function_from_file()
+        elif code == "history":
+            commands = 0
+            for command in history:
+                print(f"{commands+1}.{history[commands]}")
+                commands += 1
         else:
             interpreter.interpret(code)
             print("variables:", interpreter.variables, "\n")
