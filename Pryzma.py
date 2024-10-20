@@ -744,33 +744,128 @@ commands:
     
     def debug_interpreter(interpreter, file_path):
         current_line = 0
+        breakpoints = set()
+        
+        # Load the file and check if it exists
         try:
             with open(file_path, 'r') as file:
                 lines = file.readlines()
-
-            while current_line < len(lines):
-                line = lines[current_line].strip()
-                
-                if line == "exit":
-                    break
-                elif line.startswith("#") or line == "":
-                    current_line += 1
-                    continue
-                
-                print(f"Debug: Executing line {current_line + 1}: {line}")
-                interpreter.interpret(line)
-                print("Variables:", interpreter.variables)
-                print("Functions:", interpreter.functions)
-                
-                current_line += 1
-                command = input("Press Enter to continue, 'c' to continue to next breakpoint or 'exit' to stop debugging: ")
-                if command == "c":
-                    continue
-                elif command == "exit":
-                    break
-                
         except FileNotFoundError:
             print(f"File '{file_path}' not found.")
+            return
+        
+        # Command list for user guidance
+        commands_info = {
+            's': 'Step to the next line',
+            'c': 'Continue to the next breakpoint',
+            'b <line>': 'Add a breakpoint at the specified line number',
+            'r <line>': 'Remove a breakpoint at the specified line number',
+            'l': 'List all current breakpoints',
+            'v': 'View all variables',
+            'f': 'View all functions',
+            'exit': 'Exit the debugger',
+            'help': 'Show this help message'
+        }
+
+        # Function to print help commands
+        def print_help():
+            print("Available commands:")
+            for cmd, desc in commands_info.items():
+                print(f"{cmd}: {desc}")
+
+        # Debugging loop
+        while current_line < len(lines):
+            line = lines[current_line].strip()
+            
+            # Skip comments and empty lines
+            if line.startswith("#") or line == "":
+                current_line += 1
+                continue
+
+            # Print the current line for debugging
+            print(f"Debug: Executing line {current_line + 1}: {line}")
+            
+            # Execute the line using the interpreter
+            try:
+                interpreter.interpret(line)
+            except Exception as e:
+                print(f"Error executing line {current_line + 1}: {e}")
+            
+            # Show variables and functions after each line
+            print("Variables:", interpreter.variables)
+            print("Functions:", interpreter.functions)
+            
+            # Increment the line number
+            current_line += 1
+
+            # Check if the current line is a breakpoint
+            if current_line in breakpoints:
+                print(f"Breakpoint hit at line {current_line}.")
+            
+            # Prompt for user input
+            while True:
+                command = input("Debugger> ").strip()
+                
+                if command == 's':
+                    # Step to the next line
+                    break
+                
+                elif command == 'c':
+                    # Continue to the next breakpoint
+                    while current_line < len(lines) and current_line not in breakpoints:
+                        line = lines[current_line].strip()
+                        print(f"Debug: Executing line {current_line + 1}: {line}")
+                        try:
+                            interpreter.interpret(line)
+                        except Exception as e:
+                            print(f"Error executing line {current_line + 1}: {e}")
+                        print("Variables:", interpreter.variables)
+                        print("Functions:", interpreter.functions)
+                        current_line += 1
+                    break
+
+                elif command.startswith('b '):
+                    # Add a breakpoint
+                    try:
+                        line_num = int(command.split()[1])
+                        breakpoints.add(line_num)
+                        print(f"Breakpoint added at line {line_num}.")
+                    except ValueError:
+                        print("Invalid line number. Usage: b <line_number>")
+
+                elif command.startswith('r '):
+                    # Remove a breakpoint
+                    try:
+                        line_num = int(command.split()[1])
+                        breakpoints.discard(line_num)
+                        print(f"Breakpoint removed at line {line_num}.")
+                    except ValueError:
+                        print("Invalid line number. Usage: r <line_number>")
+                
+                elif command == 'l':
+                    # List all breakpoints
+                    print("Breakpoints:", sorted(breakpoints))
+
+                elif command == 'v':
+                    # View variables
+                    print("Variables:", interpreter.variables)
+
+                elif command == 'f':
+                    # View functions
+                    print("Functions:", interpreter.functions)
+
+                elif command == 'exit':
+                    # Exit the debugger
+                    print("Exiting debugger.")
+                    return
+
+                elif command == 'help':
+                    # Display help message
+                    print_help()
+
+                else:
+                    print("Unknown command. Type 'help' for a list of commands.")
+
 
 
 
@@ -778,6 +873,10 @@ commands:
 
 if __name__ == "__main__":
     interpreter = PryzmaInterpreter()
+
+    cls_state = True
+    tkinter_enabled = False
+    DEBUG_MODE = False
 
     if len(sys.argv) >= 2:
         file_path = sys.argv[1]
@@ -788,16 +887,15 @@ if __name__ == "__main__":
                     DEBUG_MODE = True
                     interpreter.debug_interpreter(file_path)
                     DEBUG_MODE = False
+                    if cls_state == True:
+                        interpreter.variables.clear()
+                        interpreter.functions.clear()
         interpreter.interpret_file(file_path, *arguments)
         sys.exit()
 
     print("""Pryzma 5.0
 To show the license type "license" or "help" to get help.
     """)
-
-    cls_state = True
-    tkinter_enabled = False
-    DEBUG_MODE = False
 
     while True:
         code = input("/// ")
@@ -816,9 +914,9 @@ To show the license type "license" or "help" to get help.
             os.system('cls')
         elif code == "file":
             interpreter.interpret_file2()
-            interpreter.functions.clear()
             if cls_state == True:
                 interpreter.variables.clear()
+                interpreter.functions.clear()
         elif code == "license":
             interpreter.show_license()
         elif code == "debug":
@@ -826,6 +924,9 @@ To show the license type "license" or "help" to get help.
             file_path = input("Path to the file to debug: ")
             interpreter.debug_interpreter(file_path)
             DEBUG_MODE = False
+            if cls_state == True:
+                interpreter.variables.clear()
+                interpreter.functions.clear()
         else:
             interpreter.interpret(code)
             print("variables:", interpreter.variables, "\n")
