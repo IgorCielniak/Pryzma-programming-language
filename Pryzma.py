@@ -945,7 +945,8 @@ commands:
         func - execute a function from a file
         history - show the commands history
         history <number> - execute the command from the history by number
-        clearhistory - clear the commands history
+        history clear - clear the commands history
+        history <term> - search the commands history for a term
         cmd <command> - execute a command in the operating system shell
         exit - exit the interpreter
         help - show this help
@@ -1183,16 +1184,29 @@ To show the license type "license" or "help" to get help.
         elif code == "func":
             interpreter.execute_function_from_file()
         elif code.startswith("history"):
-            code = code.split()
-            if len(code) == 1 and code[0] == "history":
-                commands = 0
-                for command in history:
-                    print(f"{commands+1}.{history[commands]}")
-                    commands += 1
-            elif code[1] == "clear":
+            code_parts = code.split()
+            if len(code_parts) == 1:
+                for index, command in enumerate(history, start=1):
+                    print(f"{index}. {command}")
+            elif len(code_parts) == 2 and code_parts[1].isnumeric():
+                command_index = int(code_parts[1]) - 1
+                if 0 <= command_index < len(history):
+                    interpreter.interpret(history[command_index])
+                else:
+                    print("Invalid history index.")
+            elif len(code_parts) == 2 and code_parts[1] == "clear":
                 history.clear()
-            elif code[1].isnumeric():
-                interpreter.interpret(history[int(code[1])-1])
+            elif len(code_parts) == 2:
+                search_term = code_parts[1]
+                print(f"Searching for '{search_term}' in history:")
+                found_commands = [cmd for cmd in history if search_term in cmd]
+                if found_commands:
+                    for index, command in enumerate(found_commands, start=1):
+                        print(f"{index}. {command}")
+                else:
+                    print("No commands found matching the search term.")
+            else:
+                print("Invalid command. Usage: history [search_term | index | clear]")
         elif code.startswith("cmd"):
             code = code[len("cmd"):].strip()
             if code:
