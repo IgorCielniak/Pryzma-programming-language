@@ -2,6 +2,7 @@ import re
 import sys
 import os
 import importlib.util
+import datetime
 
 class PryzmaInterpreter:
     
@@ -541,6 +542,8 @@ class PryzmaInterpreter:
             else:
                 print(f"Variable '{expression}' is not defined.")
                 return None
+        elif expression == "timenow":
+            return datetime.datetime.now()
         elif re.match(r"^\d+$", expression):
             return int(expression)
         elif re.match(r'^".*"$', expression):
