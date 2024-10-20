@@ -606,7 +606,7 @@ class PryzmaInterpreter:
         elif '/' in file_path or '\\' in file_path:
             self.load_functions_from_file(file_path)
         else:
-            file_path = f"C:/packages/{file_path}/{file_path}.pryzma"
+            file_path = f"{PackageManager.user_packages_path}/{file_path}/{file_path}.pryzma"
             self.load_functions_from_file(file_path)
 
     def load_functions_from_file(self, file_path):
@@ -740,12 +740,10 @@ limitations under the License.
                 print(f"{cmd}: {desc}")
 
         def log_message(message):
-            """Logs a message to the log file if logging is enabled."""
             if log_file:
                 with open(log_file, 'a') as f:
                     f.write(message + '\n')
 
-        # Initial prompt before executing any line
         print("Debugger started. Type 'help' for a list of commands.")
         log_message("Debugger started.")
 
@@ -796,16 +794,13 @@ limitations under the License.
             else:
                 print("Unknown command. Type 'help' for a list of commands.")
 
-        # Main debugging loop
         while current_line < len(lines):
             line = lines[current_line].strip()
 
-            # Check if the current line is a breakpoint
             if current_line in breakpoints:
                 print(f"Breakpoint hit at line {current_line + 1}.")
                 log_message(f"Breakpoint hit at line {current_line + 1}.")
             
-            # Execute the current line if it's not empty or a comment
             if not line.startswith("#") and line != "":
                 print(f"Debug: Executing line {current_line + 1}: {line}")
                 log_message(f"Executing line {current_line + 1}: {line}")
@@ -817,16 +812,13 @@ limitations under the License.
                     print(error_message)
                     log_message(error_message)
 
-                # Show variables and functions after each line
                 print("Variables:", interpreter.variables)
                 print("Functions:", interpreter.functions)
                 log_message(f"Variables: {interpreter.variables}")
                 log_message(f"Functions: {interpreter.functions}")
 
-            # Increment the line number
             current_line += 1
 
-            # Prompt for the next action
             while True:
                 command = input("Debugger> ").strip()
 
@@ -962,7 +954,7 @@ commands:
 
 
 class PackageManager:
-    user_packages_path = "C:/packages"
+    user_packages_path = os.path.dirname(sys.argv[0]) + "/packages/"
     package_urls = {
         "math": "https://github.com/IgorCielniak/Pryzma-packages/archive/refs/heads/math.zip",
         "std": "https://github.com/IgorCielniak/Pryzma-packages/archive/refs/heads/std.zip"
@@ -1079,7 +1071,7 @@ class PackageManager:
         print(help_text)
 
     def shell_mode(self):
-        print("Entering shell mode. Type ' exit' to quit.")
+        print("Entering shell mode. Type 'exit' to quit.")
         while True:
             user_input = input("> ").split()
             if user_input[0] == "exit":
@@ -1095,18 +1087,18 @@ class PackageManager:
                     self.add_package(PackageManager,user_input[1], user_input[2], user_input[3:])
             elif user_input[0] == "remove":
                 self.remove_package(PackageManager,user_input[1])
-                self.delete_prefix(PackageManager,"C:/packages/")
+                self.delete_prefix(PackageManager,self.user_packages_path)
             elif user_input[0] == "list":
                 self.list_packages(PackageManager)
             elif user_input[0] == "install":
                 self.install_package(PackageManager,user_input[1])
-                self.delete_prefix(PackageManager,"C:/packages/")
+                self.delete_prefix(PackageManager,self.user_packages_path)
             elif user_input[0] == "update":
                 if len(user_input) > 1:
                     self.update_package(PackageManager,user_input[1])
                 else:
                     self.update_package(PackageManager)
-                self.delete_prefix(PackageManager,"C:/packages/")
+                self.delete_prefix(PackageManager,self.user_packages_path)
             else:
                 print("Unknown command. Type 'exit' to quit.")
 
