@@ -381,6 +381,21 @@ python Pryzma.py file_path d df
 two variables will be created and accessible from code, in this example parg0 that will be 'd' and parg1 that will be 'df',
 you can pass as many arguments as you wish
 
+Calling python functions from Pryzma:
+
+call(file_path,func_name)
+
+for example:
+
+call("C:\Users\User\Desktop\test2.py", "func2")
+
+and file "C:\Users\User\Desktop\test2.py" content being:
+
+def func2():
+	print("hello from python")
+
+it will print "hello from python"
+
 Examples:
 
 Example 1: Simple Arithmetic
