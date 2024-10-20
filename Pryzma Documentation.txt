@@ -396,6 +396,18 @@ def func2():
 
 it will print "hello from python"
 
+Time:
+
+you can do some time operations like that:
+
+start_time = timenow
+# ... some code or processing ...
+end_time = timenow
+time = end_time - start_time
+print time
+
+and it will print how much time it took to execute the code, timenow returns the current time.
+
 Examples:
 
 Example 1: Simple Arithmetic
