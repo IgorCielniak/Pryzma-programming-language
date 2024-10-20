@@ -583,62 +583,19 @@ class PryzmaInterpreter:
 
     def import_functions(self, file_path):
         file_path = file_path.strip('"')
+        
         if file_path.startswith("./"):
             current_directory = os.path.dirname(self.file_path)
             absolute_file_path = os.path.join(current_directory, file_path[2:])
-            with open(absolute_file_path, 'r') as file:
-                program = file.read()
-                lines = program.split('\n')
-                function_def = False
-                function_name = ""
-                function_body = []
-                for line in lines:
-                    line = line.strip()
-                    if line.startswith("/"):
-                        if function_def:
-                            self.define_function(function_name, function_body)
-                            function_def = False
-                        function_definition = line[1:].split("{")
-                        if len(function_definition) == 2:
-                            function_name = function_definition[0].strip()
-                            function_body = function_definition[1].strip().rstrip("}").split("|")
-                            function_def = True
-                        else:
-                            print(f"Invalid function definition: {line}")
-                    elif line.startswith("") or line.startswith("#"):
-                        continue
-                    else:
-                        print(f"Invalid statement in imported file: {line}")
-                if function_def:
-                    self.define_function(function_name, function_body)
-        elif "/" in file_path:
-            with open(file_path, 'r') as file:
-                program = file.read()
-                lines = program.split('\n')
-                function_def = False
-                function_name = ""
-                function_body = []
-                for line in lines:
-                    line = line.strip()
-                    if line.startswith("/"):
-                        if function_def:
-                            self.define_function(function_name, function_body)
-                            function_def = False
-                        function_definition = line[1:].split("{")
-                        if len(function_definition) == 2:
-                            function_name = function_definition[0].strip()
-                            function_body = function_definition[1].strip().rstrip("}").split("|")
-                            function_def = True
-                        else:
-                            print(f"Invalid function definition: {line}")
-                    elif line.startswith("") or line.startswith("#"):
-                        continue
-                    else:
-                        print(f"Invalid statement in imported file: {line}")
-                if function_def:
-                    self.define_function(function_name, function_body)
+            self._load_functions_from_file(absolute_file_path)
+        elif '/' in file_path or '\\' in file_path:
+            self._load_functions_from_file(file_path)
         else:
             file_path = f"C:/packages/{file_path}/{file_path}.pryzma"
+            self._load_functions_from_file(file_path)
+
+    def _load_functions_from_file(self, file_path):
+        try:
             with open(file_path, 'r') as file:
                 program = file.read()
                 lines = program.split('\n')
@@ -664,6 +621,8 @@ class PryzmaInterpreter:
                         print(f"Invalid statement in imported file: {line}")
                 if function_def:
                     self.define_function(function_name, function_body)
+        except FileNotFoundError:
+            print(f"File '{file_path}' not found.")
 
     def get_input(self, prompt):
         if sys.stdin.isatty():
@@ -746,7 +705,6 @@ commands:
         current_line = 0
         breakpoints = set()
         
-        # Load the file and check if it exists
         try:
             with open(file_path, 'r') as file:
                 lines = file.readlines()
@@ -754,7 +712,6 @@ commands:
             print(f"File '{file_path}' not found.")
             return
         
-        # Command list for user guidance
         commands_info = {
             's': 'Step to the next line',
             'c': 'Continue to the next breakpoint',
@@ -767,51 +724,39 @@ commands:
             'help': 'Show this help message'
         }
 
-        # Function to print help commands
         def print_help():
             print("Available commands:")
             for cmd, desc in commands_info.items():
                 print(f"{cmd}: {desc}")
 
-        # Debugging loop
         while current_line < len(lines):
             line = lines[current_line].strip()
             
-            # Skip comments and empty lines
             if line.startswith("#") or line == "":
                 current_line += 1
                 continue
 
-            # Print the current line for debugging
             print(f"Debug: Executing line {current_line + 1}: {line}")
             
-            # Execute the line using the interpreter
             try:
                 interpreter.interpret(line)
             except Exception as e:
                 print(f"Error executing line {current_line + 1}: {e}")
             
-            # Show variables and functions after each line
             print("Variables:", interpreter.variables)
             print("Functions:", interpreter.functions)
             
-            # Increment the line number
             current_line += 1
 
-            # Check if the current line is a breakpoint
             if current_line in breakpoints:
                 print(f"Breakpoint hit at line {current_line}.")
             
-            # Prompt for user input
             while True:
                 command = input("Debugger> ").strip()
                 
                 if command == 's':
-                    # Step to the next line
                     break
-                
                 elif command == 'c':
-                    # Continue to the next breakpoint
                     while current_line < len(lines) and current_line not in breakpoints:
                         line = lines[current_line].strip()
                         print(f"Debug: Executing line {current_line + 1}: {line}")
@@ -823,48 +768,44 @@ commands:
                         print("Functions:", interpreter.functions)
                         current_line += 1
                     break
-
                 elif command.startswith('b '):
-                    # Add a breakpoint
                     try:
                         line_num = int(command.split()[1])
                         breakpoints.add(line_num)
                         print(f"Breakpoint added at line {line_num}.")
                     except ValueError:
                         print("Invalid line number. Usage: b <line_number>")
-
                 elif command.startswith('r '):
-                    # Remove a breakpoint
                     try:
                         line_num = int(command.split()[1])
                         breakpoints.discard(line_num)
                         print(f"Breakpoint removed at line {line_num}.")
                     except ValueError:
                         print("Invalid line number. Usage: r <line_number>")
-                
                 elif command == 'l':
-                    # List all breakpoints
                     print("Breakpoints:", sorted(breakpoints))
-
                 elif command == 'v':
-                    # View variables
                     print("Variables:", interpreter.variables)
-
                 elif command == 'f':
-                    # View functions
                     print("Functions:", interpreter.functions)
-
                 elif command == 'exit':
-                    # Exit the debugger
                     print("Exiting debugger.")
                     return
-
                 elif command == 'help':
-                    # Display help message
                     print_help()
-
                 else:
                     print("Unknown command. Type 'help' for a list of commands.")
+
+
+    def execute_function_from_file(self):
+        file_path = input("Enter the file path of the function: ")
+        function_name = input("Enter the function name: ")
+        self.import_functions(file_path)
+        if function_name in self.functions:
+            for line in self.functions[function_name]:
+                self.interpret(line)
+        else:
+            print(f"Function '{function_name}' is not defined in '{file_path}'.")
 
 
 
@@ -927,6 +868,8 @@ To show the license type "license" or "help" to get help.
             if cls_state == True:
                 interpreter.variables.clear()
                 interpreter.functions.clear()
+        elif code == "func":
+            interpreter.execute_function_from_file()
         else:
             interpreter.interpret(code)
             print("variables:", interpreter.variables, "\n")
