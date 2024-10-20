@@ -1012,12 +1012,13 @@ To show the license type "license" or "help" to get help.
             interpreter.show_license()
         elif code == "debug":
             DEBUG_MODE = True
-            file_path = input("Path to the file to debug: ")
-            interpreter.debug_interpreter(file_path)
-            DEBUG_MODE = False
-            if cls_state == True:
-                interpreter.variables.clear()
-                interpreter.functions.clear()
+            file_path = input("Path to the file to debug ('exit' to exit the debug mode): ")
+            if file_path != "exit":
+                interpreter.debug_interpreter(file_path)
+                DEBUG_MODE = False
+                if cls_state == True:
+                    interpreter.variables.clear()
+                    interpreter.functions.clear()
         elif code == "func":
             interpreter.execute_function_from_file()
         elif code.startswith("history"):
