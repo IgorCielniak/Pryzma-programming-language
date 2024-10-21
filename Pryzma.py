@@ -1040,6 +1040,9 @@ class PackageManager:
         with open(os.path.join(package_dir, "metadata.json"), "w") as metadata_file:
             json.dump(package_metadata, metadata_file)
         for file in package_files:
+            if file.startswith('"') and file.endswith('"'):
+                file = file[1:-1]
+            file = file.replace("/","\\")
             with open(os.path.join(package_dir, file), "w") as f:
                 pass
         print("Package", package_name, "added successfully.")
@@ -1079,25 +1082,6 @@ class PackageManager:
             for package in packages:
                 self.install_package(PackageManager,package)
 
-    def prompt_download_dependencies(self, dependencies):
-        print("This package has the following dependencies:")
-        for dependency in dependencies:
-            print("-", dependency)
-        response = input("Do you want to download these dependencies? (yes/no): ").lower()
-        if response == "yes":
-            for dependency in dependencies:
-                self.install_package(PackageManager,dependency)
-        else:
-            print("Dependencies not downloaded.")
-
-    def get_package_index_url(self, package_name):
-        package_url = self.package_urls.get(package_name)
-        if package_url:
-            return package_url
-        else:
-            print("Failed to determine package index URL for package", package_name)
-            return None
-        
     def delete_prefix(self, directory_path):
         if not os.path.exists(directory_path):
             return
@@ -1302,8 +1286,7 @@ To show the license type "license" or "help" to get help.
                 else:
                     print("No command specified.")
         elif code == "ppm":
-            if not os.path.exists(PackageManager.user_packages_path):
-                os.makedirs(PackageManager.user_packages_path)
+            PackageManager.initialize_repository(PackageManager)
             PackageManager.shell_mode(PackageManager)
         elif code == "info":
             PryzmaInterpreter.display_system_info()
