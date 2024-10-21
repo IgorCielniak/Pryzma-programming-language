@@ -7,6 +7,7 @@ import json
 import urllib.request
 import shutil
 import zipfile
+import platform
 
 class PryzmaInterpreter:
     
@@ -949,10 +950,32 @@ commands:
         history <term> - search the commands history for a term
         cmd <command> - execute a command in the operating system shell
         cmd - start the operating system shell
+        info - show the interpreter version along some system information
         exit - exit the interpreter
         help - show this help
         license - show the license
 """)
+
+
+    def display_system_info():
+        current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        
+        os_info = platform.system() + " " + platform.release()
+        
+        cpu_info = platform.processor()
+        
+        machine_arch = platform.machine()
+        if machine_arch in ['x86_64', 'AMD64']:
+            arch_info = '64-bit'
+        elif machine_arch in ['i386', 'i686']:
+            arch_info = '32-bit'
+        else:
+            arch_info = 'Unknown'
+
+        print(f"Pryzma {version}")
+        print(f"Current Date and Time: {current_time}")
+        print(f"Operating System: {os_info} {arch_info} ({machine_arch})")
+        print(f"Processor: {cpu_info}")
 
 
 class PackageManager:
@@ -1245,8 +1268,8 @@ To show the license type "license" or "help" to get help.
             if not os.path.exists(PackageManager.user_packages_path):
                 os.makedirs(PackageManager.user_packages_path)
             PackageManager.shell_mode(PackageManager)
-        elif code == "version":
-            print(version)
+        elif code == "info":
+            PryzmaInterpreter.display_system_info()
         else:
             interpreter.interpret(code)
             print("variables:", interpreter.variables, "\n")
