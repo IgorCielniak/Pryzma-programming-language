@@ -385,8 +385,8 @@ class PryzmaInterpreter:
                         print("tkinter isn't enabled")
                 elif line.startswith("call"):
                     call_statement = line[len("call"):].strip()
-                    file_name, function_name = self.parse_call_statement(call_statement)
-                    self.call_function_from_file(file_name, function_name)
+                    file_name, function_name, args = self.parse_call_statement(call_statement)
+                    self.call_function_from_file(file_name, function_name, args)
                 elif line == "stop":
                     input("Press any key to continue...")
                     break
@@ -889,18 +889,26 @@ limitations under the License.
     def parse_call_statement(self, statement):
         if statement.startswith("(") and statement.endswith(")"):
             statement = statement[1:-1]
-            file_name, function_name = statement.split(",")
-            file_name = file_name.strip()
-            function_name = function_name.strip()
+            parts = [part.strip() for part in statement.split(",")]
+            
+            if len(parts) < 2:
+                raise ValueError("Invalid call statement format. Expected format: call(file_name, function_name, arg1, arg2, ...)")
+            
+            file_name = parts[0]
+            function_name = parts[1]
+            
+            args = parts[2:]
+            
             if file_name.startswith('"') and file_name.endswith('"'):
                 file_name = file_name[1:-1]
             if function_name.startswith('"') and function_name.endswith('"'):
                 function_name = function_name[1:-1]
-            return file_name.strip(), function_name.strip()
+            
+            return file_name, function_name, args
         else:
-            raise ValueError("Invalid call statement format. Expected format: call(file_name, function_name)")
+            raise ValueError("Invalid call statement format. Expected format: call(file_name, function_name, arg1, arg2, ...)")
 
-    def call_function_from_file(self, file_name, function_name):
+    def call_function_from_file(self, file_name, function_name, args):
         if not os.path.isfile(file_name):
             print(f"File '{file_name}' does not exist.")
             return
@@ -922,7 +930,17 @@ limitations under the License.
         if hasattr(module, function_name):
             func = getattr(module, function_name)
             if callable(func):
-                func()
+                converted_args = []
+                for arg in args:
+                    if arg.startswith('"') and arg.endswith('"'):
+                        converted_args.append(arg[1:-1])
+                    elif arg.isdigit():
+                        converted_args.append(int(arg))
+                    elif arg in self.variables:
+                        converted_args.append(self.variables[arg])
+                    else:
+                        converted_args.append(arg)
+                func(*converted_args)
             else:
                 print(f"'{function_name}' is not callable in '{file_name}'.")
         else:
