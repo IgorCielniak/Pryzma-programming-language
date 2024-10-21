@@ -140,6 +140,16 @@ f = ","
 b = splitby(f, a)
 print(b)
 
+Replace:
+
+a = "ddd"
+
+replace(a,"d","f")
+
+print a
+
+output will be "fff" I think it is self explanatory
+
 Output will be:
 
 ['text', 'text']
@@ -370,7 +380,7 @@ del(a)
 
 print a
 
-it will print text and then it will give error that will  say that variable a doesn't exist
+it will print text and then it will give error that will say that variable a doesn't exist
 
 
 Cli arguments:
