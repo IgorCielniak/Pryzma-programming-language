@@ -387,12 +387,12 @@ call(file_path,func_name)
 
 for example:
 
-call("C:\Users\User\Desktop\test2.py", "func2")
+call("C:\Users\User\Desktop\test2.py", "func2", "hello from python")
 
 and file "C:\Users\User\Desktop\test2.py" content being:
 
-def func2():
-	print("hello from python")
+def func2(arg):
+	print(arg)
 
 it will print "hello from python"
 
