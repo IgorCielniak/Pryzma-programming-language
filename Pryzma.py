@@ -1178,6 +1178,8 @@ class PackageManager:
                 else:
                     for package_name in os.listdir(self.user_packages_path):
                         print(package_name,self.get_package_version(PackageManager,package_name))
+            elif user_input[0] == "clear":
+                os.system('cls')
             else:
                 print("Unknown command. Type 'exit' to quit.")
 
@@ -1202,7 +1204,7 @@ if __name__ == "__main__":
 
     cls_state = True
     tkinter_enabled = False
-    DEBUG_MODE = False
+    debug_mode = False
     history = []
     running_from_file = False
     version = 5.2
@@ -1213,9 +1215,9 @@ if __name__ == "__main__":
         for arg in arguments:
             if arg.startswith("-"):
                 if arg == "-d":
-                    DEBUG_MODE = True
+                    debug_mode = True
                     interpreter.debug_interpreter(file_path)
-                    DEBUG_MODE = False
+                    debug_mode = False
                     if cls_state == True:
                         interpreter.variables.clear()
                         interpreter.functions.clear()
@@ -1252,11 +1254,11 @@ To show the license type "license" or "help" to get help.
         elif code == "license":
             interpreter.show_license()
         elif code == "debug":
-            DEBUG_MODE = True
-            file_path = input("Path to the file to debug ('exit' to exit the debug mode): ")
+            debug_mode = True
+            file_path = input("Path to the file to debug ('exit' to quit debug mode): ")
             if file_path != "exit":
                 interpreter.debug_interpreter(file_path)
-                DEBUG_MODE = False
+                debug_mode = False
                 if cls_state == True:
                     interpreter.variables.clear()
                     interpreter.functions.clear()
