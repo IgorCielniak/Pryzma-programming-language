@@ -1058,6 +1058,17 @@ class PackageManager:
                     
                     os.rename(full_path, new_full_path)
 
+    def get_package_version(self, package_name):
+        package_dir = os.path.join(self.user_packages_path, package_name)
+        metadata_path = os.path.join(package_dir, "metadata.json")
+        
+        if os.path.exists(metadata_path):
+            with open(metadata_path, "r") as metadata_file:
+                metadata = json.load(metadata_file)
+                return metadata.get("version", "Version not specified.")
+        else:
+            return "Package not found."
+
     def display_help(self):
         help_text = """
         Available commands:
@@ -1066,7 +1077,9 @@ class PackageManager:
         - remove <package_name>: Remove a package from the repository.
         - list: List all installed packages.
         - install <package_name>: Install a package from the repository.
-        - update [package_name]: Update a specific package or all packages if no name is provided.
+        - update <package_name>: Update a specific package or all packages if no name is provided.
+        - version: Display the version of all installed Pryzma packages.
+        - version <package_name>: Display the version of a specific package.
         - help: Show this help message.
         - exit: Exit the Pryzma package manager.
         """
@@ -1101,6 +1114,12 @@ class PackageManager:
                 else:
                     self.update_package(PackageManager)
                 self.delete_prefix(PackageManager,self.user_packages_path)
+            elif user_input[0] == "version":
+                if len(user_input) > 1:
+                    print(self.get_package_version(PackageManager,user_input[1]))
+                else:
+                    for package_name in os.listdir(self.user_packages_path):
+                        print(package_name,self.get_package_version(PackageManager,package_name))
             else:
                 print("Unknown command. Type 'exit' to quit.")
 
