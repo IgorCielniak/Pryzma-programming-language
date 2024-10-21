@@ -1020,33 +1020,6 @@ class PackageManager:
         "std": "https://github.com/IgorCielniak/Pryzma-packages/archive/refs/heads/std.zip"
     }
 
-    def initialize_repository(self):
-        if not os.path.exists(self.user_packages_path):
-            os.makedirs(self.user_packages_path)
-            print("Repository initialized at:", self.user_packages_path)
-        else:
-            print("Repository already exists at:", self.user_packages_path)
-
-    def add_package(self, package_name, package_version, package_files):
-        package_dir = os.path.join(self.user_packages_path, package_name)
-        package_metadata = {
-            "name": package_name,
-            "version": package_version,
-            "files": package_files
-        }
-
-        if not os.path.exists(package_dir):
-            os.makedirs(package_dir)
-        with open(os.path.join(package_dir, "metadata.json"), "w") as metadata_file:
-            json.dump(package_metadata, metadata_file)
-        for file in package_files:
-            if file.startswith('"') and file.endswith('"'):
-                file = file[1:-1]
-            file = file.replace("/","\\")
-            with open(os.path.join(package_dir, file), "w") as f:
-                pass
-        print("Package", package_name, "added successfully.")
-
     def remove_package(self, package_name):
         package_dir = os.path.join(self.user_packages_path, package_name)
         if os.path.exists(package_dir):
@@ -1114,8 +1087,6 @@ class PackageManager:
     def display_help(self):
         help_text = """
         Available commands:
-        - init: Initialize the package repository.
-        - add <package_name> <package_version> <file1> <file2> ...: Add a new package with specified files.
         - remove <package_name>: Remove a package from the repository.
         - list: List all installed packages.
         - install <package_name>: Install a package from the repository.
@@ -1135,13 +1106,6 @@ class PackageManager:
                 break
             elif user_input[0] == "help":
                 self.display_help(PackageManager)
-            elif user_input[0] == "init":
-                self.initialize_repository(PackageManager)
-            elif user_input[0] == "add":
-                if len(user_input) < 4:
-                    print("Error: You need to specify package version and files.")
-                else:
-                    self.add_package(PackageManager,user_input[1], user_input[2], user_input[3:])
             elif user_input[0] == "remove":
                 self.remove_package(PackageManager,user_input[1])
                 self.delete_prefix(PackageManager,self.user_packages_path)
@@ -1286,7 +1250,8 @@ To show the license type "license" or "help" to get help.
                 else:
                     print("No command specified.")
         elif code == "ppm":
-            PackageManager.initialize_repository(PackageManager)
+            if not os.path.exists(PackageManager.user_packages_path):
+                os.makedirs(PackageManager.user_packages_path)
             PackageManager.shell_mode(PackageManager)
         elif code == "info":
             PryzmaInterpreter.display_system_info()
