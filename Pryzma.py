@@ -1086,7 +1086,7 @@ class PackageManager:
         print(help_text)
 
     def shell_mode(self):
-        print("Entering shell mode. Type 'exit' to quit.")
+        print("ppm shell. Type 'exit' to quit.")
         while True:
             user_input = input("> ").split()
             if user_input[0] == "exit":
@@ -1147,6 +1147,7 @@ if __name__ == "__main__":
     DEBUG_MODE = False
     history = []
     running_from_file = False
+    version = 5.2
 
     if len(sys.argv) >= 2:
         file_path = sys.argv[1]
@@ -1163,7 +1164,7 @@ if __name__ == "__main__":
         interpreter.interpret_file(file_path, *arguments)
         sys.exit()
 
-    print("""Pryzma 5.2
+    print(f"""Pryzma {version}
 To show the license type "license" or "help" to get help.
     """)
 
@@ -1230,7 +1231,7 @@ To show the license type "license" or "help" to get help.
         elif code.startswith("cmd"):
             if code == "cmd":
                 while True:
-                    command = input("Command ('exit' to exit): ")
+                    command = input("Command ('exit' to quit): ")
                     if command == "exit":
                         break
                     os.system(command)
@@ -1244,6 +1245,8 @@ To show the license type "license" or "help" to get help.
             if not os.path.exists(PackageManager.user_packages_path):
                 os.makedirs(PackageManager.user_packages_path)
             PackageManager.shell_mode(PackageManager)
+        elif code == "version":
+            print(version)
         else:
             interpreter.interpret(code)
             print("variables:", interpreter.variables, "\n")
