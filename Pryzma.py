@@ -387,6 +387,21 @@ class PryzmaInterpreter:
                     call_statement = line[len("call"):].strip()
                     file_name, function_name, args = self.parse_call_statement(call_statement)
                     self.call_function_from_file(file_name, function_name, args)
+                elif line.startswith("replace(") and line.endswith(")"):
+                    args = line[8:-1].split(",")
+                    if len(args) != 3:
+                        print("Invalid number of arguments for replace function.")
+                    string = self.variables[args[0]]
+                    if args[1].startswith('"') and args[1].endswith('"'):
+                        old = args[1][1:-1]
+                    else:
+                        old = self.variables[args[1]]
+                    if args[2].startswith('"') and args[2].endswith('"'):
+                        new= args[2][1:-1]
+                    else:
+                        new = self.variables[args[2]]
+                    string = string.replace(old,new)
+                    self.variables[args[0]] = string
                 elif line == "stop":
                     input("Press any key to continue...")
                     break
@@ -715,6 +730,8 @@ limitations under the License.
         breakpoints = set()
         log_file = None
 
+        if file_path.startswith('"') and file_path.endswith('"'):
+            file_path = file_path[1:-1]
         try:
             with open(file_path, 'r') as file:
                 lines = file.readlines()
