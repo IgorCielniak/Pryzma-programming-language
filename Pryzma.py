@@ -4,10 +4,11 @@ import os
 import importlib.util
 import datetime
 import json
-import urllib.request
 import shutil
 import zipfile
 import platform
+import requests
+
 
 class PryzmaInterpreter:
     
@@ -1015,10 +1016,7 @@ commands:
 
 class PackageManager:
     user_packages_path = os.path.dirname(sys.argv[0]) + "/packages/"
-    package_urls = {
-        "math": "https://github.com/IgorCielniak/Pryzma-packages/archive/refs/heads/math.zip",
-        "std": "https://github.com/IgorCielniak/Pryzma-packages/archive/refs/heads/std.zip"
-    }
+    package_api_url = "http://igorcielniak.pythonanywhere.com/api/download"
 
     def remove_package(self, package_name):
         package_dir = os.path.join(self.user_packages_path, package_name)
@@ -1034,18 +1032,27 @@ class PackageManager:
         for package in packages:
             print("-", package)
 
+
     def install_package(self, package_name):
-        package_url = self.package_urls.get(package_name)
-        if package_url:
-            print("Downloading package:", package_name)
-            package_file_path = os.path.join(self.user_packages_path, package_name + ".zip")
-            urllib.request.urlretrieve(package_url, package_file_path)
+        package_url = f"{self.package_api_url}/{package_name}"
+        response = requests.get(package_url)
+
+        if response.status_code == 200:
+            package_dir = os.path.join(self.user_packages_path, package_name)
+            os.makedirs(package_dir, exist_ok=True)
+
+            package_file_path = os.path.join(package_dir, f"{package_name}.zip")
+            with open(package_file_path, 'wb') as file:
+                file.write(response.content)
+            
             with zipfile.ZipFile(package_file_path, 'r') as zip_ref:
-                zip_ref.extractall(self.user_packages_path)
+                zip_ref.extractall(package_dir)
+
             os.remove(package_file_path)
             print("Package", package_name, "downloaded and installed successfully.")
         else:
             print("Package", package_name, "not found in the repository.")
+
 
     def update_package(self, package_name=None):
         if package_name:
@@ -1054,24 +1061,6 @@ class PackageManager:
             packages = os.listdir(self.user_packages_path)
             for package in packages:
                 self.install_package(PackageManager,package)
-
-    def delete_prefix(self, directory_path):
-        if not os.path.exists(directory_path):
-            return
-        
-        directories = os.listdir(directory_path)
-        
-        for dir_name in directories:
-            if dir_name.startswith("Pryzma-packages-"):
-                full_path = os.path.join(directory_path, dir_name)
-                new_name = dir_name[16:]
-                new_full_path = os.path.join(directory_path, new_name)
-                
-                if os.path.isdir(full_path):
-                    if os.path.exists(new_full_path):
-                        shutil.rmtree(new_full_path)
-                    
-                    os.rename(full_path, new_full_path)
 
     def get_package_version(self, package_name):
         package_dir = os.path.join(self.user_packages_path, package_name)
@@ -1107,29 +1096,33 @@ class PackageManager:
             elif user_input[0] == "help":
                 self.display_help(PackageManager)
             elif user_input[0] == "remove":
-                self.remove_package(PackageManager,user_input[1])
-                self.delete_prefix(PackageManager,self.user_packages_path)
+                if len(user_input) > 1:
+                    self.remove_package(PackageManager,user_input[1])
+                else:
+                    print("Please provide a package name.")
             elif user_input[0] == "list":
                 self.list_packages(PackageManager)
             elif user_input[0] == "install":
-                self.install_package(PackageManager,user_input[1])
-                self.delete_prefix(PackageManager,self.user_packages_path)
+                if len(user_input) > 1:
+                    self.install_package(PackageManager,user_input[1])
+                else:
+                    print("Please provide a package name.")
             elif user_input[0] == "update":
                 if len(user_input) > 1:
                     self.update_package(PackageManager,user_input[1])
                 else:
                     self.update_package(PackageManager)
-                self.delete_prefix(PackageManager,self.user_packages_path)
             elif user_input[0] == "version":
                 if len(user_input) > 1:
                     print(self.get_package_version(PackageManager,user_input[1]))
                 else:
                     for package_name in os.listdir(self.user_packages_path):
-                        print(package_name,self.get_package_version(PackageManager,package_name))
+                        print(package_name, self.get_package_version(PackageManager,package_name))
             elif user_input[0] == "clear":
-                os.system('cls')
+                os.system('cls' if os.name == 'nt' else 'clear')
             else:
                 print("Unknown command. Type 'exit' to quit.")
+
 
 
 
