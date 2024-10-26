@@ -974,11 +974,6 @@ limitations under the License.
             print(f"Function '{function_name}' is not defined in '{file_name}'.")
 
 
-
-
-
-
-
     def print_help(self):
         print("""
 commands:
@@ -996,6 +991,8 @@ commands:
         cmd <command> - execute a command in the operating system shell
         cmd - start the operating system shell
         info - show the interpreter version along with some other information
+        ppm - lunch the  Pryzma Package Manager
+        ppm <command> - execute a Pryzma package manager command
         exit - exit the interpreter
         help - show this help
         license - show the license
@@ -1252,6 +1249,42 @@ To show the license type "license" or "help" to get help.
                     os.system(code)
                 else:
                     print("No command specified.")
+        elif code.startswith("ppm"):
+            if code == "ppm":
+                if not os.path.exists(PackageManager.user_packages_path):
+                    os.makedirs(PackageManager.user_packages_path)
+                PackageManager.shell_mode(PackageManager)
+            else:
+                code = code[len("ppm "):].strip()
+                if code:
+                    user_input = code.split()
+                    if user_input[0] == "help":
+                        PackageManager.display_help(PackageManager)
+                    elif user_input[0] == "remove":
+                        if len(user_input) > 1:
+                            PackageManager.remove_package(PackageManager,user_input[1])
+                        else:
+                            print("Please provide a package name.")
+                    elif user_input[0] == "list":
+                        PackageManager.list_packages(PackageManager)
+                    elif user_input[0] == "install":
+                        if len(user_input) > 1:
+                            PackageManager.install_package(PackageManager,user_input[1])
+                        else:
+                            print("Please provide a package name.")
+                    elif user_input[0] == "update":
+                        if len(user_input) > 1:
+                            PackageManager.update_package(PackageManager,user_input[1])
+                        else:
+                            PackageManager.update_package(PackageManager)
+                    elif user_input[0] == "version":
+                        if len(user_input) > 1:
+                            print(PackageManager.get_package_version(PackageManager,user_input[1]))
+                        else:
+                            for package_name in os.listdir(PackageManager.user_packages_path):
+                                print(package_name, PackageManager.get_package_version(PackageManager,package_name))
+                    else:
+                        print("No command specified.")
         elif code == "ppm":
             if not os.path.exists(PackageManager.user_packages_path):
                 os.makedirs(PackageManager.user_packages_path)
