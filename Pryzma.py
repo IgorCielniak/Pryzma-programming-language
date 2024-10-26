@@ -919,8 +919,17 @@ limitations under the License.
             
             if file_name.startswith('"') and file_name.endswith('"'):
                 file_name = file_name[1:-1]
+            else:
+                file_name = self.variables[file_name]
             if function_name.startswith('"') and function_name.endswith('"'):
                 function_name = function_name[1:-1]
+            else:
+                function_name = self.variables[function_name]
+            for arg in args:
+                if arg.startswith('"') and arg.endswith('"') and len(arg) > 2:
+                    arg = arg[1:-1]
+                else:
+                    arg = self.variables[arg]
             
             return file_name, function_name, args
         else:
