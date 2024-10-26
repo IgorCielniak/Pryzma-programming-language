@@ -995,7 +995,7 @@ commands:
         history <term> - search the commands history for a term
         cmd <command> - execute a command in the operating system shell
         cmd - start the operating system shell
-        info - show the interpreter version along some system information
+        info - show the interpreter version along with some other information
         exit - exit the interpreter
         help - show this help
         license - show the license
