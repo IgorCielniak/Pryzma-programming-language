@@ -1068,16 +1068,20 @@ class PackageManager:
             for package in packages:
                 self.install_package(PackageManager,package)
 
-    def get_package_version(self, package_name):
+    def get_package_info(self, package_name):
         package_dir = os.path.join(self.user_packages_path, package_name)
         metadata_path = os.path.join(package_dir, "metadata.json")
         
         if os.path.exists(metadata_path):
             with open(metadata_path, "r") as metadata_file:
                 metadata = json.load(metadata_file)
-                return metadata.get("version", "Version not specified.")
+                print(package_name, metadata.get("version", "Version not specified."))
+                print("Author:", metadata.get("author", "Author not specified."))
+                print("Description:", metadata.get("description", "Description not specified."))
+                print("License:", metadata.get("license", "License not specified."))
+                print()
         else:
-            return "Package not found."
+            print("Package not found.")
 
     def display_help(self):
         help_text = """
@@ -1087,8 +1091,7 @@ class PackageManager:
         - install <package_name>: Install a package from the repository.
         - update: Update all installed packages.
         - update <package_name>: Update a specific package or all packages if no name is provided.
-        - version: Display the version of all installed Pryzma packages.
-        - version <package_name>: Display the version of a specific package.
+        - show <package_name>:  Show information about a specific package or all packages if no name is provided.
         - help: Show this help message.
         - exit: Exit the Pryzma package manager.
         """
@@ -1119,12 +1122,12 @@ class PackageManager:
                     self.update_package(PackageManager,user_input[1])
                 else:
                     self.update_package(PackageManager)
-            elif user_input[0] == "version":
+            elif user_input[0] == "show":
                 if len(user_input) > 1:
-                    print(self.get_package_version(PackageManager,user_input[1]))
+                    self.get_package_info(PackageManager,user_input[1])
                 else:
                     for package_name in os.listdir(self.user_packages_path):
-                        print(package_name, self.get_package_version(PackageManager,package_name))
+                        self.get_package_info(PackageManager,package_name)
             elif user_input[0] == "clear":
                 os.system('cls' if os.name == 'nt' else 'clear')
             else:
@@ -1277,12 +1280,12 @@ To show the license type "license" or "help" to get help.
                             PackageManager.update_package(PackageManager,user_input[1])
                         else:
                             PackageManager.update_package(PackageManager)
-                    elif user_input[0] == "version":
+                    elif user_input[0] == "show":
                         if len(user_input) > 1:
-                            print(PackageManager.get_package_version(PackageManager,user_input[1]))
+                            PackageManager.get_package_info(PackageManager,user_input[1])
                         else:
                             for package_name in os.listdir(PackageManager.user_packages_path):
-                                print(package_name, PackageManager.get_package_version(PackageManager,package_name))
+                                PackageManager.get_package_info(PackageManager,package_name)
                     else:
                         print("No command specified.")
         elif code == "ppm":
