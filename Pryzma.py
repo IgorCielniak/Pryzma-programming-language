@@ -41,6 +41,9 @@ class PryzmaInterpreter:
             self.current_line += 1
             line = line.strip()
 
+            if "#" in line:
+                line = line.split("#")[0]
+            
             try:
                 if line.startswith("print"):
                     value = line[len("print"):].strip()
@@ -61,7 +64,7 @@ class PryzmaInterpreter:
                 elif line.startswith("ifs"):
                     condition_actions = line[len("ifs"):].split(",")
                     if len(condition_actions) != 3:
-                        print("Invalid if instruction. Expected format: ifs condition, value, action")
+                        print("Invalid ifs instruction. Expected format: ifs condition, value, action")
                         continue
                     condition = condition_actions[0].strip()
                     value = condition_actions[1].strip()
@@ -81,7 +84,7 @@ class PryzmaInterpreter:
                 elif line.startswith("ifb"):
                     condition_actions = line[len("ifb"):].split(",")
                     if len(condition_actions) != 3:
-                        print("Invalid if instruction. Expected format: ifb condition, value, action")
+                        print("Invalid ifb instruction. Expected format: ifb condition, value, action")
                         continue
                     condition = condition_actions[0].strip()
                     value = condition_actions[1].strip()
@@ -101,7 +104,7 @@ class PryzmaInterpreter:
                 elif line.startswith("ifn"):
                     condition_actions = line[len("ifn"):].split(",")
                     if len(condition_actions) != 3:
-                        print("Invalid if instruction. Expected format: ifn condition, value, action")
+                        print("Invalid ifn instruction. Expected format: ifn condition, value, action")
                         continue
                     condition = condition_actions[0].strip()
                     value = condition_actions[1].strip()
@@ -273,8 +276,8 @@ class PryzmaInterpreter:
                         print("Invalid swap instruction syntax. Expected format: swap(index 1, index 2, list name)")
                         continue
                     list_name = instructions[2].strip()
-                    index_1 = instructions[0].strip()
-                    index_2 = instructions[1].strip()
+                    index_1 = int(instructions[0].strip())
+                    index_2 = int(instructions[1].strip())
                     if index_1 in self.variables:
                         index_1 = self.variables[index_1]
                     if index_2 in self.variables:
