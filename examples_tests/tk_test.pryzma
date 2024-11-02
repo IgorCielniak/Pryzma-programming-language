@@ -1,3 +1,5 @@
+tk enable
+
 tk window(root)
 
 text = "sss"
