@@ -1144,7 +1144,122 @@ class PackageManager:
 
 
 
-
+def shell(code,cls_state):
+    history.append(code)
+    if code == "help":
+        interpreter.print_help()
+    elif code == "cls":
+        interpreter.variables.clear()
+    elif code == "clst":
+        interpreter.variables.clear()
+        cls_state = True
+    elif code == "clsf":
+        cls_state = False
+    elif code == "clear":
+        os.system('cls')
+    elif code == "file":
+        running_from_file = True
+        interpreter.interpret_file2()
+        if cls_state == True:
+            interpreter.variables.clear()
+            interpreter.functions.clear()
+        running_from_file = False
+    elif code == "license":
+        interpreter.show_license()
+    elif code == "debug":
+        debug_mode = True
+        file_path = input("Path to the file to debug ('exit' to quit debug mode): ")
+        if file_path != "exit":
+            interpreter.debug_interpreter(file_path)
+            debug_mode = False
+            if cls_state == True:
+                interpreter.variables.clear()
+                interpreter.functions.clear()
+    elif code == "func":
+        interpreter.execute_function_from_file()
+    elif code.startswith("history"):
+        code_parts = code.split()
+        if len(code_parts) == 1:
+            for index, command in enumerate(history, start=1):
+                print(f"{index}. {command}")
+        elif len(code_parts) == 2 and code_parts[1].isnumeric():
+            command_index = int(code_parts[1]) - 1
+            if 0 <= command_index < len(history):
+                shell(history[command_index],cls_state)
+            else:
+                print("Invalid history index.")
+        elif len(code_parts) == 2 and code_parts[1] == "clear":
+            history.clear()
+        elif len(code_parts) == 2:
+            search_term = code_parts[1]
+            print(f"Searching for '{search_term}' in history:")
+            found_commands = [cmd for cmd in history if search_term in cmd]
+            if found_commands:
+                for index, command in enumerate(found_commands, start=1):
+                    print(f"{index}. {command}")
+            else:
+                print("No commands found matching the search term.")
+        else:
+                print("Invalid command. Usage: history [search_term | index | clear]")
+    elif code.startswith("cmd"):
+        if code == "cmd":
+            while True:
+                command = input("Command ('exit' to quit): ")
+                if command == "exit":
+                    break
+                os.system(command)
+        else:
+            code = code[len("cmd"):].strip()
+            if code:
+                os.system(code)
+            else:
+                print("No command specified.")
+    elif code.startswith("ppm"):
+        if code == "ppm":
+            if not os.path.exists(PackageManager.user_packages_path):
+                os.makedirs(PackageManager.user_packages_path)
+            PackageManager.shell_mode(PackageManager)
+        else:
+            code = code[len("ppm "):].strip()
+            if code:
+                user_input = code.split()
+                if user_input[0] == "help":
+                    PackageManager.display_help(PackageManager)
+                elif user_input[0] == "remove":
+                    if len(user_input) > 1:
+                        PackageManager.remove_package(PackageManager,user_input[1])
+                    else:
+                        print("Please provide a package name.")
+                elif user_input[0] == "list":
+                    PackageManager.list_packages(PackageManager)
+                elif user_input[0] == "install":
+                    if len(user_input) > 1:
+                        PackageManager.install_package(PackageManager,user_input[1])
+                    else:
+                        print("Please provide a package name.")
+                elif user_input[0] == "update":
+                    if len(user_input) > 1:
+                        PackageManager.update_package(PackageManager,user_input[1])
+                    else:
+                        PackageManager.update_package(PackageManager)
+                elif user_input[0] == "show":
+                    if len(user_input) > 1:
+                        PackageManager.get_package_info(PackageManager,user_input[1])
+                    else:
+                        for package_name in os.listdir(PackageManager.user_packages_path):
+                            PackageManager.get_package_info(PackageManager,package_name)
+                else:
+                    print("No command specified.")
+    elif code == "ppm":
+        if not os.path.exists(PackageManager.user_packages_path):
+            os.makedirs(PackageManager.user_packages_path)
+        PackageManager.shell_mode(PackageManager)
+    elif code == "info":
+        PryzmaInterpreter.display_system_info()
+    else:
+        interpreter.interpret(code)
+        print("variables:", interpreter.variables, "\n")
+        print("functions:", interpreter.functions, "\n")
 
 
 
@@ -1184,120 +1299,6 @@ To show the license type "license" or "help" to get help.
 
     while True:
         code = input("/// ")
-        history.append(code)
         if code == "exit":
             break
-        if code == "help":
-            interpreter.print_help()
-        elif code == "cls":
-            interpreter.variables.clear()
-        elif code == "clst":
-            interpreter.variables.clear()
-            cls_state = True
-        elif code == "clsf":
-            cls_state = False
-        elif code == "clear":
-            os.system('cls')
-        elif code == "file":
-            running_from_file = True
-            interpreter.interpret_file2()
-            if cls_state == True:
-                interpreter.variables.clear()
-                interpreter.functions.clear()
-            running_from_file = False
-        elif code == "license":
-            interpreter.show_license()
-        elif code == "debug":
-            debug_mode = True
-            file_path = input("Path to the file to debug ('exit' to quit debug mode): ")
-            if file_path != "exit":
-                interpreter.debug_interpreter(file_path)
-                debug_mode = False
-                if cls_state == True:
-                    interpreter.variables.clear()
-                    interpreter.functions.clear()
-        elif code == "func":
-            interpreter.execute_function_from_file()
-        elif code.startswith("history"):
-            code_parts = code.split()
-            if len(code_parts) == 1:
-                for index, command in enumerate(history, start=1):
-                    print(f"{index}. {command}")
-            elif len(code_parts) == 2 and code_parts[1].isnumeric():
-                command_index = int(code_parts[1]) - 1
-                if 0 <= command_index < len(history):
-                    interpreter.interpret(history[command_index])
-                else:
-                    print("Invalid history index.")
-            elif len(code_parts) == 2 and code_parts[1] == "clear":
-                history.clear()
-            elif len(code_parts) == 2:
-                search_term = code_parts[1]
-                print(f"Searching for '{search_term}' in history:")
-                found_commands = [cmd for cmd in history if search_term in cmd]
-                if found_commands:
-                    for index, command in enumerate(found_commands, start=1):
-                        print(f"{index}. {command}")
-                else:
-                    print("No commands found matching the search term.")
-            else:
-                print("Invalid command. Usage: history [search_term | index | clear]")
-        elif code.startswith("cmd"):
-            if code == "cmd":
-                while True:
-                    command = input("Command ('exit' to quit): ")
-                    if command == "exit":
-                        break
-                    os.system(command)
-            else:
-                code = code[len("cmd"):].strip()
-                if code:
-                    os.system(code)
-                else:
-                    print("No command specified.")
-        elif code.startswith("ppm"):
-            if code == "ppm":
-                if not os.path.exists(PackageManager.user_packages_path):
-                    os.makedirs(PackageManager.user_packages_path)
-                PackageManager.shell_mode(PackageManager)
-            else:
-                code = code[len("ppm "):].strip()
-                if code:
-                    user_input = code.split()
-                    if user_input[0] == "help":
-                        PackageManager.display_help(PackageManager)
-                    elif user_input[0] == "remove":
-                        if len(user_input) > 1:
-                            PackageManager.remove_package(PackageManager,user_input[1])
-                        else:
-                            print("Please provide a package name.")
-                    elif user_input[0] == "list":
-                        PackageManager.list_packages(PackageManager)
-                    elif user_input[0] == "install":
-                        if len(user_input) > 1:
-                            PackageManager.install_package(PackageManager,user_input[1])
-                        else:
-                            print("Please provide a package name.")
-                    elif user_input[0] == "update":
-                        if len(user_input) > 1:
-                            PackageManager.update_package(PackageManager,user_input[1])
-                        else:
-                            PackageManager.update_package(PackageManager)
-                    elif user_input[0] == "show":
-                        if len(user_input) > 1:
-                            PackageManager.get_package_info(PackageManager,user_input[1])
-                        else:
-                            for package_name in os.listdir(PackageManager.user_packages_path):
-                                PackageManager.get_package_info(PackageManager,package_name)
-                    else:
-                        print("No command specified.")
-        elif code == "ppm":
-            if not os.path.exists(PackageManager.user_packages_path):
-                os.makedirs(PackageManager.user_packages_path)
-            PackageManager.shell_mode(PackageManager)
-        elif code == "info":
-            PryzmaInterpreter.display_system_info()
-        else:
-            interpreter.interpret(code)
-            print("variables:", interpreter.variables, "\n")
-            print("functions:", interpreter.functions, "\n")
+        shell(code,cls_state)
