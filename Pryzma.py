@@ -980,25 +980,25 @@ limitations under the License.
     def print_help(self):
         print("""
 commands:
-        file - run a program from a file
-        cls - clear the functions and variables dictionaries
-        clst - set clearing functions and variables dictionaries after program execution to true
-        clsf - set clearing functions and variables dictionaries after program execution to false
-        clear - clear the console
-        debug - start debugging mode
-        func - execute a function from a file
-        history - show the commands history
-        history <number> - execute the command from the history by number
-        history clear - clear the commands history
-        history <term> - search the commands history for a term
-        cmd <command> - execute a command in the operating system shell
-        cmd - start the operating system shell
-        info - show the interpreter version along with some other information
-        ppm - lunch the Pryzma Package Manager shell
-        ppm <command> - execute a Pryzma package manager command
-        exit - exit the interpreter
-        help - show this help
-        license - show the license
+    file - run a program from a file
+    cls - clear the functions and variables dictionaries
+    clst - set clearing functions and variables dictionaries after program execution to true
+    clsf - set clearing functions and variables dictionaries after program execution to false
+    clear - clear the console
+    debug - start debugging mode
+    func - execute a function from a file
+    history - show the commands history
+    history <number> - execute the command from the history by number
+    history clear - clear the commands history
+    history <term> - search the commands history for a term
+    cmd <command> - execute a command in the operating system shell
+    cmd - start the operating system shell
+    info - show the interpreter version along with some other information
+    ppm - lunch the Pryzma Package Manager shell
+    ppm <command> - execute a Pryzma package manager command
+    exit - exit the interpreter
+    help - show this help
+    license - show the license
 """)
 
 
@@ -1094,7 +1094,7 @@ class PackageManager:
         - install <package_name>: Install a package from the repository.
         - update: Update all installed packages.
         - update <package_name>: Update a specific package or all packages if no name is provided.
-        - show <package_name>:  Show information about a specific package or all packages if no name is provided.
+        - show <package_name>: Show information about a specific package or all packages if no name is provided.
         - help: Show this help message.
         - exit: Exit the Pryzma package manager.
         """
