@@ -994,7 +994,7 @@ commands:
         cmd <command> - execute a command in the operating system shell
         cmd - start the operating system shell
         info - show the interpreter version along with some other information
-        ppm - lunch the  Pryzma Package Manager shell
+        ppm - lunch the Pryzma Package Manager shell
         ppm <command> - execute a Pryzma package manager command
         exit - exit the interpreter
         help - show this help
