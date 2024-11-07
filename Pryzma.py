@@ -1024,7 +1024,7 @@ commands:
 
 
 class PackageManager:
-    user_packages_path = os.path.dirname(sys.argv[0]) + "/packages/"
+    user_packages_path = os.path.dirname(os.path.abspath(__file__)) + "/packages/"
     package_api_url = "http://igorcielniak.pythonanywhere.com/api/download"
 
     def remove_package(self, package_name):
