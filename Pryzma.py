@@ -1156,7 +1156,10 @@ def shell(code,cls_state):
     elif code == "clsf":
         cls_state = False
     elif code == "clear":
-        os.system('cls')
+        if os.name == "posix":
+            os.system('clear')
+        else:
+            os.system('cls')
     elif code == "file":
         running_from_file = True
         interpreter.interpret_file2()
