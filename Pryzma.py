@@ -1160,8 +1160,8 @@ def shell(code,cls_state):
         interpreter.print_help()
     elif code == "cls":
         interpreter.variables.clear()
+        interpreter.functions.clear()
     elif code == "clst":
-        interpreter.variables.clear()
         cls_state = True
     elif code == "clsf":
         cls_state = False
