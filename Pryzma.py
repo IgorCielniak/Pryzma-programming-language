@@ -1109,6 +1109,37 @@ class PackageManager:
         - exit: Exit the Pryzma package manager.
         """
         print(help_text)
+    
+    def execute_ppm_command(self,user_input):
+        if user_input[0] == "help":
+            self.display_help(PackageManager)
+        elif user_input[0] == "remove":
+            if len(user_input) > 1:
+                self.remove_package(PackageManager, user_input[1])
+            else:
+                print("Please provide a package name.")
+        elif user_input[0] == "list":
+            self.list_packages(PackageManager)
+        elif user_input[0] == "install":
+            if len(user_input) > 1:
+                self.install_package(PackageManager, user_input[1])
+            else:
+                print("Please provide a package name.")
+        elif user_input[0] == "update":
+            if len(user_input) > 1:
+                self.update_package(PackageManager, user_input[1])
+            else:
+                self.update_package(PackageManager)
+        elif user_input[0] == "show":
+            if len(user_input) > 1:
+                self.get_package_info(PackageManager, user_input[1])
+            else:
+                for package_name in os.listdir(self.user_packages_path):
+                    self.get_package_info(PackageManager, package_name)
+        elif user_input[0] == "clear":
+            os.system('cls' if os.name == 'nt' else 'clear')
+        else:
+            print("Unknown command. Type 'help' for available commands.")
 
     def shell_mode(self):
         print("ppm shell. Type 'exit' to quit.")
@@ -1116,35 +1147,8 @@ class PackageManager:
             user_input = input("> ").split()
             if user_input[0] == "exit":
                 break
-            elif user_input[0] == "help":
-                self.display_help(PackageManager)
-            elif user_input[0] == "remove":
-                if len(user_input) > 1:
-                    self.remove_package(PackageManager,user_input[1])
-                else:
-                    print("Please provide a package name.")
-            elif user_input[0] == "list":
-                self.list_packages(PackageManager)
-            elif user_input[0] == "install":
-                if len(user_input) > 1:
-                    self.install_package(PackageManager,user_input[1])
-                else:
-                    print("Please provide a package name.")
-            elif user_input[0] == "update":
-                if len(user_input) > 1:
-                    self.update_package(PackageManager,user_input[1])
-                else:
-                    self.update_package(PackageManager)
-            elif user_input[0] == "show":
-                if len(user_input) > 1:
-                    self.get_package_info(PackageManager,user_input[1])
-                else:
-                    for package_name in os.listdir(self.user_packages_path):
-                        self.get_package_info(PackageManager,package_name)
-            elif user_input[0] == "clear":
-                os.system('cls' if os.name == 'nt' else 'clear')
             else:
-                print("Unknown command. Type 'exit' to quit.")
+                self.execute_ppm_command(PackageManager, user_input)
 
 
 
@@ -1234,39 +1238,7 @@ def shell(code,cls_state):
             PackageManager.shell_mode(PackageManager)
         else:
             code = code[len("ppm "):].strip()
-            if code:
-                user_input = code.split()
-                if user_input[0] == "help":
-                    PackageManager.display_help(PackageManager)
-                elif user_input[0] == "remove":
-                    if len(user_input) > 1:
-                        PackageManager.remove_package(PackageManager,user_input[1])
-                    else:
-                        print("Please provide a package name.")
-                elif user_input[0] == "list":
-                    PackageManager.list_packages(PackageManager)
-                elif user_input[0] == "install":
-                    if len(user_input) > 1:
-                        PackageManager.install_package(PackageManager,user_input[1])
-                    else:
-                        print("Please provide a package name.")
-                elif user_input[0] == "update":
-                    if len(user_input) > 1:
-                        PackageManager.update_package(PackageManager,user_input[1])
-                    else:
-                        PackageManager.update_package(PackageManager)
-                elif user_input[0] == "show":
-                    if len(user_input) > 1:
-                        PackageManager.get_package_info(PackageManager,user_input[1])
-                    else:
-                        for package_name in os.listdir(PackageManager.user_packages_path):
-                            PackageManager.get_package_info(PackageManager,package_name)
-                else:
-                    print("No command specified.")
-    elif code == "ppm":
-        if not os.path.exists(PackageManager.user_packages_path):
-            os.makedirs(PackageManager.user_packages_path)
-        PackageManager.shell_mode(PackageManager)
+            PackageManager.execute_ppm_command(PackageManager, code.split())
     elif code == "info":
         PryzmaInterpreter.display_system_info()
     else:
