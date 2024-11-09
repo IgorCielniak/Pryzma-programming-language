@@ -1001,8 +1001,6 @@ commands:
     history <number> - execute the command from the history by number
     history clear - clear the commands history
     history <term> - search the commands history for a term
-    cmd <command> - execute a command in the operating system shell
-    cmd - start the operating system shell
     info - show the interpreter version along with some other information
     ppm - lunch the Pryzma Package Manager shell
     ppm <command> - execute a Pryzma package manager command
@@ -1098,15 +1096,15 @@ class PackageManager:
 
     def display_help(self):
         help_text = """
-        Available commands:
-        - remove <package_name>: Remove a package from the repository.
-        - list: List all installed packages.
-        - install <package_name>: Install a package from the repository.
-        - update: Update all installed packages.
-        - update <package_name>: Update a specific package or all packages if no name is provided.
-        - show <package_name>: Show information about a specific package or all packages if no name is provided.
-        - help: Show this help message.
-        - exit: Exit the Pryzma package manager.
+Available commands:
+    - remove <package_name>: Remove a package from the repository.
+    - list: List all installed packages.
+    - install <package_name>: Install a package from the repository.
+    - update: Update all installed packages.
+    - update <package_name>: Update a specific package or all packages if no name is provided.
+    - show <package_name>: Show information about a specific package or all packages if no name is provided.
+    - help: Show this help message.
+    - exit: Exit the Pryzma package manager.
         """
         print(help_text)
     
@@ -1218,19 +1216,6 @@ def shell(code,cls_state):
                 print("No commands found matching the search term.")
         else:
                 print("Invalid command. Usage: history [search_term | index | clear]")
-    elif code.startswith("cmd"):
-        if code == "cmd":
-            while True:
-                command = input("Command ('exit' to quit): ")
-                if command == "exit":
-                    break
-                os.system(command)
-        else:
-            code = code[len("cmd"):].strip()
-            if code:
-                os.system(code)
-            else:
-                print("No command specified.")
     elif code.startswith("ppm"):
         if code == "ppm":
             if not os.path.exists(PackageManager.user_packages_path):
