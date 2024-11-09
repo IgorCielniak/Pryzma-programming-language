@@ -813,6 +813,11 @@ limitations under the License.
                 return
             elif command == 'help':
                 print_help()
+            elif command == 'clear':
+                if os.name == "posix":
+                    os.system('clear')
+                else:
+                    os.system('cls')
             else:
                 print("Unknown command. Type 'help' for a list of commands.")
 
@@ -903,6 +908,11 @@ limitations under the License.
                     return
                 elif command == 'help':
                     print_help()
+                elif command == 'clear':
+                    if os.name == "posix":
+                        os.system('clear')
+                    else:
+                        os.system('cls')
                 else:
                     print("Unknown command. Type 'help' for a list of commands.")
 
