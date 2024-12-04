@@ -1045,9 +1045,12 @@ class PackageManager:
 
     def list_packages(self):
         packages = os.listdir(self.user_packages_path)
-        print("Available packages:")
-        for package in packages:
-            print("-", package)
+        if packages:
+            print("Available packages:")
+            for package in packages:
+                print("-", package)
+        else:
+            print("No packages installed.")
 
 
     def install_package(self, package_name):
@@ -1082,7 +1085,7 @@ class PackageManager:
     def get_package_info(self, package_name):
         package_dir = os.path.join(self.user_packages_path, package_name)
         metadata_path = os.path.join(package_dir, "metadata.json")
-        
+         
         if os.path.exists(metadata_path):
             with open(metadata_path, "r") as metadata_file:
                 metadata = json.load(metadata_file)
@@ -1132,8 +1135,11 @@ Available commands:
             if len(user_input) > 1:
                 self.get_package_info(PackageManager, user_input[1])
             else:
-                for package_name in os.listdir(self.user_packages_path):
-                    self.get_package_info(PackageManager, package_name)
+                if os.listdir(self.user_packages_path):
+                    for package_name in os.listdir(self.user_packages_path):
+                        self.get_package_info(PackageManager, package_name)
+                else:
+                    print("No packages installed.")
         elif user_input[0] == "clear":
             os.system('cls' if os.name == 'nt' else 'clear')
         else:
@@ -1222,6 +1228,8 @@ def shell(code,cls_state):
                 os.makedirs(PackageManager.user_packages_path)
             PackageManager.shell_mode(PackageManager)
         else:
+            if not os.path.exists(PackageManager.user_packages_path):
+                os.makedirs(PackageManager.user_packages_path)
             code = code[len("ppm "):].strip()
             PackageManager.execute_ppm_command(PackageManager, code.split())
     elif code == "info":
