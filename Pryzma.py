@@ -1085,7 +1085,7 @@ class PackageManager:
     def get_package_info(self, package_name):
         package_dir = os.path.join(self.user_packages_path, package_name)
         metadata_path = os.path.join(package_dir, "metadata.json")
-        
+         
         if os.path.exists(metadata_path):
             with open(metadata_path, "r") as metadata_file:
                 metadata = json.load(metadata_file)
