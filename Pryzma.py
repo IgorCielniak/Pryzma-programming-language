@@ -729,7 +729,7 @@ limitations under the License.
         else:
             print(f"Function '{function_name}' is not defined in '{file_path}'.")
 
-    def debug_interpreter(interpreter, file_path):
+    def debug_interpreter(interpreter, file_path, running_from_file):
         current_line = 0
         breakpoints = set()
         log_file = None
@@ -915,6 +915,11 @@ limitations under the License.
                         os.system('cls')
                 else:
                     print("Unknown command. Type 'help' for a list of commands.")
+        if running_from_file == True:
+            cvf = input("Clear variables and functions dictionaries? (y/n): ")
+            if cvf.lower() == "y":
+                interpreter.variables.clear()
+                interpreter.functions.clear()
 
 
     def parse_call_statement(self, statement):
@@ -1085,7 +1090,7 @@ class PackageManager:
     def get_package_info(self, package_name):
         package_dir = os.path.join(self.user_packages_path, package_name)
         metadata_path = os.path.join(package_dir, "metadata.json")
-         
+        
         if os.path.exists(metadata_path):
             with open(metadata_path, "r") as metadata_file:
                 metadata = json.load(metadata_file)
@@ -1185,9 +1190,11 @@ def shell(code):
     elif code == "license":
         interpreter.show_license()
     elif code == "debug":
+        running_from_file = True
         file_path = input("Path to the file to debug ('exit' to quit debug mode): ")
         if file_path != "exit":
-            interpreter.debug_interpreter(file_path)
+            interpreter.debug_interpreter(file_path, running_from_file)
+        running_from_file = False
     elif code == "func":
         interpreter.execute_function_from_file()
     elif code.startswith("history"):
@@ -1252,11 +1259,7 @@ if __name__ == "__main__":
         for arg in arguments:
             if arg.startswith("-"):
                 if arg == "-d":
-                    interpreter.debug_interpreter(file_path)
-                    cvf = input("Clear variables and functions dictionaries? (y/n): ")
-                    if cvf.lower() == "y":
-                        interpreter.variables.clear()
-                        interpreter.functions.clear()
+                    interpreter.debug_interpreter(file_path, running_from_file)
         interpreter.interpret_file(file_path, *arguments)
         sys.exit()
 
