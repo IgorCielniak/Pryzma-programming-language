@@ -1045,9 +1045,12 @@ class PackageManager:
 
     def list_packages(self):
         packages = os.listdir(self.user_packages_path)
-        print("Available packages:")
-        for package in packages:
-            print("-", package)
+        if packages:
+            print("Available packages:")
+            for package in packages:
+                print("-", package)
+        else:
+            print("No packages installed.")
 
 
     def install_package(self, package_name):
@@ -1132,8 +1135,11 @@ Available commands:
             if len(user_input) > 1:
                 self.get_package_info(PackageManager, user_input[1])
             else:
-                for package_name in os.listdir(self.user_packages_path):
-                    self.get_package_info(PackageManager, package_name)
+                if os.listdir(self.user_packages_path):
+                    for package_name in os.listdir(self.user_packages_path):
+                        self.get_package_info(PackageManager, package_name)
+                else:
+                    print("No packages installed.")
         elif user_input[0] == "clear":
             os.system('cls' if os.name == 'nt' else 'clear')
         else:
@@ -1156,17 +1162,13 @@ Available commands:
 
 
 
-def shell(code,cls_state):
+def shell(code):
     history.append(code)
     if code == "help":
         interpreter.print_help()
     elif code == "cls":
         interpreter.variables.clear()
         interpreter.functions.clear()
-    elif code == "clst":
-        cls_state = True
-    elif code == "clsf":
-        cls_state = False
     elif code == "clear":
         if os.name == "posix":
             os.system('clear')
@@ -1175,21 +1177,17 @@ def shell(code,cls_state):
     elif code == "file":
         running_from_file = True
         interpreter.interpret_file2()
-        if cls_state == True:
+        cvf = input("Clear variables and functions dictionaries? (y/n): ")
+        if cvf.lower() == "y":
             interpreter.variables.clear()
             interpreter.functions.clear()
         running_from_file = False
     elif code == "license":
         interpreter.show_license()
     elif code == "debug":
-        debug_mode = True
         file_path = input("Path to the file to debug ('exit' to quit debug mode): ")
         if file_path != "exit":
             interpreter.debug_interpreter(file_path)
-            debug_mode = False
-            if cls_state == True:
-                interpreter.variables.clear()
-                interpreter.functions.clear()
     elif code == "func":
         interpreter.execute_function_from_file()
     elif code.startswith("history"):
@@ -1200,7 +1198,7 @@ def shell(code,cls_state):
         elif len(code_parts) == 2 and code_parts[1].isnumeric():
             command_index = int(code_parts[1]) - 1
             if 0 <= command_index < len(history):
-                shell(history[command_index],cls_state)
+                shell(history[command_index])
             else:
                 print("Invalid history index.")
         elif len(code_parts) == 2 and code_parts[1] == "clear":
@@ -1222,6 +1220,8 @@ def shell(code,cls_state):
                 os.makedirs(PackageManager.user_packages_path)
             PackageManager.shell_mode(PackageManager)
         else:
+            if not os.path.exists(PackageManager.user_packages_path):
+                os.makedirs(PackageManager.user_packages_path)
             code = code[len("ppm "):].strip()
             PackageManager.execute_ppm_command(PackageManager, code.split())
     elif code == "info":
@@ -1241,9 +1241,7 @@ def shell(code,cls_state):
 if __name__ == "__main__":
     interpreter = PryzmaInterpreter()
 
-    cls_state = True
     tkinter_enabled = False
-    debug_mode = False
     history = []
     running_from_file = False
     version = 5.2
@@ -1254,10 +1252,9 @@ if __name__ == "__main__":
         for arg in arguments:
             if arg.startswith("-"):
                 if arg == "-d":
-                    debug_mode = True
                     interpreter.debug_interpreter(file_path)
-                    debug_mode = False
-                    if cls_state == True:
+                    cvf = input("Clear variables and functions dictionaries? (y/n): ")
+                    if cvf.lower() == "y":
                         interpreter.variables.clear()
                         interpreter.functions.clear()
         interpreter.interpret_file(file_path, *arguments)
@@ -1271,4 +1268,4 @@ To show the license type "license" or "help" to get help.
         code = input("/// ")
         if code == "exit":
             break
-        shell(code,cls_state)
+        shell(code)
