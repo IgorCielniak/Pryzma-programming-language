@@ -1001,6 +1001,7 @@ commands:
     ppm - lunch the Pryzma Package Manager shell
     ppm <command> - execute a Pryzma package manager command
     exit - exit the interpreter
+    reboot - reboot the interpreter
     help - show this help
     license - show the license
 """)
@@ -1264,4 +1265,6 @@ To show the license type "license" or "help" to get help.
         code = input("/// ")
         if code == "exit":
             break
+        elif code == "reboot":
+            os.execl(sys.executable, sys.executable, *sys.argv)
         shell(code)
