@@ -616,11 +616,7 @@ class PryzmaInterpreter:
     def import_functions(self, file_path):
         file_path = file_path.strip('"')
         
-        if file_path.startswith("./"):
-            current_directory = os.path.dirname(__file__)
-            absolute_file_path = os.path.join(current_directory, file_path[2:])
-            self.load_functions_from_file(absolute_file_path)
-        elif '/' in file_path or '\\' in file_path:
+        if '/' in file_path or '\\' in file_path:
             self.load_functions_from_file(file_path)
         else:
             file_path = f"{PackageManager.user_packages_path}/{file_path}/{file_path}.pryzma"
