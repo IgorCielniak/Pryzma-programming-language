@@ -990,8 +990,6 @@ limitations under the License.
 commands:
     file - run a program from a file
     cls - clear the functions and variables dictionaries
-    clst - set clearing functions and variables dictionaries after program execution to true
-    clsf - set clearing functions and variables dictionaries after program execution to false
     clear - clear the console
     debug - start debugging mode
     func - execute a function from a file
@@ -1053,23 +1051,25 @@ class PackageManager:
 
     def install_package(self, package_name):
         package_url = f"{self.package_api_url}/{package_name}"
-        response = requests.get(package_url)
-
-        if response.status_code == 200:
-            package_dir = os.path.join(self.user_packages_path, package_name)
-            os.makedirs(package_dir, exist_ok=True)
-
-            package_file_path = os.path.join(package_dir, f"{package_name}.zip")
-            with open(package_file_path, 'wb') as file:
-                file.write(response.content)
-            
-            with zipfile.ZipFile(package_file_path, 'r') as zip_ref:
-                zip_ref.extractall(package_dir)
-
-            os.remove(package_file_path)
-            print("Package", package_name, "downloaded and installed successfully.")
-        else:
-            print("Package", package_name, "not found in the repository.")
+        try:
+            response = requests.get(package_url)
+            if response.status_code == 200:
+                package_dir = os.path.join(self.user_packages_path, package_name)
+                os.makedirs(package_dir, exist_ok=True)
+    
+                package_file_path = os.path.join(package_dir, f"{package_name}.zip")
+                with open(package_file_path, 'wb') as file:
+                    file.write(response.content)
+    
+                with zipfile.ZipFile(package_file_path, 'r') as zip_ref:
+                    zip_ref.extractall(package_dir)
+    
+                os.remove(package_file_path)
+                print("Package", package_name, "downloaded and installed successfully.")
+            else:
+                print("Package", package_name, "not found in the repository.")
+        except requests.exceptions.ConnectionError as ex:
+            print("Connection error, check your inernet connection.")
 
 
     def update_package(self, package_name=None):
