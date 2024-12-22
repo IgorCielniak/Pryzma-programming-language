@@ -617,12 +617,9 @@ class PryzmaInterpreter:
         file_path = file_path.strip('"')
         
         if file_path.startswith("./"):
-            if running_from_file == True:
-                current_directory = os.path.dirname(self.file_path)
-                absolute_file_path = os.path.join(current_directory, file_path[2:])
-                self.load_functions_from_file(absolute_file_path)
-            else:
-                print("Cannot import functions from a relative path when running from the interpreter.")
+            current_directory = os.path.dirname(__file__)
+            absolute_file_path = os.path.join(current_directory, file_path[2:])
+            self.load_functions_from_file(absolute_file_path)
         elif '/' in file_path or '\\' in file_path:
             self.load_functions_from_file(file_path)
         else:
