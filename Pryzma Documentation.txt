@@ -140,6 +140,10 @@ f = ","
 b = splitby(f, a)
 print(b)
 
+Output will be:
+
+['text', 'text']
+
 Replace:
 
 a = "ddd"
@@ -149,10 +153,6 @@ replace(a,"d","f")
 print a
 
 output will be "fff" I think it is self explanatory
-
-Output will be:
-
-['text', 'text']
 
 Arithmetic Operations:
 
