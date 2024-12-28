@@ -187,7 +187,7 @@ it will print ex because it will remove one character form right and one from le
 
 Flow Control:
 
-Pryzma supports simple flow control using the STOP statement. It terminates the program execution.
+Pryzma supports simple flow control using the stop statement. It terminates the program execution.
 
 stop
 
@@ -203,7 +203,7 @@ output will be:
 4
 5
 
-while a, b, print if
+while a, b, print i
 
 while value of a equals value of b value of i will be printed
 
