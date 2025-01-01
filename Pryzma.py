@@ -19,12 +19,7 @@ class PryzmaInterpreter:
 
     def interpret_file(self, file_path, *args):
         self.file_path = file_path.strip('"')
-        arg_count = 0
-        pargs = {}
-        for arguments in args:
-            pargs[f"parg{arg_count}"] = args[arg_count]
-            arg_count += 1
-        self.variables["pargs"] = pargs
+        self.variables["pargs"] = args
         try:
             with open(self.file_path, 'r') as file:
                 program = file.read()
