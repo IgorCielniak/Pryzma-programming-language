@@ -155,6 +155,7 @@ class PryzmaInterpreter:
                         arg = arg.strip(")")
                         if arg:
                             arg = arg.split(",")
+                            self.variables["argc"] = len(arg)
                             for args in range(len(arg)):
                                 arg[args] = arg[args].lstrip()
                             for args in range(len(arg)):
