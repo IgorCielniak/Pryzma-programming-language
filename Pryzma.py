@@ -455,11 +455,13 @@ class PryzmaInterpreter:
     def evaluate_expression(self, expression):
         if "+" in expression:
             parts = expression.split("+")
-            evaluated_parts = [self.evaluate_expression(part.strip()) for part in parts]
-            if all(isinstance(part, int) for part in evaluated_parts):
-                return sum(evaluated_parts)
-            elif all(isinstance(part, str) for part in evaluated_parts):
+            evaluated_parts = [self.evaluate_expression(part.strip()) for part in parts]
+            if all(isinstance(part, str) for part in evaluated_parts):
                 return "".join(evaluated_parts)
+            elif all(isinstance(part, (int, float)) for part in evaluated_parts):
+                return sum(float(part) for part in evaluated_parts)
+            elif any(isinstance(part, str) for part in evaluated_parts) and any(isinstance(part, (int, float, bool)) for part in evaluated_parts):
+                return TypeError("Cannot mix string and numeric values in addition.")
         elif "=" in expression:
             var, val = expression.split("=")
             var = var.strip()
