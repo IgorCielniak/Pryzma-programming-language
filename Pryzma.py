@@ -460,8 +460,12 @@ class PryzmaInterpreter:
                 return "".join(evaluated_parts)
             elif all(isinstance(part, (int, float)) for part in evaluated_parts):
                 return sum(float(part) for part in evaluated_parts)
-            elif any(isinstance(part, str) for part in evaluated_parts) and any(isinstance(part, (int, float, bool)) for part in evaluated_parts):
+            elif any(isinstance(part, str) for part in evaluated_parts) and any(isinstance(part, (int, float, bool)) for part in evaluated_parts): 
                 return TypeError("Cannot mix string and numeric values in addition.")
+            elif all(isinstance(part, list) for part in evaluated_parts):
+                return sum(evaluated_parts, [])
+            elif all(isinstance(part, tuple) for part in evaluated_parts):
+                return sum(evaluated_parts ,())
         elif "=" in expression:
             var, val = expression.split("=")
             var = var.strip()
