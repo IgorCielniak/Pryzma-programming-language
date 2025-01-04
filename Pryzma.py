@@ -405,6 +405,14 @@ class PryzmaInterpreter:
                         new = self.variables[args[2]]
                     string = string.replace(old,new)
                     self.variables[args[0]] = string
+                elif line.startswith("interpret_pryzma(") and line.endswith(")"):
+                    code = line[17:-1]
+                    if "|" in code:
+                        code = code.split("|")
+                        for part in code:
+                            self.interpret(part)
+                    else:
+                        self.interpret(code)
                 elif line == "stop":
                     input("Press any key to continue...")
                     break
