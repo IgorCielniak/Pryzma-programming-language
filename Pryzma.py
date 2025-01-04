@@ -7,7 +7,7 @@ import json
 import shutil
 import zipfile
 import platform
-import requests
+
 
 
 class PryzmaInterpreter:
@@ -219,9 +219,12 @@ class PryzmaInterpreter:
                         self.write_to_file(str(self.variables[content]), file_path)
                     else:
                         print(f"Invalid content at line {self.current_line}: {content}")
-                elif line.startswith("del(") and line.endswith(")"):
-                    variable = line[4:-1]
+                elif line.startswith("delvar(") and line.endswith(")"):
+                    variable = line[7:-1]
                     self.variables.pop(variable)
+                elif line.startswith("delfunc(") and line.endswith(")"):
+                    function = line[8:-1]
+                    self.functions.pop(variable)
                 elif line.startswith("whilen"):
                     condition_action = line[len("whilen"):].split(",", 2)
                     if len(condition_action) != 3:
@@ -325,7 +328,7 @@ class PryzmaInterpreter:
                             elif len(command) == 3:
                                 self.tk_vars[button_name] = tk.Button(self.tk_vars[window],text = button_text)
                             elif len(command) == 4:
-                                self.tk_vars[button_name] = tk.Button(self.tk_vars[window],text = button_text,command = lambda: self.button_command_exec(button_command))
+                                self.tk_vars[button_name] = tk.Button(self.tk_vars[window],text = button_text,command = lambda: self.interpret(button_command))
                             else:
                                 print(f"Invalid create_button command")
                             self.tk_vars[button_name].pack()
@@ -423,9 +426,6 @@ class PryzmaInterpreter:
                         print(f"Invalid statement at line {self.current_line}: {line}")
             except Exception as e:
                 print(f"Error at line {self.current_line}: {e}")
-
-    def button_command_exec(self, button_command):
-        self.interpret(button_command)
 
     def decrement_variable(self, variable):
         if variable in self.variables:
@@ -1233,15 +1233,19 @@ def shell(code):
         else:
                 print("Invalid command. Usage: history [search_term | index | clear]")
     elif code.startswith("ppm"):
-        if code == "ppm":
-            if not os.path.exists(PackageManager.user_packages_path):
-                os.makedirs(PackageManager.user_packages_path)
-            PackageManager.shell_mode(PackageManager)
-        else:
-            if not os.path.exists(PackageManager.user_packages_path):
-                os.makedirs(PackageManager.user_packages_path)
-            code = code[len("ppm "):].strip()
-            PackageManager.execute_ppm_command(PackageManager, code.split())
+        try:
+            import requests
+            if code == "ppm":
+                if not os.path.exists(PackageManager.user_packages_path):
+                    os.makedirs(PackageManager.user_packages_path)
+                PackageManager.shell_mode(PackageManager)
+            else:
+                if not os.path.exists(PackageManager.user_packages_path):
+                    os.makedirs(PackageManager.user_packages_path)
+                code = code[len("ppm "):].strip()
+                PackageManager.execute_ppm_command(PackageManager, code.split())
+        except ModuleNotFoundError:
+            print("Module 'requests' not found, please install it to use ppm")
     elif code == "info":
         PryzmaInterpreter.display_system_info()
     else:
