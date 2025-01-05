@@ -237,153 +237,153 @@ i--
 print i
 output will be 0 , -- increments by one
 
-Tkinter for Pryzma:^M
-^M
-to enable the use of tkinter from the code you can do some think like that:^M
-^M
-tk enable^M
-^M
-now you can use basic tkinter functions in Pryzma, for example:^M
-^M
-tk window(name_of_the_window)^M
-^M
-this creates a window with the given name^M
-^M
-tk create_label(name_of_the_label, name_of_the_window, text_to_display)^M
-^M
-this creates a label with the given name, parent window, and text to display^M
-^M
-tk create_button(name_of_the_button, name_of_the_window, text_to_display, command_to_execute)^M
-^M
-this creates a button with the given name, parent window, text to display, and command to execute when clicked^M
-^M
-tk get_entry_text(entry_name, variable_name)^M
-^M
-this gets the text from the entry with the given name and assigns it th the variable given^M
-^M
-tk title(name_of_the_window, text_to_display_as_the_title)^M
-^M
-this sets the title of the window to the given text^M
-^M
-tk set_entry_text(entry_name, text_to_display)^M
+Tkinter for Pryzma:
 
-this sets the text of the entry with the given name to the given text^M
-^M
-importing:^M
-^M
-use file_path^M
-^M
-after import you can use functions from the imported file^M
-^M
-if you add ./ before the file path it will look for the given file in the same folder as the file,^M
-and if you just give the module name it will look for it in the packages folder that is created while installing packages with ppm.^M
-^M
-Comments:^M
-^M
-Comments in Pryzma start with the # symbol and continue to the end of the line.^M
-^M
+to enable the use of tkinter from the code you can do some think like that:
+
+tk enable
+
+now you can use basic tkinter functions in Pryzma, for example:
+
+tk window(name_of_the_window)
+
+this creates a window with the given name
+
+tk create_label(name_of_the_label, name_of_the_window, text_to_display)
+
+this creates a label with the given name, parent window, and text to display
+
+tk create_button(name_of_the_button, name_of_the_window, text_to_display, command_to_execute)
+
+this creates a button with the given name, parent window, text to display, and command to execute when clicked
+
+tk get_entry_text(entry_name, variable_name)
+
+this gets the text from the entry with the given name and assigns it th the variable given
+
+tk title(name_of_the_window, text_to_display_as_the_title)
+
+this sets the title of the window to the given text
+
+tk set_entry_text(entry_name, text_to_display)
+
+this sets the text of the entry with the given name to the given text
+
+importing:
+
+use file_path
+
+after import you can use functions from the imported file
+
+if you add ./ before the file path it will look for the given file in the same folder as the file,
+and if you just give the module name it will look for it in the packages folder that is created while installing packages with ppm.
+
+Comments:
+
+Comments in Pryzma start with the # symbol and continue to the end of the line.
+
 #This is a comment
 
 you also can do in line comments:
 
 print "Hello, World" #This prints Hello, world
 
-^M
-If statement:^M
-^M
-input variable::"var1:"^M
-input variable2::"var2:"^M
+
+If statement:
+
+input variable::"var1:"
+input variable2::"var2:"
 if(variable==variable2).(print "true")
 
 you can use operators like: ==, !=, <=, >=, < and >
 
-Functions:^M
-^M
-declare function:^M
-^M
-/function_name{command|command2|command3}^M
-^M
+Functions:
+
+declare function:
+
+/function_name{command|command2|command3}
+
 you separate the instruction using the pipe symbol |
-^M
-calling functions:^M
-^M
-@function_name("text")^M
-^M
-string text will be automatically assigned to variable arg1,variables also can be used as arguments like that:^M
-^M
-^M
-^M
-/add{print arg1}^M
-^M
-a = "text"^M
-^M
-@add(a)^M
-^M
-when calling a function at least one argument need to be passed even when it is not going to be use other wise you will get an error,for now calling a function with arguments in an if statment is impossible^M
-to call a function without argument you can do, when calling a function a variable argc is creates that holds a value of how many arguments were passed to the function.^M
-^M
-@add^M
-^M
-^M
-Loops:^M
-^M
-for i, 1:5, print i^M
-^M
-it will print numbers from one to five^M
-^M
-a=3^M
-^M
-for i, a:5, print i^M
-^M
-it will print numbers from 3 to 5^M
-^M
 
-while a, b, @func^M
-^M
+calling functions:
+
+@function_name("text")
+
+string text will be automatically assigned to variable arg1,variables also can be used as arguments like that:
+
+
+
+/add{print arg1}
+
+a = "text"
+
+@add(a)
+
+when calling a function at least one argument need to be passed even when it is not going to be use other wise you will get an error,for now calling a function with arguments in an if statment is impossible
+to call a function without argument you can do, when calling a function a variable argc is creates that holds a value of how many arguments were passed to the function.
+
+@add
+
+
+Loops:
+
+for i, 1:5, print i
+
+it will print numbers from one to five
+
+a=3
+
+for i, a:5, print i
+
+it will print numbers from 3 to 5
+
+
+while a, b, @func
+
 as long as variable a will equal variable b it will call function func you can use string instead of a variable
-there is also whilen that works the same but checks if the variables aren't equal^M
-^M
-Exec function:^M
-^M
-exec bash command^M
-^M
-can be used like that:^M
-^M
-exec echo Hello^M
-^M
-Read and write:^M
-^M
-content = read(C:\Users\User\Desktop\Untitled-1.txt)^M
-^M
-content of file C:\Users\User\Desktop\Untitled-1.txt will be assigned to variable content^M
-^M
-write(C:\Users\User\Desktop\Untitled-1.txt,content)^M
-^M
-iw will write value of variable content to file C:\Users\User\Desktop\Untitled-1.txt, if file doesn't exist it will create it.^M
-^M
-In:^M
-^M
-a = [1,2,3]^M
-^M
-b = in(a, 2)^M
+there is also whilen that works the same but checks if the variables aren't equal
 
-print b^M
-^M
-output will be True, you can also check if some string appear in list or if some word appear in string^M
-^M
-Del:^M
-^M
-you can use delvar to delete a variable like that:^M
-^M
-a = "text"^M
-^M
-print a^M
-^M
-delvar(a)^M
-^M
-print a^M
+Exec function:
 
-it will print text and then it will give error that will say that variable a doesn't exist^M
+exec bash command
+
+can be used like that:
+
+exec echo Hello
+
+Read and write:
+
+content = read(C:\Users\User\Desktop\Untitled-1.txt)
+
+content of file C:\Users\User\Desktop\Untitled-1.txt will be assigned to variable content
+
+write(C:\Users\User\Desktop\Untitled-1.txt,content)
+
+iw will write value of variable content to file C:\Users\User\Desktop\Untitled-1.txt, if file doesn't exist it will create it.
+
+In:
+
+a = [1,2,3]
+
+b = in(a, 2)
+
+print b
+
+output will be True, you can also check if some string appear in list or if some word appear in string
+
+Del:
+
+you can use delvar to delete a variable like that:
+
+a = "text"
+
+print a
+
+delvar(a)
+
+print a
+
+it will print text and then it will give error that will say that variable a doesn't exist
 
 or delfunc to to delete a function
 
@@ -394,59 +394,59 @@ there is a function called interpret_pryzma that as the name suggests interprets
 interpret_pryzma(a = 10|print a)
 
 and it will output 10
-^M
-Cli arguments:^M
-by running:^M
-^M
-python Pryzma.py file_path d df^M
+
+Cli arguments:
+by running:
+
+python Pryzma.py file_path d df
 
 a list called pargs will be accesable from code and in this example it will contain two variables 'd' and 'df'
-as well as a 'file' variable that holds the full path to the current running file^M
-you can pass as many arguments as you wish^M
-^M
-Calling python functions from Pryzma:^M
-^M
-call(file_path,func_name, args)^M
-^M
-for example:^M
-^M
-call("C:\Users\User\Desktop\test2.py", "func2", "hello from python")^M
-^M
-and file "C:\Users\User\Desktop\test2.py" content being:^M
-^M
-def func2(arg):^M
-        print(arg)^M
-^M
-it will print "hello from python"^M
-^M
-Time:^M
-^M
-you can do some time operations like that:^M
-^M
-start_time = timenow^M
-# ... some code or processing ...^M
-end_time = timenow^M
-time = end_time - start_time^M
-print time^M
+as well as a 'file' variable that holds the full path to the current running file
+you can pass as many arguments as you wish
 
-and it will print how much time it took to execute the code, timenow returns the current time.^M
+Calling python functions from Pryzma:
 
-Running Programs:^M
-^M
-To run a Pryzma program, save the code in a text file execute it by lunching the^M
-Pryzma interpreter and writing "file" command and providing a file path, or by lunching it from command line and  providing a file path sorunded  with " like that:^M
-^M
-python Pryzma.py "file_path"^M
-^M
-License:^M
-^M
-Pryzma is open-source software released under the Apache license. See the license.txt file for more details.^M
-^M
-Author:^M
-^M
-Pryzma was created by Igor Cielniak.^M
-^M
-Support:^M
-^M
-For questions, bug reports, and feature requests, please contact me throu me email igorcielniak.contact@gmail.com or via github.^M
+call(file_path,func_name, args)
+
+for example:
+
+call("C:\Users\User\Desktop\test2.py", "func2", "hello from python")
+
+and file "C:\Users\User\Desktop\test2.py" content being:
+
+def func2(arg):
+        print(arg)
+
+it will print "hello from python"
+
+Time:
+
+you can do some time operations like that:
+
+start_time = timenow
+# ... some code or processing ...
+end_time = timenow
+time = end_time - start_time
+print time
+
+and it will print how much time it took to execute the code, timenow returns the current time.
+
+Running Programs:
+
+To run a Pryzma program, save the code in a text file execute it by lunching the
+Pryzma interpreter and writing "file" command and providing a file path, or by lunching it from command line and  providing a file path sorunded  with " like that:
+
+python Pryzma.py "file_path"
+
+License:
+
+Pryzma is open-source software released under the Apache license. See the license.txt file for more details.
+
+Author:
+
+Pryzma was created by Igor Cielniak.
+
+Support:
+
+For questions, bug reports, and feature requests, please contact me throu me email igorcielniak.contact@gmail.com or via github.
 
