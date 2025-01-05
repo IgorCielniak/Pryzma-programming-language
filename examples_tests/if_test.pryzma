@@ -2,8 +2,8 @@
 
 /add{print arg1}
 
-a = "text"
+a = 1
 
-b = "*"
+b = 1
 
-if a, b, @add(a)
+if (a==b).(@add(a))

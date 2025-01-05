@@ -2,7 +2,7 @@ print "1.add\n2.delete\n3.show\n4.save\n5.load\n6.exit"
 
 stopvar = "False"
 
-/main{input action::"action: "|if action, "1", @add|if action, "2", @delete|if action, "3", @show|if action, "4", @save|if action, "5", @load|if action, "6", stopvar="True"}
+/main{input action::"action: "|if (action=="1").(@add)|if (action=="2").(@delete)|if (action=="3").(@show)|if (action=="4").(@save)|if (action=="5").(@load)|if (action=="6").(stopvar="True")}
 
 tasks = []
 

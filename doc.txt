@@ -1,0 +1,452 @@
+Pryzma programming language official documentation
+
+Pryzma is a simple interpreted programing language written in python
+
+Variables:
+
+in pryzma you have strings, intigers, floats, booleans, lists, dictionaries and tuples:
+
+a = "a"
+
+value = 1
+value2 = 1.1
+
+condition = True
+condition2 = False
+
+my_list = []
+my_dict = {}
+my_tuple = ()
+
+List operations:
+
+list = [1,2,3]
+
+print list[0] outputs 1 etc.
+
+append a, "text"
+
+it will append a string "text" to list a, you can also do copy that append elements from one list to another:
+
+a = [1,2]
+
+b = [3,4]
+
+copy b,a
+
+print a
+
+output will be [1,2,3,4]
+
+a = ["text", "text2"]
+
+pop a, "text"
+
+print a
+
+it will pop text from list a and output ["text2"]
+
+you can move objects on a list by using the move instruction like that:
+
+a = [1,2,3,4,5]
+
+move(0, 1, a)
+
+print a
+
+output will be [2, 1, 3, 4, 5] becouse it moves the object with the index 0 to index 1
+
+you can also swap wariables like that:
+
+a = [1,2,3,4,5]
+
+swap(0, 2, a)
+
+print a
+
+output will be [3, 2, 1, 4, 5]
+
+Type conversion:
+
+variable = int(variable)
+
+or
+
+variable = str(1)
+
+or
+
+a = ("a", "b")
+
+variable = list(a)
+
+etc.
+
+to get type of some variable you can do:
+
+a = 1
+b = type(a)
+print b
+
+it will print int
+
+you can also check if a variable is a number like this:
+
+a = 1
+
+b = isanumber(a)
+
+print b
+
+output will be True
+
+
+Len:
+you also can do len like that:
+
+a = "text"
+
+print len(a)
+
+it will print 4 ,you can also do:
+
+a = [1,2,3,4,5]
+
+print len(a)
+
+it will print 5
+
+index:
+
+a = [1,2,3,4,5]
+b = index(a, 3)
+print b
+
+output will be 2
+index() returns index of value in some list or error if isn't in the list
+
+
+Split:
+
+a = "text"
+
+print split(a)
+
+it will print:
+
+["t", "e", "x", "t"]
+
+
+splitlines() works nearly the same but it split by lines not by words, there is also splitby(),
+that split by some character for example if i have string "textMtext" and i want to split it by the M i can do it like that:
+
+a = "textMtext"
+b = splitby("M", a)
+print b
+
+output will be a list that will look like that:
+
+["text", "text"]
+
+if you want to split by "," because its not working you will need to do some think like that:
+
+a = "text,text"
+f = ","
+b = splitby(f, a)
+print(b)
+
+Output will be:
+
+['text', 'text']
+
+Replace:
+
+a = "ddd"
+
+replace(a,"d","f")
+
+print a
+
+output will be "fff" I think it is self explanatory
+
+Arithmetic Operations:
+
+Pryzma supports basic arithmetic operations including addition, subtraction, multiplication, and division.
+
+result = 10 + 5
+total = 2 * 3
+difference = 8 - 4
+quotient = 10 / 2
+
+Input/Output:
+
+Pryzma allows input from the user and output to the console. Concatenation is used to combine strings and variables for output.
+
+input age::"age:"
+print "Your age is: " + age
+
+in input age is a variable that input will be assigned to it and "age:" is the prompt, if input will look like that:
+
+input age
+
+then no prompt will be displayed
+
+if there is \n in line it will print new line like in python,you can also do string slicing like that:
+
+a = "text"
+
+print a[1:-1]
+
+it will print ex because it will remove one character form right and one from left
+
+Flow Control:
+
+Pryzma supports simple flow control using the stop statement. It terminates the program execution.
+
+stop
+
+Loops:
+
+for i, 1:5, print i
+
+output will be:
+
+1
+2
+3
+4
+5
+
+while a, b, print i
+
+while value of a equals value of b value of i will be printed
+
+there is also whilen that execute the action as long as value a doesn't equal value b
+
+incrementing by one:
+
+i = 0
+i++
+print i
+output will be 1 , ++ increments by one
+
+decrementing by one:
+
+i = 1
+i--
+print i
+output will be 0 , -- increments by one
+
+Tkinter for Pryzma:^M
+^M
+to enable the use of tkinter from the code you can do some think like that:^M
+^M
+tk enable^M
+^M
+now you can use basic tkinter functions in Pryzma, for example:^M
+^M
+tk window(name_of_the_window)^M
+^M
+this creates a window with the given name^M
+^M
+tk create_label(name_of_the_label, name_of_the_window, text_to_display)^M
+^M
+this creates a label with the given name, parent window, and text to display^M
+^M
+tk create_button(name_of_the_button, name_of_the_window, text_to_display, command_to_execute)^M
+^M
+this creates a button with the given name, parent window, text to display, and command to execute when clicked^M
+^M
+tk get_entry_text(entry_name, variable_name)^M
+^M
+this gets the text from the entry with the given name and assigns it th the variable given^M
+^M
+tk title(name_of_the_window, text_to_display_as_the_title)^M
+^M
+this sets the title of the window to the given text^M
+^M
+tk set_entry_text(entry_name, text_to_display)^M
+
+this sets the text of the entry with the given name to the given text^M
+^M
+importing:^M
+^M
+use file_path^M
+^M
+after import you can use functions from the imported file^M
+^M
+if you add ./ before the file path it will look for the given file in the same folder as the file,^M
+and if you just give the module name it will look for it in the packages folder that is created while installing packages with ppm.^M
+^M
+Comments:^M
+^M
+Comments in Pryzma start with the # symbol and continue to the end of the line.^M
+^M
+#This is a comment
+
+you also can do in line comments:
+
+print "Hello, World" #This prints Hello, world
+
+^M
+If statement:^M
+^M
+input variable::"var1:"^M
+input variable2::"var2:"^M
+if(variable==variable2).(print "true")
+
+you can use operators like: ==, !=, <=, >=, < and >
+
+Functions:^M
+^M
+declare function:^M
+^M
+/function_name{command|command2|command3}^M
+^M
+you separate the instruction using the pipe symbol |
+^M
+calling functions:^M
+^M
+@function_name("text")^M
+^M
+string text will be automatically assigned to variable arg1,variables also can be used as arguments like that:^M
+^M
+^M
+^M
+/add{print arg1}^M
+^M
+a = "text"^M
+^M
+@add(a)^M
+^M
+when calling a function at least one argument need to be passed even when it is not going to be use other wise you will get an error,for now calling a function with arguments in an if statment is impossible^M
+to call a function without argument you can do, when calling a function a variable argc is creates that holds a value of how many arguments were passed to the function.^M
+^M
+@add^M
+^M
+^M
+Loops:^M
+^M
+for i, 1:5, print i^M
+^M
+it will print numbers from one to five^M
+^M
+a=3^M
+^M
+for i, a:5, print i^M
+^M
+it will print numbers from 3 to 5^M
+^M
+
+while a, b, @func^M
+^M
+as long as variable a will equal variable b it will call function func you can use string instead of a variable
+there is also whilen that works the same but checks if the variables aren't equal^M
+^M
+Exec function:^M
+^M
+exec bash command^M
+^M
+can be used like that:^M
+^M
+exec echo Hello^M
+^M
+Read and write:^M
+^M
+content = read(C:\Users\User\Desktop\Untitled-1.txt)^M
+^M
+content of file C:\Users\User\Desktop\Untitled-1.txt will be assigned to variable content^M
+^M
+write(C:\Users\User\Desktop\Untitled-1.txt,content)^M
+^M
+iw will write value of variable content to file C:\Users\User\Desktop\Untitled-1.txt, if file doesn't exist it will create it.^M
+^M
+In:^M
+^M
+a = [1,2,3]^M
+^M
+b = in(a, 2)^M
+
+print b^M
+^M
+output will be True, you can also check if some string appear in list or if some word appear in string^M
+^M
+Del:^M
+^M
+you can use delvar to delete a variable like that:^M
+^M
+a = "text"^M
+^M
+print a^M
+^M
+delvar(a)^M
+^M
+print a^M
+
+it will print text and then it will give error that will say that variable a doesn't exist^M
+
+or delfunc to to delete a function
+
+interpret_pryzma:
+
+there is a function called interpret_pryzma that as the name suggests interprets pryzm code:
+
+interpret_pryzma(a = 10|print a)
+
+and it will output 10
+^M
+Cli arguments:^M
+by running:^M
+^M
+python Pryzma.py file_path d df^M
+
+a list called pargs will be accesable from code and in this example it will contain two variables 'd' and 'df'
+as well as a 'file' variable that holds the full path to the current running file^M
+you can pass as many arguments as you wish^M
+^M
+Calling python functions from Pryzma:^M
+^M
+call(file_path,func_name, args)^M
+^M
+for example:^M
+^M
+call("C:\Users\User\Desktop\test2.py", "func2", "hello from python")^M
+^M
+and file "C:\Users\User\Desktop\test2.py" content being:^M
+^M
+def func2(arg):^M
+        print(arg)^M
+^M
+it will print "hello from python"^M
+^M
+Time:^M
+^M
+you can do some time operations like that:^M
+^M
+start_time = timenow^M
+# ... some code or processing ...^M
+end_time = timenow^M
+time = end_time - start_time^M
+print time^M
+
+and it will print how much time it took to execute the code, timenow returns the current time.^M
+
+Running Programs:^M
+^M
+To run a Pryzma program, save the code in a text file execute it by lunching the^M
+Pryzma interpreter and writing "file" command and providing a file path, or by lunching it from command line and  providing a file path sorunded  with " like that:^M
+^M
+python Pryzma.py "file_path"^M
+^M
+License:^M
+^M
+Pryzma is open-source software released under the Apache license. See the license.txt file for more details.^M
+^M
+Author:^M
+^M
+Pryzma was created by Igor Cielniak.^M
+^M
+Support:^M
+^M
+For questions, bug reports, and feature requests, please contact me throu me email igorcielniak.contact@gmail.com or via github.^M
+
