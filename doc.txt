@@ -431,6 +431,16 @@ print time
 
 and it will print how much time it took to execute the code, timenow returns the current time.
 
+Dir:
+
+print dir("C:\Users\User\Desktop\Untitled-1.txt")
+
+output:
+
+C:\Users\User\Desktop\
+
+as the argument you can also pass a variable
+
 Running Programs:
 
 To run a Pryzma program, save the code in a text file execute it by lunching the

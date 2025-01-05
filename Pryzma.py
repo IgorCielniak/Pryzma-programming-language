@@ -597,6 +597,15 @@ class PryzmaInterpreter:
             else:
                 print(f"Variable '{expression}' is not defined.")
                 return None
+        elif expression.startswith("dir(") and expression.endswith(")"):
+            expression = expression[4:-1]
+            if expression.startswith('"') and expression.endswith('"'):
+                return os.path.dirname(expression[1:-1])
+            elif expression in self.variables:
+                return os.path.dirname(self.variables[expression])
+            else:
+                print("Invalid argument for dir() function")
+                return None
         elif expression == "timenow":
             return datetime.datetime.now()
         elif re.match(r"^\d+$", expression):
