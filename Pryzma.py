@@ -59,86 +59,100 @@ class PryzmaInterpreter:
                 elif line.startswith("use"):
                     file_path = line[len("use"):].strip()
                     self.import_functions(file_path)
-                elif line.startswith("ifs"):
-                    condition_actions = line[len("ifs"):].split(",")
-                    if len(condition_actions) != 3:
-                        print("Invalid ifs instruction. Expected format: ifs condition, value, action")
-                        continue
-                    condition = condition_actions[0].strip()
-                    value = condition_actions[1].strip()
-                    action = condition_actions[2].strip()
-                    if condition.startswith('"') and condition.endswith('"'):
-                        condition = condition[1:-1]
-                    if value.startswith('"') and value.endswith('"'):
-                        value = value[1:-1]
-                    if value in self.variables:
-                        value = self.variables[value]
-                    if condition in self.variables:
-                        condition = self.variables[condition]
-                    if condition == "*" or action == "*":
-                        self.interpret(action)
-                    elif value > condition:
-                        self.interpret(action)
-                elif line.startswith("ifb"):
-                    condition_actions = line[len("ifb"):].split(",")
-                    if len(condition_actions) != 3:
-                        print("Invalid ifb instruction. Expected format: ifb condition, value, action")
-                        continue
-                    condition = condition_actions[0].strip()
-                    value = condition_actions[1].strip()
-                    action = condition_actions[2].strip()
-                    if condition.startswith('"') and condition.endswith('"'):
-                        condition = condition[1:-1]
-                    if value.startswith('"') and value.endswith('"'):
-                        value = value[1:-1]
-                    if value in self.variables:
-                        value = self.variables[value]
-                    if condition in self.variables:
-                        condition = self.variables[condition]
-                    if condition == "*" or action == "*":
-                        self.interpret(action)
-                    elif value < condition:
-                        self.interpret(action)
-                elif line.startswith("ifn"):
-                    condition_actions = line[len("ifn"):].split(",")
-                    if len(condition_actions) != 3:
-                        print("Invalid ifn instruction. Expected format: ifn condition, value, action")
-                        continue
-                    condition = condition_actions[0].strip()
-                    value = condition_actions[1].strip()
-                    action = condition_actions[2].strip()
-                    if condition.startswith('"') and condition.endswith('"'):
-                        condition = condition[1:-1]
-                    if value.startswith('"') and value.endswith('"'):
-                        value = value[1:-1]
-                    if value in self.variables:
-                        value = self.variables[value]
-                    if condition in self.variables:
-                        condition = self.variables[condition]
-                    if condition == "*" or action == "*":
-                        self.interpret(action)
-                    elif value != condition:
-                        self.interpret(action)
                 elif line.startswith("if"):
-                    condition_actions = line[len("if"):].split(",")
-                    if len(condition_actions) != 3:
-                        print("Invalid if instruction. Expected format: if condition, value, action")
-                        continue
-                    condition = condition_actions[0].strip()
-                    value = condition_actions[1].strip()
-                    action = condition_actions[2].strip()
-                    if condition.startswith('"') and condition.endswith('"'):
-                        condition = condition[1:-1]
-                    if value.startswith('"') and value.endswith('"'):
-                        value = value[1:-1]
-                    if value in self.variables:
-                        value = self.variables[value]
-                    if condition in self.variables:
-                        condition = self.variables[condition]
-                    if condition == "*" or action == "*":
-                        self.interpret(action)
-                    elif value == condition:
-                        self.interpret(action)
+                    line = line[2:].split(".")
+                    condition = line[0].strip()[1:-1]
+                    action = line[1].strip()[1:-1]
+                    if "==" in condition:
+                        condition = condition.split("==")
+                        condition[0].strip()
+                        condition[1].strip()
+                        condition_count = 1
+                        for value in condition:
+                            if value.startswith('"') and value.endswith('"'):
+                                value = value[1:-1]
+                            elif value == True or False:
+                                continue
+                            else:
+                                condition[condition_count -1] = self.variables[value]
+                            condition_count +=1
+                        if condition[0] == condition[1]:
+                            self.interpret(action)
+                    elif "!=" in condition:
+                        condition = condition.split("!=")
+                        condition[0].strip()
+                        condition[1].strip()
+                        condition_count = 1
+                        for value in condition:
+                            if value.startswith('"') and value.endswith('"'):
+                                value = value[1:-1]
+                            elif value == True or False:
+                                continue
+                            else:
+                                condition[condition_count -1] = self.variables[value]
+                            condition_count +=1
+                        if condition[0] != condition[1]:
+                            self.interpret(action)
+                    elif "<=" in condition:
+                        condition = condition.split("<=")
+                        condition[0].strip()
+                        condition[1].strip()
+                        condition_count = 1
+                        for value in condition:
+                            if value.startswith('"') and value.endswith('"'):
+                                value = value[1:-1]
+                            elif value == True or False:
+                                continue
+                            else:
+                                condition[condition_count -1] = self.variables[value]
+                            condition_count +=1
+                        if condition[0] <= condition[1]:
+                            self.interpret(action)
+                    elif ">=" in condition:
+                        condition = condition.split(">=")
+                        condition[0].strip()
+                        condition[1].strip()
+                        condition_count = 1
+                        for value in condition:
+                            if value.startswith('"') and value.endswith('"'):
+                                value = value[1:-1]
+                            elif value == True or False:
+                                continue
+                            else:
+                                condition[condition_count -1] = self.variables[value]
+                            condition_count +=1
+                        if condition[0] >= condition[1]:
+                            self.interpret(action)
+                    elif "<" in condition:
+                        condition = condition.split("<")
+                        condition[0].strip()
+                        condition[1].strip()
+                        condition_count = 1
+                        for value in condition:
+                            if value.startswith('"') and value.endswith('"'):
+                                value = value[1:-1]
+                            elif value == True or False:
+                                continue
+                            else:
+                                condition[condition_count -1] = self.variables[value]
+                            condition_count +=1
+                        if condition[0] < condition[1]:
+                            self.interpret(action)
+                    elif ">" in condition:
+                        condition = condition.split(">")
+                        condition[0].strip()
+                        condition[1].strip()
+                        condition_count = 1
+                        for value in condition:
+                            if value.startswith('"') and value.endswith('"'):
+                                value = value[1:-1]
+                            elif value == True or False:
+                                continue
+                            else:
+                                condition[condition_count -1] = self.variables[value]
+                            condition_count +=1
+                        if condition[0] > condition[1]:
+                            self.interpret(action)
                 elif line.startswith("/"):
                     self.variable_definition_in_function_body = "no"
                     function_definition = line[1:].split("{")
