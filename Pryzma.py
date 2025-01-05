@@ -7,7 +7,7 @@ import json
 import shutil
 import zipfile
 import platform
-
+import requests
 
 
 class PryzmaInterpreter:
@@ -1247,19 +1247,15 @@ def shell(code):
         else:
                 print("Invalid command. Usage: history [search_term | index | clear]")
     elif code.startswith("ppm"):
-        try:
-            import requests
-            if code == "ppm":
-                if not os.path.exists(PackageManager.user_packages_path):
-                    os.makedirs(PackageManager.user_packages_path)
-                PackageManager.shell_mode(PackageManager)
-            else:
-                if not os.path.exists(PackageManager.user_packages_path):
-                    os.makedirs(PackageManager.user_packages_path)
-                code = code[len("ppm "):].strip()
-                PackageManager.execute_ppm_command(PackageManager, code.split())
-        except ModuleNotFoundError:
-            print("Module 'requests' not found, please install it to use ppm")
+        if code == "ppm":
+            if not os.path.exists(PackageManager.user_packages_path):
+                os.makedirs(PackageManager.user_packages_path)
+            PackageManager.shell_mode(PackageManager)
+        else:
+            if not os.path.exists(PackageManager.user_packages_path):
+                os.makedirs(PackageManager.user_packages_path)
+            code = code[len("ppm "):].strip()
+            PackageManager.execute_ppm_command(PackageManager, code.split())
     elif code == "info":
         PryzmaInterpreter.display_system_info()
     else:
