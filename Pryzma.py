@@ -43,6 +43,15 @@ class PryzmaInterpreter:
             if "#" in line:
                 line = line.split("#")[0]
             
+            handled = False
+            for handler in self.custom_handlers.values():
+                if handler(line):
+                    handled = True
+                    break
+
+            if handled:
+                continue
+
             try:
                 if line.startswith("print"):
                     value = line[len("print"):].strip()
@@ -441,14 +450,13 @@ class PryzmaInterpreter:
                     if line == "" or line.startswith("#"):
                         continue
                     else:
-                        # Handle unknown keywords using custom handlers
                         handled = False
                         for handler in self.custom_handlers.values():
                             if handler(line):
                                 handled = True
                                 break
                         if not handled:
-                            print(f"Invalid statement at line {self.current_line}: {line}")
+                            print(f"Unknown keyword at line {self.current_line}: {line}")
             except Exception as e:
                 print(f"Error at line {self.current_line}: {e}")
 
