@@ -456,7 +456,7 @@ class PryzmaInterpreter:
                                 handled = True
                                 break
                         if not handled:
-                            print(f"Unknown keyword at line {self.current_line}: {line}")
+                            print(f"Invalid statement at line {self.current_line}: {line}")
             except Exception as e:
                 print(f"Error at line {self.current_line}: {e}")
 
