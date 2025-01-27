@@ -16,6 +16,7 @@ class PryzmaInterpreter:
         self.variables = {}
         self.functions = {}
         self.tk_vars = {}
+        self.custom_handlers = {}
 
     def interpret_file(self, file_path, *args):
         self.file_path = file_path.strip('"')
@@ -430,6 +431,9 @@ class PryzmaInterpreter:
                             self.interpret(part)
                     else:
                         self.interpret(code)
+                elif line.startswith("load(") and line.endswith(")"):
+                    module_path = line[5:-1].strip('"')
+                    self.load_module(module_path)
                 elif line == "stop":
                     input("Press any key to continue...")
                     break
@@ -437,9 +441,31 @@ class PryzmaInterpreter:
                     if line == "" or line.startswith("#"):
                         continue
                     else:
-                        print(f"Invalid statement at line {self.current_line}: {line}")
+                        # Handle unknown keywords using custom handlers
+                        handled = False
+                        for handler in self.custom_handlers.values():
+                            if handler(line):
+                                handled = True
+                                break
+                        if not handled:
+                            print(f"Invalid statement at line {self.current_line}: {line}")
             except Exception as e:
                 print(f"Error at line {self.current_line}: {e}")
+
+    def load_module(self, module_path):
+        """Load an external Python module and register its start function."""
+        try:
+            module_name = os.path.basename(module_path).replace(".py", "")
+            spec = importlib.util.spec_from_file_location(module_name, module_path)
+            module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(module)
+
+            if hasattr(module, "start"):
+                self.custom_handlers[module_name] = module.start
+            else:
+                print(f"Module '{module_name}' does not have a 'start' function.")
+        except Exception as e:
+            print(f"Error loading module '{module_path}': {e}")
 
     def decrement_variable(self, variable):
         if variable in self.variables:

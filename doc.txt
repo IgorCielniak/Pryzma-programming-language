@@ -441,6 +441,29 @@ C:\Users\User\Desktop\
 
 as the argument you can also pass a variable
 
+Extending the interpreters functionality:
+
+you can define csutom keywords by making and loading a pyyhon extesnion for the interpreter, example extension:
+
+def start(line):
+    if line.startswith("customfunc"):
+        text = line[10:].strip()
+        print(text)
+        return True  # Indicate that the line was handled
+    return False  # Indicate that the line was not handled
+
+this function takes the line and checks if it starts with customfunc and if it does it print the rest of the line
+excluding the "customfunc"
+
+to use the custom keywords from the pryzma code you need to load the module like this:
+
+load("/home/user/Desktop/new.py")
+customfunc hello
+
+this code will load the module and print "hello"
+
+the funcion in the python module code needs to be named "start"
+
 Running Programs:
 
 To run a Pryzma program, save the code in a text file execute it by lunching the
