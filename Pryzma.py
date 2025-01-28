@@ -450,11 +450,6 @@ class PryzmaInterpreter:
                     if line == "" or line.startswith("#"):
                         continue
                     else:
-                        handled = False
-                        for handler in self.custom_handlers.values():
-                            if handler(line):
-                                handled = True
-                                break
                         if not handled:
                             print(f"Invalid statement at line {self.current_line}: {line}")
             except Exception as e:
