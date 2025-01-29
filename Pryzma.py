@@ -245,10 +245,18 @@ class PryzmaInterpreter:
                         print(f"Invalid content at line {self.current_line}: {content}")
                 elif line.startswith("delvar(") and line.endswith(")"):
                     variable = line[7:-1]
+                    if variable.startswith('"') and variable.endswith('"'):
+                        variable = variable[1:-1]
+                    else:
+                        variable = self.variables[variable]
                     self.variables.pop(variable)
                 elif line.startswith("delfunc(") and line.endswith(")"):
                     function = line[8:-1]
-                    self.functions.pop(variable)
+                    if function.startswith('"') and function.endswith('"'):
+                        function = function[1:-1]
+                    else:
+                        function = self.variables[function]
+                    self.functions.pop(function)
                 elif line.startswith("whilen"):
                     condition_action = line[len("whilen"):].split(",", 2)
                     if len(condition_action) != 3:
@@ -441,7 +449,11 @@ class PryzmaInterpreter:
                     else:
                         self.interpret(code)
                 elif line.startswith("load(") and line.endswith(")"):
-                    module_path = line[5:-1].strip('"')
+                    module_path = line[5:-1]
+                    if module_path.startswith('"') and module_path.endswith('"'):
+                        module_path = module_path[1:-1]
+                    else:
+                        module_path = self.variables[module_path]
                     self.load_module(module_path)
                 elif line == "stop":
                     input("Press any key to continue...")

@@ -379,13 +379,25 @@ a = "text"
 
 print a
 
-delvar(a)
+delvar("a")
 
 print a
 
 it will print text and then it will give error that will say that variable a doesn't exist
+as the argument for the delvar() function you cann pass strings with the name of the function or a variable so you can do this:
 
-or delfunc to to delete a function
+a = "text"
+b = "a"
+
+print a
+
+delvar(b)
+
+print a
+
+the output will be the same as in the earlier example
+
+you can also delfunc to to delete a function in the same way
 
 interpret_pryzma:
 
@@ -461,7 +473,7 @@ load("/home/user/Desktop/new.py")
 customfunc hello
 
 this code will load the module and print "hello"
-
+the arg fot the load() function can also be a variable
 the funcion in the python module code needs to be named "start"
 
 Running Programs:
