@@ -1,4 +1,4 @@
-input p::"password:"
+input p::"initial password:"
 
 /login{input pass::"password:"|if (p==pass).(print "correct password")|if (p!=pass).(@incorrect)}
 

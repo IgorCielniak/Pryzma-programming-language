@@ -2,6 +2,8 @@ Pryzma programming language official documentation
 
 Pryzma is a simple interpreted programing language written in python
 
+if you wish you can put semicolons at the end of a line but you don't need to
+
 Variables:
 
 in pryzma you have strings, intigers, floats, booleans, lists, dictionaries and tuples:

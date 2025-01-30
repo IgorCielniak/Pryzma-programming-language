@@ -33,13 +33,16 @@ class PryzmaInterpreter:
         self.functions[name] = body
 
     def interpret(self, program):
-        lines = program.split('\n')
+        program = program.replace('\n', ";")
         self.current_line = 0
         
+        lines = re.split(r';(?=(?:[^"]*"[^"]*")*[^"]*$)', program)
+        lines = [stmt.strip() for stmt in lines if stmt.strip()]
+
         for line in lines:
             self.current_line += 1
             line = line.strip()
-
+            
             if "#" in line:
                 line = line.split("#")[0]
             
