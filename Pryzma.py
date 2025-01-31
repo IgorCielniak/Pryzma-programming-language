@@ -51,10 +51,11 @@ class PryzmaInterpreter:
 
             for key_word in self.deleted_key_words:
                 if line.startswith(key_word):
+                    keyword = key_word
                     deleted_keyword = True
 
             if deleted_keyword:
-                print("Error: keyword deleted")
+                print(f"Error: keyword deleted '{keyword}'")
                 break
 
             handled = False
