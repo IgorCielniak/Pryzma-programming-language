@@ -17,6 +17,7 @@ class PryzmaInterpreter:
         self.functions = {}
         self.tk_vars = {}
         self.custom_handlers = {}
+        self.deleted_key_words = []
 
     def interpret_file(self, file_path, *args):
         self.file_path = file_path.strip('"')
@@ -47,6 +48,17 @@ class PryzmaInterpreter:
             if "#" in line:
                 line = line.split("#")[0]
             
+            deleted_keyword = False
+
+            for key_word in self.deleted_key_words:
+                if line.startswith(key_word):
+                    keyword = key_word
+                    deleted_keyword = True
+
+            if deleted_keyword:
+                print(f"Error: keyword deleted '{keyword}'")
+                break
+
             handled = False
             for handler in self.custom_handlers.values():
                 if handler(line):
@@ -261,6 +273,13 @@ class PryzmaInterpreter:
                     else:
                         function = self.variables[function]
                     self.functions.pop(function)
+                elif line.startswith("delkeyword(") and line.endswith(")"):
+                    key_word = line[11:-1] 
+                    if key_word.startswith('"') and key_word.endswith('"'):
+                        key_word = key_word[1:-1]
+                    else:
+                        key_word = self.variables[key_word]
+                    self.deleted_key_words.append(key_word)
                 elif line.startswith("whilen"):
                     condition_action = line[len("whilen"):].split(",", 2)
                     if len(condition_action) != 3:

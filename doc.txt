@@ -399,7 +399,8 @@ print a
 
 the output will be the same as in the earlier example
 
-you can also delfunc to to delete a function in the same way
+you can also delfunc to to delete a function in the same way or
+delkeyword() to delete a key word (yes this actually works)
 
 interpret_pryzma:
 
