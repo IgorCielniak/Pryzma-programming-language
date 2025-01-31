@@ -18,12 +18,13 @@ class PryzmaInterpreter:
         self.tk_vars = {}
         self.custom_handlers = {}
         self.deleted_key_words = []
+        self.variables["interpreter_path"] = __file__
+
 
     def interpret_file(self, file_path, *args):
         self.file_path = file_path.strip('"')
         self.variables["pargs"] = args
         self.variables["file"] = os.path.abspath(file_path)
-        self.variables["interpreter_path"] = __file__
         try:
             with open(self.file_path, 'r') as file:
                 program = file.read()
@@ -1349,7 +1350,7 @@ if __name__ == "__main__":
     tkinter_enabled = False
     history = []
     running_from_file = False
-    version = 5.2
+    version = 5.4
 
     if len(sys.argv) >= 2:
         file_path = sys.argv[1]
