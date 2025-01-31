@@ -430,10 +430,12 @@ call("C:\Users\User\Desktop\test2.py", "func2", "hello from python")
 
 and file "C:\Users\User\Desktop\test2.py" content being:
 
-def func2(arg):
+def func2(variables, arg):
         print(arg)
 
 it will print "hello from python"
+the variables is passed as well so you can define variables from python that are later accesable from the main pryzma script
+it needs to accept the variables even if you don't need it
 
 Time:
 

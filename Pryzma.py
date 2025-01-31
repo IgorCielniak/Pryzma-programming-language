@@ -1082,7 +1082,7 @@ limitations under the License.
                         converted_args.append(self.variables[arg])
                     else:
                         converted_args.append(arg)
-                func(*converted_args)
+                func(self.variables, *converted_args)
             else:
                 print(f"'{function_name}' is not callable in '{file_name}'.")
         else:
