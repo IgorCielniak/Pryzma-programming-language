@@ -62,7 +62,7 @@ class PryzmaInterpreter:
 
             handled = False
             for handler in self.custom_handlers.values():
-                if handler(line):
+                if handler(self, line):
                     handled = True
                     break
 
