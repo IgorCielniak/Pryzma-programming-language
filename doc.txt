@@ -230,14 +230,14 @@ incrementing by one:
 i = 0
 i++
 print i
-output will be 1 , ++ increments by one
+output will be 1 , ++ increments by one you can also do ++i
 
 decrementing by one:
 
 i = 1
 i--
 print i
-output will be 0 , -- increments by one
+output will be 0 , -- decrements by one you can also do --i
 
 Tkinter for Pryzma:
 
