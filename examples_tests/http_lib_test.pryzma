@@ -1,9 +1,0 @@
-use http
-
-#@ping("youtube.com")
-
-@download("https://raw.githubusercontent.com/IgorCielniak/Pryzma-packages/refs/heads/main/http/http.pryzma")
-response = str(response)
-response = splitby("\n", response)
-
-for i, 0:len(response)-1, print response[i]
