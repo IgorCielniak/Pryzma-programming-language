@@ -448,6 +448,11 @@ time = end_time - start_time
 print time
 
 and it will print how much time it took to execute the code, timenow returns the current time.
+if you want the program to wait you can do
+
+wait(5)
+
+the "5" in this example is time in seconds that you want to wait
 
 Dir:
 
