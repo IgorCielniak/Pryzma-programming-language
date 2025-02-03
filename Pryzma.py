@@ -1332,7 +1332,7 @@ def shell(code):
         else:
             if not os.path.exists(PackageManager.user_packages_path):
                 os.makedirs(PackageManager.user_packages_path)
-            code = code[len("ppm "):].strip()
+            code = code[len("ppm"):].strip()
             PackageManager.execute_ppm_command(PackageManager, code.split())
     elif code == "info":
         PryzmaInterpreter.display_system_info()
