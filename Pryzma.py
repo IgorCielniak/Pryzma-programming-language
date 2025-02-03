@@ -481,7 +481,7 @@ class PryzmaInterpreter:
                         module_path = self.variables[module_path]
                     self.load_module(module_path)
                 elif line.startswith("wait(") and line.endswith(")"):
-                    time_to_wait = int(line[5:-1])
+                    time_to_wait = float(line[5:-1])
                     time.sleep(time_to_wait)
                 elif line == "stop":
                     input("Press any key to continue...")
