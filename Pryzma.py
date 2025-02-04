@@ -1203,7 +1203,7 @@ class PackageManager:
                 print("License:", metadata.get("license", "License not specified."))
                 print()
         else:
-            print("Package not found.")
+            print("Package metadata not found.")
 
     def display_help(self):
         help_text = """
@@ -1211,7 +1211,6 @@ Available commands:
     - remove <package_name>: Remove a package from the repository.
     - list: List all installed packages.
     - install <package_name>: Install a package from the repository.
-    - update: Update all installed packages.
     - update <package_name>: Update a specific package or all packages if no name is provided.
     - show <package_name>: Show information about a specific package or all packages if no name is provided.
     - help: Show this help message.
