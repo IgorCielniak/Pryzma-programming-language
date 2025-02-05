@@ -316,14 +316,13 @@ contain the string "text", variables also can be used as arguments like that:
 
 
 
-/add{print arg1}
+/add{print args[0]}
 
 a = "text"
 
 @add(a)
 
-when calling a function at least one argument need to be passed even when it is not going to be use other wise you will get an error,for now calling a function with arguments in an if statment is impossible
-to call a function without argument you can do, when calling a function a variable argc is creates that holds a value of how many arguments were passed to the function.
+to call a function without argument you can do
 
 @add
 
