@@ -311,7 +311,8 @@ calling functions:
 
 @function_name("text")
 
-string text will be automatically assigned to variable arg1,variables also can be used as arguments like that:
+a list called args will be created and contain all arguments in this case it would
+contain the string "text", variables also can be used as arguments like that:
 
 
 

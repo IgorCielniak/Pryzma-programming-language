@@ -198,19 +198,19 @@ class PryzmaInterpreter:
                         arg = arg.strip(")")
                         if arg:
                             arg = arg.split(",")
-                            self.variables["argc"] = len(arg)
                             for args in range(len(arg)):
                                 arg[args] = arg[args].lstrip()
                             for args in range(len(arg)):
                                 if arg[args].startswith('"') and arg[args].endswith('"'):
-                                    self.variables[f'arg{args+1}'] = arg[args][1:-1]
+                                    arg[args] = arg[args][1:-1]
                                 elif arg[args] in self.variables:
-                                    self.variables[f'arg{args+1}'] = self.variables[arg[args]]
+                                    arg[args] = self.variables[arg[args]]
                                 elif arg[args].isdigit():
-                                    self.variables[f'arg{args+1}'] = int(arg[args])
+                                    arg[args] = int(arg[args])
                                 else:
                                     print(f"Invalid argument at line {self.current_line}")
                                     break
+                            self.variables["args"] = arg
                     if function_name in self.functions:
                         command = 0
                         while command < len(self.functions[function_name]):
