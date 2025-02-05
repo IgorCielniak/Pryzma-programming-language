@@ -716,7 +716,7 @@ class PryzmaInterpreter:
         end_val = self.evaluate_expression(end)
         
         if isinstance(start_val, int) and isinstance(end_val, int):
-            for val in range(start_val, end_val + 1):
+            for val in range(start_val, end_val):
                 self.variables[loop_var] = val
                 self.interpret(action)
         else:
