@@ -1,6 +1,6 @@
 
 
-/add{print arg1}
+/add{print args[0]}
 
 a = 1
 
