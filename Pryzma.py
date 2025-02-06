@@ -182,7 +182,6 @@ class PryzmaInterpreter:
                         if condition[0] > condition[1]:
                             self.interpret(action)
                 elif line.startswith("/"):
-                    self.variable_definition_in_function_body = "no"
                     function_definition = line[1:].split("{")
                     if len(function_definition) == 2:
                         function_name = function_definition[0].strip()
