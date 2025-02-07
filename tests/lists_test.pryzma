@@ -1,0 +1,11 @@
+a = [1,2,3]
+
+
+append a, "text"
+
+print a
+
+pop a, 2
+
+print a
+

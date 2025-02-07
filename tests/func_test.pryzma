@@ -1,0 +1,6 @@
+/func1{print args[0]}
+
+/func2{@func1("text")}
+
+@func2
+
