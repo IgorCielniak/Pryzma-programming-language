@@ -1,3 +1,5 @@
-/func{for i,0:len(args),print args[i]}
+/func{&
+for i,0:len(args),print args[i]&
+}
 
 @func("hello", "world")
