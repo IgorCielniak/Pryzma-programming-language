@@ -348,11 +348,17 @@ there is also whilen that works the same but checks if the variables aren't equa
 
 Exec function:
 
-exec bash command
+exec "os command"
 
 can be used like that:
 
-exec echo Hello
+exec "echo Hello"
+
+or:
+
+command = "echo world"
+
+exec command
 
 Read and write:
 

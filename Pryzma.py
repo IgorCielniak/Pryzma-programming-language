@@ -243,7 +243,11 @@ class PryzmaInterpreter:
                     index = index.strip()
                     self.pop_from_list(list_name, index)
                 elif line.startswith("exec"):
-                    line = line[5:]
+                    line = line[4:].strip()
+                    if line.startswith('"') and line.endswith('"'):
+                        line = line[1:-1]
+                    else:
+                        line = self.variables[line]
                     os.system(line)
                 elif line.startswith("write(") and line.endswith(")"):
                     file_path, content = line[6:-1].split(",")
