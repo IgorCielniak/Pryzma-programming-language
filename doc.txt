@@ -487,6 +487,24 @@ this code will load the module and print "hello"
 the arg fot the load() function can also be a variable
 the funcion in the python module code needs to be named "start"
 
+& usage:
+
+if you place & at the and of a line at interpreting time the line
+gets merged with the next one so a program like this:
+
+/func{&
+print "hello"|&
+print "world"&
+}
+
+before beeing pased to the main interpreting function would be evaluated
+and look like this:
+
+/func{print "hello"|print "world"}
+
+this allows for all sort of weird interesting and usefull thinks
+such as  multiline functions as shown in the example
+
 Running Programs:
 
 To run a Pryzma program, save the code in a text file execute it by lunching the

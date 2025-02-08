@@ -37,9 +37,10 @@ class PryzmaInterpreter:
         self.functions[name] = body
 
     def interpret(self, program):
+        program = program.replace('&\n', '')
         program = program.replace('\n', ";")
         self.current_line = 0
-        
+
         lines = re.split(r';(?=(?:[^"]*"[^"]*")*[^"]*$)', program)
         lines = [stmt.strip() for stmt in lines if stmt.strip()]
 
