@@ -840,10 +840,16 @@ limitations under the License.
             file_path = file_path[1:-1]
         try:
             with open(file_path, 'r') as file:
-                lines = file.readlines()
+                program = file.read()
         except FileNotFoundError:
             print(f"File '{file_path}' not found.")
             return
+
+        program = program.replace('&\n', '')
+        program = program.replace('\n', ";")
+
+        lines = re.split(r';(?=(?:[^"]*"[^"]*")*[^"]*$)', program)
+        lines = [stmt.strip() for stmt in lines if stmt.strip()]
 
         commands_info = {
             's': 'Step to the next line',
