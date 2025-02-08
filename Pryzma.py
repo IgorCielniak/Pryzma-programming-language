@@ -1352,16 +1352,19 @@ if __name__ == "__main__":
     tkinter_enabled = False
     history = []
     running_from_file = False
-    version = 5.4
+    version = 5.5
 
     if len(sys.argv) >= 2:
         file_path = sys.argv[1]
         arguments = sys.argv[1:]
+        debug = False
         for arg in arguments:
             if arg.startswith("-"):
                 if arg == "-d":
+                    debug = True
                     interpreter.debug_interpreter(file_path, running_from_file)
-        interpreter.interpret_file(file_path, *arguments)
+        if debug == False:
+            interpreter.interpret_file(file_path, *arguments)
         sys.exit()
 
     print(f"""Pryzma {version}
