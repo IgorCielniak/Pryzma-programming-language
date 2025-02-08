@@ -209,15 +209,16 @@ stop
 
 Loops:
 
-for i, 1:5, print i
+for i, 1:3, print i,print "hello"
 
 output will be:
 
 1
+hello
 2
+hello
 3
-4
-5
+hello
 
 while a, b, print i
 

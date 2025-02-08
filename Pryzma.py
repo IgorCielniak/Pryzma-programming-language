@@ -80,11 +80,14 @@ class PryzmaInterpreter:
                     self.custom_input(variable)
                 elif line.startswith("for"):
                     loop_statement = line[len("for"):].strip()
-                    loop_var, range_expr, action = loop_statement.split(",", 2)
+                    loop_var = loop_statement.split(",")[0]
+                    range_expr = loop_statement.split(",")[1]
+                    actions = loop_statement.split(",")[2:]
                     loop_var = loop_var.strip()
                     range_expr = range_expr.strip()
-                    action = action.strip()
-                    self.for_loop(loop_var, range_expr, action)
+                    for action in actions:
+                        action = action.strip()
+                    self.for_loop(loop_var, range_expr, actions)
                 elif line.startswith("use"):
                     file_path = line[len("use"):].strip()
                     self.import_functions(file_path)
@@ -710,7 +713,7 @@ class PryzmaInterpreter:
         value = self.get_input(prompt)
         self.variables[variable_name] = value
 
-    def for_loop(self, loop_var, range_expr, action):
+    def for_loop(self, loop_var, range_expr, actions):
         start, end = range_expr.split(":")
         start_val = self.evaluate_expression(start)
         end_val = self.evaluate_expression(end)
@@ -718,7 +721,8 @@ class PryzmaInterpreter:
         if isinstance(start_val, int) and isinstance(end_val, int):
             for val in range(start_val, end_val):
                 self.variables[loop_var] = val
-                self.interpret(action)
+                for action in actions:
+                    self.interpret(action)
         else:
             print("Invalid range expression for loop.")
 
