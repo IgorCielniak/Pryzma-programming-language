@@ -839,10 +839,12 @@ limitations under the License.
         else:
             print(f"Function '{function_name}' is not defined in '{file_path}'.")
 
-    def debug_interpreter(interpreter, file_path, running_from_file):
+    def debug_interpreter(self, interpreter, file_path, running_from_file, arguments):
         current_line = 0
         breakpoints = set()
         log_file = None
+        self.variables["pargs"] = arguments
+        self.variables["file"] = os.path.abspath(file_path)
 
         if file_path.startswith('"') and file_path.endswith('"'):
             file_path = file_path[1:-1]
@@ -1309,7 +1311,7 @@ def shell(code):
         running_from_file = True
         file_path = input("Path to the file to debug ('exit' to quit debug mode): ")
         if file_path != "exit":
-            interpreter.debug_interpreter(file_path, running_from_file)
+            interpreter.debug_interpreter(interpreter, file_path, running_from_file)
         running_from_file = False
     elif code == "func":
         interpreter.execute_function_from_file()
@@ -1376,8 +1378,9 @@ if __name__ == "__main__":
         for arg in arguments:
             if arg.startswith("-"):
                 if arg == "-d":
+                    arguments.remove(arg)
                     debug = True
-                    interpreter.debug_interpreter(file_path, running_from_file)
+                    interpreter.debug_interpreter(interpreter, file_path, running_from_file, arguments)
         if debug == False:
             interpreter.interpret_file(file_path, *arguments)
         sys.exit()
