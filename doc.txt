@@ -240,6 +240,24 @@ i--
 print i
 output will be 0 , -- decrements by one you can also do --i
 
+normal incrementing:
+you can use += like this
+
+x=5
+x+=5
+print x
+
+it will print 10
+
+normal decrenenting:
+
+x = 10
+x-=5
+print x
+
+output:
+5
+
 Tkinter for Pryzma:
 
 to enable the use of tkinter from the code you can do some think like that:

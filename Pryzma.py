@@ -221,6 +221,22 @@ class PryzmaInterpreter:
                             command += 1
                     else:
                         print(f"Function '{function_name}' is not defined.")
+                elif "+=" in line:
+                    line = line.split("+=")
+                    if len(line) != 2:
+                        print("Too much arguments")
+                    var = line[0].strip()
+                    var2 = line[1].strip()
+                    var2 = self.evaluate_expression(var2)
+                    self.variables[var] += var2
+                elif "-=" in line:
+                    line = line.split("-=")
+                    if len(line) != 2:
+                        print("Too much arguments")
+                    var = line[0].strip()
+                    var2 = line[1].strip()
+                    var2 = self.evaluate_expression(var2)
+                    self.variables[var] -= var2
                 elif "=" in line:
                     variable, expression = line.split('=')
                     variable = variable.strip()
