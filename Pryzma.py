@@ -1311,7 +1311,7 @@ def shell(code):
         running_from_file = True
         file_path = input("Path to the file to debug ('exit' to quit debug mode): ")
         if file_path != "exit":
-            interpreter.debug_interpreter(interpreter, file_path, running_from_file)
+            interpreter.debug_interpreter(interpreter, file_path, running_from_file, [])
         running_from_file = False
     elif code == "func":
         interpreter.execute_function_from_file()
