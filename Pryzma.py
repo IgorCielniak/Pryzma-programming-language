@@ -221,6 +221,18 @@ class PryzmaInterpreter:
                             command += 1
                     else:
                         print(f"Function '{function_name}' is not defined.")
+                elif line.startswith("interpret_pryzma(") and line.endswith(")"):
+                    code = line[17:-1]
+                    if "|" in code:
+                        code = code.split("|")
+                        for part in code:
+                            if part.startswith('"') and part.endswith('"'):
+                                part = part[1:-1]
+                            else:
+                                part = self.variables[part]
+                            self.interpret(part)
+                    else:
+                        self.interpret(code)
                 elif "+=" in line:
                     line = line.split("+=")
                     if len(line) != 2:
@@ -488,14 +500,6 @@ class PryzmaInterpreter:
                         new = self.variables[args[2]]
                     string = string.replace(old,new)
                     self.variables[args[0]] = string
-                elif line.startswith("interpret_pryzma(") and line.endswith(")"):
-                    code = line[17:-1]
-                    if "|" in code:
-                        code = code.split("|")
-                        for part in code:
-                            self.interpret(part)
-                    else:
-                        self.interpret(code)
                 elif line.startswith("load(") and line.endswith(")"):
                     module_path = line[5:-1]
                     if module_path.startswith('"') and module_path.endswith('"'):
