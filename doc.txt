@@ -532,6 +532,16 @@ and look like this:
 this allows for all sort of weird interesting and usefull thinks
 such as  multiline functions as shown in the example
 
+Try:
+
+Pryzma has a VERY basic try that tries to execute a piece of code and if it fails returns one
+how it looks:
+
+try(print a|a = 10)
+
+a variable err will be created and hold a value 1 after executing this code
+becouse the print instruction tries to acces variable a that is created later so it fails
+
 Running Programs:
 
 To run a Pryzma program, save the code in a text file execute it by lunching the

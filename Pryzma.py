@@ -20,6 +20,7 @@ class PryzmaInterpreter:
         self.custom_handlers = {}
         self.deleted_key_words = []
         self.variables["interpreter_path"] = __file__
+        self.in_try_block = False
 
 
     def interpret_file(self, file_path, *args):
@@ -59,7 +60,10 @@ class PryzmaInterpreter:
                     deleted_keyword = True
 
             if deleted_keyword:
-                print(f"Error: keyword deleted '{keyword}'")
+                if not self.in_try_block:
+                    print(f"Error: keyword deleted '{keyword}'")
+                else:
+                    return 1
                 break
 
             handled = False
@@ -193,7 +197,10 @@ class PryzmaInterpreter:
                         function_body2 = function_body.split("|")
                         self.define_function(function_name, function_body2)
                     else:
-                        print(f"Invalid function definition: {line}")
+                        if not self.in_try_block:
+                            print(f"Invalid function definition: {line}")
+                        else:
+                            return 1
                 elif line.startswith("@"):
                     function_name = line[1:].strip()
                     if "(" in function_name:
@@ -211,7 +218,10 @@ class PryzmaInterpreter:
                                 elif arg[args].isdigit():
                                     arg[args] = int(arg[args])
                                 else:
-                                    print(f"Invalid argument at line {self.current_line}")
+                                    if not self.in_try_block:
+                                        print(f"Invalid argument at line {self.current_line}")
+                                    else:
+                                        return 1
                                     break
                             self.variables["args"] = arg
                     if function_name in self.functions:
@@ -220,7 +230,10 @@ class PryzmaInterpreter:
                             self.interpret(self.functions[function_name][command])
                             command += 1
                     else:
-                        print(f"Function '{function_name}' is not defined.")
+                        if not self.in_try_block:
+                            print(f"Function '{function_name}' is not defined.")
+                        else:
+                            return 1
                 elif line.startswith("interpret_pryzma(") and line.endswith(")"):
                     code = line[17:-1]
                     if "|" in code:
@@ -233,10 +246,27 @@ class PryzmaInterpreter:
                             self.interpret(part)
                     else:
                         self.interpret(code)
+                elif line.startswith("try(") and line.endswith(")"):
+                    self.in_try_block = True
+                    instructions = line[4:-1].split("|")
+                    error = 0
+                    for instruction in instructions:
+                        if "read(" or "write(" or "index(" or "in(" or "all(" or "isnumber(" or "dir(" in instruction:
+                            self.interpret(instruction)
+                        else:
+                            self.variables["err"] = self.interpret(instruction)
+                        if self.variables["err"] == 1:
+                            error = 1
+                    self.variables["err"] = error
+                    self.in_try_block = False
                 elif "+=" in line:
                     line = line.split("+=")
                     if len(line) != 2:
-                        print("Too much arguments")
+                        if not self.in_try_block:
+                            print("Too much arguments")
+                        else:
+                            return 1
+                        continue
                     var = line[0].strip()
                     var2 = line[1].strip()
                     var2 = self.evaluate_expression(var2)
@@ -244,7 +274,11 @@ class PryzmaInterpreter:
                 elif "-=" in line:
                     line = line.split("-=")
                     if len(line) != 2:
-                        print("Too much arguments")
+                        if not self.in_try_block:
+                            print("Too much arguments")
+                        else:
+                            return 1
+                        continue
                     var = line[0].strip()
                     var2 = line[1].strip()
                     var2 = self.evaluate_expression(var2)
@@ -295,7 +329,10 @@ class PryzmaInterpreter:
                     elif content in self.variables:
                         self.write_to_file(str(self.variables[content]), file_path)
                     else:
-                        print(f"Invalid content at line {self.current_line}: {content}")
+                        if not self.in_try_block:
+                            print(f"Invalid content at line {self.current_line}: {content}")
+                        else:
+                            return 1
                 elif line.startswith("delvar(") and line.endswith(")"):
                     variable = line[7:-1]
                     if variable.startswith('"') and variable.endswith('"'):
@@ -320,7 +357,10 @@ class PryzmaInterpreter:
                 elif line.startswith("whilen"):
                     condition_action = line[len("whilen"):].split(",", 2)
                     if len(condition_action) != 3:
-                        print("Invalid while loop syntax. Expected format: while condition, value, action")
+                        if not self.in_try_block:
+                            print("Invalid while loop syntax. Expected format: while condition, value, action")
+                        else:
+                            return 1
                         continue
                     condition = condition_action[0].strip()
                     value = condition_action[1].strip()
@@ -334,7 +374,10 @@ class PryzmaInterpreter:
                 elif line.startswith("while"):
                     condition_action = line[len("while"):].split(",", 2)
                     if len(condition_action) != 3:
-                        print("Invalid while loop syntax. Expected format: while condition, value, action")
+                        if not self.in_try_block:
+                            print("Invalid while loop syntax. Expected format: while condition, value, action")
+                        else:
+                            return 1
                         continue
                     condition = condition_action[0].strip()
                     value = condition_action[1].strip()
@@ -354,7 +397,10 @@ class PryzmaInterpreter:
                 elif line.startswith("move(") and line.endswith(")"):
                     instructions = line[5:-1].split(",")
                     if len(instructions) != 3:
-                        print("Invalid move instruction syntax. Expected format: move(old index, new index, list name)")
+                        if not self.in_try_block:
+                            print("Invalid move instruction syntax. Expected format: move(old index, new index, list name)")
+                        else:
+                            return 1
                         continue
                     list_name = instructions[2].strip()
                     try:
@@ -363,11 +409,17 @@ class PryzmaInterpreter:
                         value = self.variables[list_name].pop(old_index)
                         self.variables[list_name].insert(new_index, value)
                     except ValueError:
-                        print("Invalid index")
+                        if not self.in_try_block:
+                            print("Invalid index")
+                        else:
+                            return 1
                 elif line.startswith("swap(") and line.endswith(")"):
                     instructions = line[5:-1].split(",")
                     if len(instructions) != 3:
-                        print("Invalid swap instruction syntax. Expected format: swap(index 1, index 2, list name)")
+                        if not self.in_try_block:
+                            print("Invalid swap instruction syntax. Expected format: swap(index 1, index 2, list name)")
+                        else:
+                            return 1
                         continue
                     list_name = instructions[2].strip()
                     index_1 = int(instructions[0].strip())
@@ -379,7 +431,10 @@ class PryzmaInterpreter:
                     try:
                         self.variables[list_name][index_1], self.variables[list_name][index_2] = self.variables[list_name][index_2], self.variables[list_name][index_1]
                     except ValueError:
-                        print("Invalid index")
+                        if not self.in_try_block:
+                            print("Invalid index")
+                        else:
+                            return 1
                 elif line.startswith("tk"):
                     global tkinter_enabled
                     command = line[2:].strip()
@@ -422,7 +477,10 @@ class PryzmaInterpreter:
                             elif len(command) == 4:
                                 self.tk_vars[button_name] = tk.Button(self.tk_vars[window],text = button_text,command = lambda: self.interpret(button_command))
                             else:
-                                print(f"Invalid create_button command")
+                                if not self.in_try_block:
+                                    print(f"Invalid create_button command")
+                                else:
+                                    return 1
                             self.tk_vars[button_name].pack()
                         elif command.startswith("create_label(") and command.endswith(")"):
                             command = command[13:-1]
@@ -440,7 +498,10 @@ class PryzmaInterpreter:
                             elif len(command) == 3:
                                 self.tk_vars[label_name] = tk.Label(self.tk_vars[window],text = label_text)
                             else:
-                                print(f"Invalid create_label command")
+                                if not self.in_try_block:
+                                    print(f"Invalid create_label command")
+                                else:
+                                    return 1
                             self.tk_vars[label_name].pack()
                         elif command.startswith("create_entry(") and command.endswith(")"):
                             command = command[13:-1]
@@ -458,7 +519,10 @@ class PryzmaInterpreter:
                             elif len(command) == 3:
                                 self.tk_vars[entry_name] = tk.Entry(self.tk_vars[window],text = entry_text)
                             else:
-                                print(f"Invalid create_entry command")
+                                if not self.in_try_block:
+                                    print(f"Invalid create_entry command")
+                                else:
+                                    return 1
                             self.tk_vars[entry_name].pack()
                         elif command.startswith("get_entry_text(") and command.endswith(")"):
                             command = command[15:-1]
@@ -468,7 +532,10 @@ class PryzmaInterpreter:
                             if entry_name in self.tk_vars:
                                 self.variables[variable_name] = self.tk_vars[entry_name].get()
                             else:
-                                print(f"Invalid get_entry_text command")
+                                if not self.in_try_block:
+                                    print(f"Invalid get_entry_text command")
+                                else:
+                                    return 1
                         elif command.startswith("set_entry_text(") and command.endswith(")"):
                             command = command[15:-1]
                             command = command.split(",")
@@ -478,9 +545,15 @@ class PryzmaInterpreter:
                                 self.tk_vars[entry_name].delete(0, tk.END)
                                 self.tk_vars[entry_name].insert(0, self.variables[variable_name])
                             else:
-                                print(f"Invalid set_entry_text command")
+                                if not self.in_try_block:
+                                    print(f"Invalid set_entry_text command")
+                                else:
+                                    return 1
                     else:
-                        print("tkinter isn't enabled")
+                        if not self.in_try_block:
+                            print("tkinter isn't enabled")
+                        else:
+                            return 1
                 elif line.startswith("call"):
                     call_statement = line[len("call"):].strip()
                     file_name, function_name, args = self.parse_call_statement(call_statement)
@@ -488,7 +561,11 @@ class PryzmaInterpreter:
                 elif line.startswith("replace(") and line.endswith(")"):
                     args = line[8:-1].split(",")
                     if len(args) != 3:
-                        print("Invalid number of arguments for replace function.")
+                        if not self.in_try_block:
+                            print("Invalid number of arguments for replace function.")
+                        else:
+                            return 1
+                        continue
                     string = self.variables[args[0]]
                     if args[1].startswith('"') and args[1].endswith('"'):
                         old = args[1][1:-1]
@@ -518,9 +595,15 @@ class PryzmaInterpreter:
                         continue
                     else:
                         if not handled:
-                            print(f"Invalid statement at line {self.current_line}: {line}")
+                            if self.in_try_block:
+                                return 1
+                            else:
+                                print(f"Invalid statement at line {self.current_line}: {line}")
             except Exception as e:
-                print(f"Error at line {self.current_line}: {e}")
+                if self.in_try_block:
+                    return 1
+                else:
+                    print(f"Error at line {self.current_line}: {e}")
 
     def load_module(self, module_path):
         """Load an external Python module and register its start function."""
@@ -533,27 +616,45 @@ class PryzmaInterpreter:
             if hasattr(module, "start"):
                 self.custom_handlers[module_name] = module.start
             else:
-                print(f"Module '{module_name}' does not have a 'start' function.")
+                if not self.in_try_block:
+                    print(f"Module '{module_name}' does not have a 'start' function.")
+                else:
+                    return 1
         except Exception as e:
-            print(f"Error loading module '{module_path}': {e}")
+            if not self.in_try_block:
+                print(f"Error loading module '{module_path}': {e}")
+            else:
+                return 1
 
     def decrement_variable(self, variable):
         if variable in self.variables:
             if isinstance(self.variables[variable], int):
                 self.variables[variable] -= 1
             else:
-                print(f"Error: Cannot decrement non-integer variable '{variable}'.")
+                if not self.in_try_block:
+                    print(f"Error: Cannot decrement non-integer variable '{variable}'.")
+                else:
+                    return 1
         else:
-            print(f"Error: Variable '{variable}' not found.")
+            if not self.in_try_block:
+                print(f"Error: Variable '{variable}' not found.")
+            else:
+                return 1
 
     def increment_variable(self, variable):
         if variable in self.variables:
             if isinstance(self.variables[variable], int):
                 self.variables[variable] += 1
             else:
-                print(f"Error: Cannot increment non-integer variable '{variable}'.")
+                if not self.in_try_block:
+                    print(f"Error: Cannot increment non-integer variable '{variable}'.")
+                else:
+                    return 1
         else:
-            print(f"Error: Variable '{variable}' not found.")
+            if not self.in_try_block:
+                print(f"Error: Variable '{variable}' not found.")
+            else:
+                return 1
 
 
     def write_to_file(self, content, file_path):
@@ -565,7 +666,10 @@ class PryzmaInterpreter:
                 else:
                     file.write(content)
         except Exception as e:
-            print(f"Error writing to file '{file_path}': {e}")
+            if not self.in_try_block:
+                print(f"Error writing to file '{file_path}': {e}")
+            else:
+                return 1
 
     def assign_variable(self, variable, expression):
         self.variables[variable] = self.evaluate_expression(expression)
@@ -609,7 +713,10 @@ class PryzmaInterpreter:
         elif expression.startswith("splitby(") and expression.endswith(")"):
             args = expression[8:-1].split(",")
             if len(args) != 2:
-                print("Invalid number of arguments for splitby function.")
+                if not self.in_try_block:
+                    print("Invalid number of arguments for splitby function.")
+                else:
+                    self.variables["err"] = 1
                 return None
             char_to_split = args[0].strip()
             string_to_split = args[1].strip()
@@ -641,7 +748,10 @@ class PryzmaInterpreter:
                 with open(file_path, 'r') as file:
                     return file.read()
             except FileNotFoundError:
-                print(f"File '{file_path}' not found.")
+                if not self.in_try_block:
+                    print(f"File '{file_path}' not found.")
+                else:
+                    self.variables["err"] = 1
                 return ""
         elif expression.startswith("in(") and expression.endswith(")"):
             list_name, value = expression[3:-1].split(",")
@@ -655,11 +765,17 @@ class PryzmaInterpreter:
             elif value in self.variables:
                 return self.variables[value] in self.variables[list_name]
             else:
-                print(f"Variable '{value}' is not defined.")
+                if not self.in_try_block:
+                    print(f"Variable '{value}' is not defined.")
+                else:
+                    self.variables["err"] = 1
         elif expression.startswith("index(") and expression.endswith(")"):
             args = expression[6:-1].split(",")
             if len(args) != 2:
-                print("Invalid number of arguments for index function.")
+                if not self.in_try_block:
+                    print("Invalid number of arguments for index function.")
+                else:
+                    self.variables["err"] = 1
                 return None
             list_name = args[0].strip()
             value = args[1].strip()
@@ -675,15 +791,24 @@ class PryzmaInterpreter:
                     index_value = self.variables[list_name].index(value)
                     return index_value
                 except ValueError:
-                    print(f"Value '{value}' not found in list '{list_name}'.")
+                    if not self.in_try_block:
+                        print(f"Value '{value}' not found in list '{list_name}'.")
+                    else:
+                        self.variables["err"] = 1
             else:
-                print(f"Variable '{list_name}' is not a list.")
+                if not self.in_try_block:
+                    print(f"Variable '{list_name}' is not a list.")
+                else:
+                    return 1
         elif expression.startswith("all(") and expression.endswith(")"):
             list_name = expression[4:-1]
             if list_name in self.variables and isinstance(self.variables[list_name], list):
                 return " ".join(map(str, self.variables[list_name]))
             else:
-                print(f"List '{list_name}' is not defined.")
+                if not self.in_try_block:
+                    print(f"List '{list_name}' is not defined.")
+                else:
+                    self.variables["err"] = 1
                 return None
         elif expression.startswith("isanumber(") and expression.endswith(")"):
             expression = expression[10:-1]
@@ -691,7 +816,10 @@ class PryzmaInterpreter:
                 expression = self.variables[expression]
                 return str(expression).isnumeric()
             else:
-                print(f"Variable '{expression}' is not defined.")
+                if not self.in_try_block:
+                    print(f"Variable '{expression}' is not defined.")
+                else:
+                    self.variables["err"] = 1
                 return None
         elif expression.startswith("dir(") and expression.endswith(")"):
             expression = expression[4:-1]
@@ -700,7 +828,10 @@ class PryzmaInterpreter:
             elif expression in self.variables:
                 return os.path.dirname(self.variables[expression])
             else:
-                print("Invalid argument for dir() function")
+                if not self.in_try_block:
+                    print("Invalid argument for dir() function")
+                else:
+                    self.variables["err"] = 1
                 return None
         elif expression == "timenow":
             return datetime.datetime.now()
@@ -714,7 +845,10 @@ class PryzmaInterpreter:
             try:
                 return eval(expression, {}, self.variables)
             except NameError:
-                print(f"Unknown variable or expression: {expression}")
+                if not self.in_try_block:
+                    print(f"Unknown variable or expression: {expression}")
+                else:
+                    return 1
         return None
 
     def print_value(self, value):
@@ -748,7 +882,10 @@ class PryzmaInterpreter:
                 for action in actions:
                     self.interpret(action)
         else:
-            print("Invalid range expression for loop.")
+            if not self.in_try_block:
+                print("Invalid range expression for loop.")
+            else:
+                return 1
 
     def import_functions(self, file_path):
         file_path = file_path.strip('"')
@@ -779,15 +916,24 @@ class PryzmaInterpreter:
                             function_body = function_definition[1].strip().rstrip("}").split("|")
                             function_def = True
                         else:
-                            print(f"Invalid function definition: {line}")
+                            if not self.in_try_block:
+                                print(f"Invalid function definition: {line}")
+                            else:
+                                return 1
                     elif line.startswith("") or line.startswith("#"):
                         continue
                     else:
-                        print(f"Invalid statement in imported file: {line}")
+                        if not self.in_try_block:
+                            print(f"Invalid statement in imported file: {line}")
+                        else:
+                            return 1
                 if function_def:
                     self.define_function(function_name, function_body)
         except FileNotFoundError:
-            print(f"File '{file_path}' not found.")
+            if not self.in_try_block:
+                print(f"File '{file_path}' not found.")
+            else:
+                return 1
 
     def get_input(self, prompt):
         if sys.stdin.isatty():
@@ -796,13 +942,6 @@ class PryzmaInterpreter:
             sys.stdout.write(prompt)
             sys.stdout.flush()
             return sys.stdin.readline().rstrip('\n')
-
-    def evaluate_condition(self, condition):
-        if condition in self.variables:
-            return bool(self.variables[condition])
-        else:
-            print(f"Unknown variable in condition: {condition}")
-            return False
 
     def interpret_file2(self):
         self.file_path = input("Enter the file path of the program: ")
@@ -832,7 +971,10 @@ limitations under the License.
         if list_name in self.variables:
             self.variables[list_name].append(self.evaluate_expression(value))
         else:
-            print(f"List '{list_name}' does not exist.")
+            if not self.in_try_block:
+                print(f"List '{list_name}' does not exist.")
+            else:
+                return 1
 
     def pop_from_list(self, list_name, index):
         if list_name in self.variables:
@@ -843,10 +985,15 @@ limitations under the License.
                     index = self.variables[index]
                 self.variables[list_name].pop(index)
             except IndexError:
-                print(f"Index {index} out of range for list '{list_name}'.")
-                return
+                if not self.in_try_block:
+                    print(f"Index {index} out of range for list '{list_name}'.")
+                else:
+                    return 1
         else:
-            print(f"List '{list_name}' does not exist.")
+            if not self.in_tru_block:
+                print(f"List '{list_name}' does not exist.")
+            else:
+                return 1
 
 
     def execute_function_from_file(self):
@@ -1066,7 +1213,10 @@ limitations under the License.
             parts = [part.strip() for part in statement.split(",")]
             
             if len(parts) < 2:
-                raise ValueError("Invalid call statement format. Expected format: call(file_name, function_name, arg1, arg2, ...)")
+                if not self.in_try_block:
+                    print("Invalid call statement format. Expected format: call(file_name, function_name, arg1, arg2, ...)")
+                else:
+                    return 1
             
             file_name = parts[0]
             function_name = parts[1]
@@ -1089,7 +1239,10 @@ limitations under the License.
             
             return file_name, function_name, args
         else:
-            raise ValueError("Invalid call statement format. Expected format: call(file_name, function_name, arg1, arg2, ...)")
+            if not self.in_try_block:
+                print("Invalid call statement format. Expected format: call(file_name, function_name, arg1, arg2, ...)")
+            else:
+                return 1
 
     def call_function_from_file(self, file_name, function_name, args):
         if not os.path.isfile(file_name):
