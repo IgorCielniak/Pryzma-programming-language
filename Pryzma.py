@@ -237,18 +237,20 @@ class PryzmaInterpreter:
                     line = line.split("+=")
                     if len(line) != 2:
                         print("Too much arguments")
-                    var = line[0].strip()
-                    var2 = line[1].strip()
-                    var2 = self.evaluate_expression(var2)
-                    self.variables[var] += var2
+                    else:
+                        var = line[0].strip()
+                        var2 = line[1].strip()
+                        var2 = self.evaluate_expression(var2)
+                        self.variables[var] += var2
                 elif "-=" in line:
                     line = line.split("-=")
                     if len(line) != 2:
                         print("Too much arguments")
-                    var = line[0].strip()
-                    var2 = line[1].strip()
-                    var2 = self.evaluate_expression(var2)
-                    self.variables[var] -= var2
+                    else:
+                        var = line[0].strip()
+                        var2 = line[1].strip()
+                        var2 = self.evaluate_expression(var2)
+                        self.variables[var] -= var2
                 elif "=" in line:
                     variable, expression = line.split('=')
                     variable = variable.strip()
@@ -322,29 +324,31 @@ class PryzmaInterpreter:
                     if len(condition_action) != 3:
                         print("Invalid while loop syntax. Expected format: while condition, value, action")
                         continue
-                    condition = condition_action[0].strip()
-                    value = condition_action[1].strip()
-                    action = condition_action[2].strip()
-                    if (condition.startswith('"') and condition.endswith('"')) or (value.startswith('"') and value.endswith('"')):
-                        while str(self.evaluate_expression(condition)) == str(self.evaluate_expression(value)):
-                            self.interpret(action)
                     else:
-                        while str(self.variables[condition]) != str(self.variables[value]):
-                            self.interpret(action)
+                        condition = condition_action[0].strip()
+                        value = condition_action[1].strip()
+                        action = condition_action[2].strip()
+                        if (condition.startswith('"') and condition.endswith('"')) or (value.startswith('"') and value.endswith('"')):
+                            while str(self.evaluate_expression(condition)) != str(self.evaluate_expression(value)):
+                                self.interpret(action)
+                        else:
+                            while str(self.variables[condition]) != str(self.variables[value]):
+                                self.interpret(action)
                 elif line.startswith("while"):
                     condition_action = line[len("while"):].split(",", 2)
                     if len(condition_action) != 3:
                         print("Invalid while loop syntax. Expected format: while condition, value, action")
                         continue
-                    condition = condition_action[0].strip()
-                    value = condition_action[1].strip()
-                    action = condition_action[2].strip()
-                    if (condition.startswith('"') and condition.endswith('"')) or (value.startswith('"') and value.endswith('"')):
-                        while str(self.evaluate_expression(condition)) == str(self.evaluate_expression(value)):
-                            self.interpret(action)
                     else:
-                        while str(self.variables[condition]) == str(self.variables[value]):
-                            self.interpret(action)
+                        condition = condition_action[0].strip()
+                        value = condition_action[1].strip()
+                        action = condition_action[2].strip()
+                        if (condition.startswith('"') and condition.endswith('"')) or (value.startswith('"') and value.endswith('"')):
+                            while str(self.evaluate_expression(condition)) == str(self.evaluate_expression(value)):
+                                self.interpret(action)
+                        else:
+                            while str(self.variables[condition]) == str(self.variables[value]):
+                                self.interpret(action)
                 elif "++" in line:
                     variable = line.replace("++", "").strip()
                     self.increment_variable(variable)
@@ -356,30 +360,32 @@ class PryzmaInterpreter:
                     if len(instructions) != 3:
                         print("Invalid move instruction syntax. Expected format: move(old index, new index, list name)")
                         continue
-                    list_name = instructions[2].strip()
-                    try:
-                        old_index = int(instructions[0])
-                        new_index = int(instructions[1])
-                        value = self.variables[list_name].pop(old_index)
-                        self.variables[list_name].insert(new_index, value)
-                    except ValueError:
-                        print("Invalid index")
+                    else:
+                        list_name = instructions[2].strip()
+                        try:
+                            old_index = int(instructions[0])
+                            new_index = int(instructions[1])
+                            value = self.variables[list_name].pop(old_index)
+                            self.variables[list_name].insert(new_index, value)
+                        except ValueError:
+                            print("Invalid index")
                 elif line.startswith("swap(") and line.endswith(")"):
                     instructions = line[5:-1].split(",")
                     if len(instructions) != 3:
                         print("Invalid swap instruction syntax. Expected format: swap(index 1, index 2, list name)")
                         continue
-                    list_name = instructions[2].strip()
-                    index_1 = int(instructions[0].strip())
-                    index_2 = int(instructions[1].strip())
-                    if index_1 in self.variables:
-                        index_1 = self.variables[index_1]
-                    if index_2 in self.variables:
-                        index_2 = self.variables[index_2]
-                    try:
-                        self.variables[list_name][index_1], self.variables[list_name][index_2] = self.variables[list_name][index_2], self.variables[list_name][index_1]
-                    except ValueError:
-                        print("Invalid index")
+                    else:
+                        list_name = instructions[2].strip()
+                        index_1 = int(instructions[0].strip())
+                        index_2 = int(instructions[1].strip())
+                        if index_1 in self.variables:
+                            index_1 = self.variables[index_1]
+                        if index_2 in self.variables:
+                            index_2 = self.variables[index_2]
+                        try:
+                            self.variables[list_name][index_1], self.variables[list_name][index_2] = self.variables[list_name][index_2], self.variables[list_name][index_1]
+                        except ValueError:
+                            print("Invalid index")
                 elif line.startswith("tk"):
                     global tkinter_enabled
                     command = line[2:].strip()
@@ -489,17 +495,18 @@ class PryzmaInterpreter:
                     args = line[8:-1].split(",")
                     if len(args) != 3:
                         print("Invalid number of arguments for replace function.")
-                    string = self.variables[args[0]]
-                    if args[1].startswith('"') and args[1].endswith('"'):
-                        old = args[1][1:-1]
                     else:
-                        old = self.variables[args[1]]
-                    if args[2].startswith('"') and args[2].endswith('"'):
-                        new= args[2][1:-1]
-                    else:
-                        new = self.variables[args[2]]
-                    string = string.replace(old,new)
-                    self.variables[args[0]] = string
+                        string = self.variables[args[0]]
+                        if args[1].startswith('"') and args[1].endswith('"'):
+                            old = args[1][1:-1]
+                        else:
+                            old = self.variables[args[1]]
+                        if args[2].startswith('"') and args[2].endswith('"'):
+                            new= args[2][1:-1]
+                        else:
+                            new = self.variables[args[2]]
+                        string = string.replace(old,new)
+                        self.variables[args[0]] = string
                 elif line.startswith("load(") and line.endswith(")"):
                     module_path = line[5:-1]
                     if module_path.startswith('"') and module_path.endswith('"'):
