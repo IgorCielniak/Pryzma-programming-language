@@ -96,98 +96,39 @@ class PryzmaInterpreter:
                     file_path = line[len("use"):].strip()
                     self.import_functions(file_path)
                 elif line.startswith("if"):
-                    line = line[2:].split(".")
+                    line = line[2:]
+                    line = line.split(".")
                     condition = line[0].strip()[1:-1]
                     action = line[1].strip()[1:-1]
                     if "==" in condition:
-                        condition = condition.split("==")
-                        condition[0].strip()
-                        condition[1].strip()
-                        condition_count = 1
-                        for value in condition:
-                            if value.startswith('"') and value.endswith('"'):
-                                value = value[1:-1]
-                            elif value == True or False:
-                                continue
-                            else:
-                                condition[condition_count -1] = self.variables[value]
-                            condition_count +=1
-                        if condition[0] == condition[1]:
+                        value1 = self.evaluate_expression(condition.split("==")[0])
+                        value2 = self.evaluate_expression(condition.split("==")[1])
+                        if value1 == value2:
                             self.interpret(action)
                     elif "!=" in condition:
-                        condition = condition.split("!=")
-                        condition[0].strip()
-                        condition[1].strip()
-                        condition_count = 1
-                        for value in condition:
-                            if value.startswith('"') and value.endswith('"'):
-                                value = value[1:-1]
-                            elif value == True or False:
-                                continue
-                            else:
-                                condition[condition_count -1] = self.variables[value]
-                            condition_count +=1
-                        if condition[0] != condition[1]:
+                        value1 = self.evaluate_expression(condition.split("!=")[0])
+                        value2 = self.evaluate_expression(condition.split("!=")[1])
+                        if value1 != value2:
                             self.interpret(action)
                     elif "<=" in condition:
-                        condition = condition.split("<=")
-                        condition[0].strip()
-                        condition[1].strip()
-                        condition_count = 1
-                        for value in condition:
-                            if value.startswith('"') and value.endswith('"'):
-                                value = value[1:-1]
-                            elif value == True or False:
-                                continue
-                            else:
-                                condition[condition_count -1] = self.variables[value]
-                            condition_count +=1
-                        if condition[0] <= condition[1]:
+                        value1 = self.evaluate_expression(condition.split("<=")[0])
+                        value2 = self.evaluate_expression(condition.split("<=")[1])
+                        if value1 <= value2:
                             self.interpret(action)
                     elif ">=" in condition:
-                        condition = condition.split(">=")
-                        condition[0].strip()
-                        condition[1].strip()
-                        condition_count = 1
-                        for value in condition:
-                            if value.startswith('"') and value.endswith('"'):
-                                value = value[1:-1]
-                            elif value == True or False:
-                                continue
-                            else:
-                                condition[condition_count -1] = self.variables[value]
-                            condition_count +=1
-                        if condition[0] >= condition[1]:
+                        value1 = self.evaluate_expression(condition.split(">=")[0])
+                        value2 = self.evaluate_expression(condition.split(">=")[1])
+                        if value1 >= value2:
                             self.interpret(action)
                     elif "<" in condition:
-                        condition = condition.split("<")
-                        condition[0].strip()
-                        condition[1].strip()
-                        condition_count = 1
-                        for value in condition:
-                            if value.startswith('"') and value.endswith('"'):
-                                value = value[1:-1]
-                            elif value == True or False:
-                                continue
-                            else:
-                                condition[condition_count -1] = self.variables[value]
-                            condition_count +=1
-                        if condition[0] < condition[1]:
+                        value1 = self.evaluate_expression(condition.split("<")[0])
+                        value2 = self.evaluate_expression(condition.split("<")[1])
+                        if value1 < value2:
                             self.interpret(action)
                     elif ">" in condition:
-                        condition = condition.split(">")
-                        condition[0].strip()
-                        condition[1].strip()
-                        condition_count = 1
-                        for value in condition:
-                            if value.startswith('"') and value.endswith('"'):
-                                value = value[1:-1]
-                            elif value == True or False:
-                                continue
-                            else:
-                                condition[condition_count -1] = self.variables[value]
-                            condition_count +=1
-                        if condition[0] > condition[1]:
+                        value1 = self.evaluate_expression(condition.split(">")[0])
+                        value2 = self.evaluate_expression(condition.split(">")[1])
+                        if value1 > value2:
                             self.interpret(action)
                 elif line.startswith("/"):
                     function_definition = line[1:].split("{")
