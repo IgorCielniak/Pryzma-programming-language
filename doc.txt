@@ -541,6 +541,7 @@ try(print a|a = 10)
 
 a variable err will be created and hold a value 1 after executing this code
 becouse the print instruction tries to acces variable a that is created later so it fails
+the err variable is reset to zero only after a next try block is succesfully executed or when changed manually
 
 Running Programs:
 
