@@ -1364,7 +1364,7 @@ commands:
 34 - Value not found in list for index function
 35 - Variable is not a list for index function
 36 - List not defined for all()
-37 - Variable is not defined for isnumber()
+37 - Variable is not defined for isanumber()
 38 - Invalid argument for dir()
 39 - Unknown variable or expression
 40 - Invalid range expression for loop
