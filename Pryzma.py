@@ -198,6 +198,10 @@ class PryzmaInterpreter:
                                 part = self.variables[part]
                             self.interpret(part)
                     else:
+                        if code.startswith('"') and code.endswith('"'):
+                            code = code[1:-1]
+                        else:
+                            code = self.variables[code]
                         self.interpret(code)
                 elif line.startswith("try(") and line.endswith(")"):
                     self.in_try_block = True
@@ -236,7 +240,7 @@ class PryzmaInterpreter:
                     var2 = self.evaluate_expression(var2)
                     self.variables[var] -= var2
                 elif "=" in line:
-                    variable, expression = line.split('=')
+                    variable, expression = line.split('=', 1)
                     variable = variable.strip()
                     expression = expression.strip()
                     self.assign_variable(variable, expression)
@@ -653,7 +657,11 @@ class PryzmaInterpreter:
         self.variables[variable] = self.evaluate_expression(expression)
 
     def evaluate_expression(self, expression):
-        if "+" in expression:
+        if re.match(r"^\d+$", expression):
+            return int(expression)
+        elif re.match(r'^".*"$', expression):
+            return expression[1:-1]
+        elif "+" in expression:
             parts = expression.split("+")
             evaluated_parts = [self.evaluate_expression(part.strip()) for part in parts]
 
@@ -822,10 +830,6 @@ class PryzmaInterpreter:
                 return None
         elif expression == "timenow":
             return datetime.datetime.now()
-        elif re.match(r"^\d+$", expression):
-            return int(expression)
-        elif re.match(r'^".*"$', expression):
-            return expression[1:-1]
         elif expression in self.variables:
             return self.variables[expression]
         else:
