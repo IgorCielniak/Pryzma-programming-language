@@ -21,6 +21,7 @@ class PryzmaInterpreter:
         self.deleted_key_words = []
         self.variables["interpreter_path"] = __file__
         self.in_try_block = False
+        self.in_func = False
 
 
     def interpret_file(self, file_path, *args):
@@ -40,7 +41,8 @@ class PryzmaInterpreter:
     def interpret(self, program):
         program = program.replace('&\n', '')
         program = program.replace('\n', ";")
-        self.current_line = 0
+        if not self.in_func:
+            self.current_line = 0
 
         lines = re.split(r';(?=(?:[^"]*"[^"]*")*[^"]*$)', program)
         lines = [stmt.strip() for stmt in lines if stmt.strip()]
@@ -143,6 +145,7 @@ class PryzmaInterpreter:
                         else:
                             self.variables["err"] = 2
                 elif line.startswith("@"):
+                    self.in_func = True
                     function_name = line[1:].strip()
                     if "(" in function_name:
                         function_name, arg = function_name.split("(") 
@@ -175,6 +178,7 @@ class PryzmaInterpreter:
                             print(f"Function '{function_name}' is not defined.")
                         else:
                             self.variables["err"] = 4
+                    self.in_func = False
                 elif line.startswith("interpret_pryzma(") and line.endswith(")"):
                     code = line[17:-1]
                     if "|" in code:
@@ -192,7 +196,6 @@ class PryzmaInterpreter:
                     instructions = line[4:-1].split("|")
                     error = 0
                     for instruction in instructions:
-#                        self.variables["err"] = 0
                         self.interpret(instruction)
                         if self.variables["err"] != 0:
                             error = self.variables["err"]
