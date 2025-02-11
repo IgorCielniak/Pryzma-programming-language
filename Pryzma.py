@@ -1371,7 +1371,7 @@ commands:
 41 - Invalid function definition in imported file
 42 - Invalid statement in imported file
 43 - File not found for use function 
-44 - List does  ot exist for append function
+44 - List does not exist for append function
 45 - Index out of range for pop function
 46 - List does not exist for pop function
 """ 
