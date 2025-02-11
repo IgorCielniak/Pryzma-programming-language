@@ -192,7 +192,7 @@ class PryzmaInterpreter:
                     instructions = line[4:-1].split("|")
                     error = 0
                     for instruction in instructions:
-                        self.variables["err"] = 0
+#                        self.variables["err"] = 0
                         self.interpret(instruction)
                         if self.variables["err"] != 0:
                             error = self.variables["err"]
