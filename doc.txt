@@ -48,6 +48,17 @@ print a
 
 it will pop text from list a and output ["text2"]
 
+you can remove from a list like this:
+
+a = [1,2,3,4,5]
+
+remove a,5
+
+print a
+
+output will be:
+[1,2,3,4]
+
 you can move objects on a list by using the move instruction like that:
 
 a = [1,2,3,4,5]

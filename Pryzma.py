@@ -260,6 +260,11 @@ class PryzmaInterpreter:
                     list_name = list_name.strip()
                     index = index.strip()
                     self.pop_from_list(list_name, index)
+                elif line.startswith("remove"):
+                    list_name, var = line[6:].split(",")
+                    list_name = list_name.strip()
+                    var = var.strip()
+                    self.variables[list_name].remove(self.evaluate_expression(var))
                 elif line.startswith("exec"):
                     line = line[4:].strip()
                     if line.startswith('"') and line.endswith('"'):
