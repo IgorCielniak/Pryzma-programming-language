@@ -412,13 +412,13 @@ exec command
 
 Read and write:
 
-content = read(C:\Users\User\Desktop\Untitled-1.txt)
+content = read("C:\Users\User\Desktop\Untitled-1.txt")
 
 content of file C:\Users\User\Desktop\Untitled-1.txt will be assigned to variable content
 
-write(C:\Users\User\Desktop\Untitled-1.txt,content)
+write("C:\Users\User\Desktop\Untitled-1.txt",mode,content)
 
-iw will write value of variable content to file C:\Users\User\Desktop\Untitled-1.txt, if file doesn't exist it will create it.
+iw will write value of variable content to file C:\Users\User\Desktop\Untitled-1.txt in mode stored as a value of vatiable mode
 
 In:
 

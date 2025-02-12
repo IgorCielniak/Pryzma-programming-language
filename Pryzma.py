@@ -293,26 +293,16 @@ class PryzmaInterpreter:
                         line = self.variables[line]
                     os.system(line)
                 elif line.startswith("write(") and line.endswith(")"):
-                    file_path, content = line[6:-1].split(",")
-                    file_path = file_path.strip()
-                    content = content.strip()
-                    if content.startswith('"') and content.endswith('"'):
-                        content = content[1:-1]
-                        if file_path.startswith('"') and file_path.endswith('"'):
-                            file_path = file_path[1:-1]
-                        self.write_to_file(content, file_path)
-                    elif file_path.startswith('"') and file_path.endswith('"'):
-                        file_path = file_path[1:-1]
-                        if content.startswith('"') and content.endswith('"'):
-                            content = content[1:-1]
-                            self.write_to_file(content, file_path)
-                        self.write_to_file(self.variables[content], file_path)
-                    elif content in self.variables:
-                        self.write_to_file(str(self.variables[content]), file_path)
+                    line = line[6:-1].split(",")
+                    if len(line) == 3:
+                        file_path = self.evaluate_expression(line[0].strip())
+                        mode = self.evaluate_expression(line[1].strip())
+                        content = self.evaluate_expression(line[2].strip())
+                        self.write_to_file(file_path, mode, str(content))
                     else:
                         if not self.in_try_block:
                             self.in_func_err()
-                            print(f"Error near line {self.current_line}: Invalid content: {content}")
+                            print(f"Error near line {self.current_line}: Invalid number of arguments for write()")
                         else:
                             self.variables["err"] = 7
                 elif line.startswith("delvar(") and line.endswith(")"):
@@ -663,9 +653,9 @@ class PryzmaInterpreter:
                 self.variables["err"] = 28
 
 
-    def write_to_file(self, content, file_path):
+    def write_to_file(self, file_path, mode, content):
         try:
-            with open(file_path, 'w+') as file:
+            with open(file_path, mode) as file:
                 if isinstance(content, list):
                     for line in content:
                         file.write(f"{line}\n")
@@ -748,11 +738,7 @@ class PryzmaInterpreter:
         elif expression.startswith("splitlines(") and expression.endswith(")"):
             return self.variables[expression[11:-1]].splitlines()
         elif expression.startswith("read(") and expression.endswith(")"):
-            file_path = expression[5:-1]
-            if file_path.startswith('"') and file_path.endswith('"'):
-                file_path = file_path[1:-1]
-            else:
-                file_path = self.variables[file_path]
+            file_path = self.evaluate_expression(expression[5:-1])
             try:
                 with open(file_path, 'r') as file:
                     return file.read()
