@@ -239,11 +239,31 @@ class PryzmaInterpreter:
                     var2 = line[1].strip()
                     var2 = self.evaluate_expression(var2)
                     self.variables[var] -= var2
+                elif line.startswith("int"):
+                    line = line[3:].strip()
+                    if "=" in line:
+                        variable, expression = line.split("=", 1)
+                        variable = variable.strip()
+                        expression = expression.strip()
+                        self.variables[variable] = int(self.evaluate_expression(expression))
+                    else:
+                        variable = line.strip()
+                        self.variables[line] = 0
+                elif line.startswith("str"):
+                    line = line[3:].strip()
+                    if "=" in line:
+                        variable, expression = line.split("=", 1)
+                        variable = variable.strip()
+                        expression = expression.strip()
+                        self.variables[variable] = str(self.evaluate_expression(expression))
+                    else:
+                        variable = line.strip()
+                        self.variables[line] = ""
                 elif "=" in line:
                     variable, expression = line.split('=', 1)
                     variable = variable.strip()
                     expression = expression.strip()
-                    self.assign_variable(variable, expression)
+                    self.variables[variable] = self.evaluate_expression(expression)
                 elif line.startswith("copy"):
                     list1, list2 = line[len("copy"):].split(",")
                     list1 = list1.strip()
@@ -657,9 +677,6 @@ class PryzmaInterpreter:
                 print(f"Error near line {self.current_line} while writing to file '{file_path}': {e}")
             else:
                 self.variables["err"] = 29
-
-    def assign_variable(self, variable, expression):
-        self.variables[variable] = self.evaluate_expression(expression)
 
     def evaluate_expression(self, expression):
         if re.match(r"^\d+$", expression):

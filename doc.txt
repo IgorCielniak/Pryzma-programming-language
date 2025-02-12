@@ -20,6 +20,27 @@ my_list = []
 my_dict = {}
 my_tuple = ()
 
+you can define staticly typed strings and integers:
+
+int x
+
+default value 0
+
+int x = 6
+int x = "7"
+
+"7" will be converted to an integer
+
+str a
+
+default value ""
+
+str a = "a"
+
+str value = 7
+
+7 will be converted to a string
+
 List operations:
 
 list = [1,2,3]
