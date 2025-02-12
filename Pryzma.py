@@ -144,7 +144,7 @@ class PryzmaInterpreter:
                     else:
                         if not self.in_try_block:
                             self.in_func_err()
-                                print(f"Invalid function definition at line {self.current_line}")
+                            print(f"Invalid function definition at line {self.current_line}")
                         else:
                             self.variables["err"] = 2
                 elif line.startswith("@"):
