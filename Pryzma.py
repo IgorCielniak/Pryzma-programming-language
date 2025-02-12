@@ -144,7 +144,7 @@ class PryzmaInterpreter:
                     else:
                         if not self.in_try_block:
                             self.in_func_err()
-                            print(f"Invalid function definition at line {self.current_line}")
+                                print(f"Invalid function definition at line {self.current_line}")
                         else:
                             self.variables["err"] = 2
                 elif line.startswith("@"):
@@ -186,7 +186,7 @@ class PryzmaInterpreter:
                         else:
                             self.variables["err"] = 4
                     self.in_func = False
-                    self.cutrent_func_name = None
+                    self.current_func_name = None
                 elif line.startswith("interpret_pryzma(") and line.endswith(")"):
                     code = line[17:-1]
                     if "|" in code:
@@ -898,10 +898,16 @@ class PryzmaInterpreter:
             self.load_functions_from_file(file_path)
 
     def load_functions_from_file(self, file_path):
+        name = os.path.splitext(os.path.basename(file_path))[0]
         try:
             with open(file_path, 'r') as file:
                 program = file.read()
-                lines = program.split('\n')
+
+                program = program.replace('&\n', '')
+                program = program.replace('\n', ";")
+                lines = re.split(r';(?=(?:[^"]*"[^"]*")*[^"]*$)', program)
+                lines = [stmt.strip() for stmt in lines if stmt.strip()]
+
                 function_def = False
                 function_name = ""
                 function_body = []
@@ -914,6 +920,10 @@ class PryzmaInterpreter:
                         function_definition = line[1:].split("{")
                         if len(function_definition) == 2:
                             function_name = function_definition[0].strip()
+                            if function_name.startswith(name + "."):
+                                function_name = function_definition[0].strip()
+                            else:
+                                function_name = name + "." + function_definition[0].strip()
                             function_body = function_definition[1].strip().rstrip("}").split("|")
                             function_def = True
                         else:
@@ -996,7 +1006,7 @@ limitations under the License.
                 else:
                     self.variables["err"] = 45
         else:
-            if not self.in_tru_block:
+            if not self.in_try_block:
                 self.in_func_err()
                 print(f"Error near line {self.current_line}: List '{list_name}' does not exist.")
             else:
@@ -1343,7 +1353,7 @@ commands:
 4 - Function not defined
 5 - Too much arguments for +=
 6 - Too much arguments for -=
-7 - Invalid content for write()
+7 - Invalid number of arguments for write()
 8 - Invalid syntax for while
 9 - Invalid syntax for whilen
 10 - Invalid move() instruction syntax
@@ -1364,7 +1374,7 @@ commands:
 25 - Cannot decrement non-integer variable
 26 - Variable not found for decrement function
 27 - Cannot increment non-integer variable
-28 - Variable noy found fot increment function
+28 - Variable not found for increment function
 29 - Error writing to file
 30 - Invalid number of arguments for splitby function
 31 - File not found
