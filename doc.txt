@@ -355,8 +355,13 @@ Functions:
 declare function:
 
 /function_name{command|command2|command3}
+or
+/func_name{
+command;
+command;
+}
 
-you separate the instruction using the pipe symbol |
+you separate the instruction using the pipe symbol | or ; in multiline functions
 
 calling functions:
 
@@ -545,24 +550,6 @@ customfunc hello
 this code will load the module and print "hello"
 the arg fot the load() function can also be a variable
 the funcion in the python module code needs to be named "start"
-
-& usage:
-
-if you place & at the and of a line at interpreting time the line
-gets merged with the next one so a program like this:
-
-/func{&
-print "hello"|&
-print "world"&
-}
-
-before beeing pased to the main interpreting function would be evaluated
-and look like this:
-
-/func{print "hello"|print "world"}
-
-this allows for all sort of weird interesting and usefull thinks
-such as  multiline functions as shown in the example
 
 Try:
 

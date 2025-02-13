@@ -40,7 +40,25 @@ class PryzmaInterpreter:
         self.functions[name] = body
 
     def interpret(self, program):
-        program = program.replace('&\n', '')
+
+        rep_in_func = False
+        char_ = 0
+        prog = list(program)
+        for char in prog:
+            if char == "{":
+                rep_in_func = True
+            if char == "}":
+                rep_in_func = False
+            if rep_in_func and char == "\n":
+                prog[char_] = ""
+            if rep_in_func  and char == ";":
+                prog[char_] = "|"
+            char_ += 1
+        prog2 = ""
+        for char in prog:
+            prog2+=char
+        program = prog2
+
         program = program.replace('\n', ";")
         if not self.in_func:
             self.current_line = 0
