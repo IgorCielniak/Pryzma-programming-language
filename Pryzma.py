@@ -58,7 +58,7 @@ class PryzmaInterpreter:
         for char in prog:
             prog2+=char
         program = prog2
-
+        program = program.replace('&\n', "")
         program = program.replace('\n', ";")
         if not self.in_func:
             self.current_line = 0
