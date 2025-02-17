@@ -1646,7 +1646,7 @@ if __name__ == "__main__":
     tkinter_enabled = False
     history = []
     running_from_file = False
-    version = 5.5
+    version = 5.6
 
     if len(sys.argv) >= 2:
         file_path = sys.argv[1]
