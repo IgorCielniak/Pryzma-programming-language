@@ -75,18 +75,10 @@ class PryzmaInterpreter:
 
         lines = re.split(r';(?=(?:[^"]*"[^"]*")*[^"]*$)', program)
         lines = [stmt.strip() for stmt in lines if stmt.strip()]
-        
+
         if preprocess_only == True:
-            list_or_lines = input("format to lines or to a list (lines/list): ")
-            if list_or_lines == "list":
-                print(lines)
-            elif list_or_lines == "lines":
-                for line in lines:
-                    print(line)
-            else:
-                print("Invalid choice dafaulting to lines")
-                for line in lines:
-                    print(line)
+            for line in lines:
+                print(line)
             sys.exit()
 
         for line in lines:
