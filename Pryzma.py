@@ -23,7 +23,7 @@ class PryzmaInterpreter:
         self.in_try_block = False
         self.in_func = False
         self.current_func_name = None
-
+        self.preprocess_only = False
 
     def interpret_file(self, file_path, *args):
         self.file_path = file_path.strip('"')
@@ -76,7 +76,7 @@ class PryzmaInterpreter:
         lines = re.split(r';(?=(?:[^"]*"[^"]*")*[^"]*$)', program)
         lines = [stmt.strip() for stmt in lines if stmt.strip()]
 
-        if preprocess_only == True:
+        if self.preprocess_only == True:
             for line in lines:
                 print(line)
             sys.exit()
@@ -1659,7 +1659,7 @@ if __name__ == "__main__":
         file_path = sys.argv[1]
         arguments = sys.argv[1:]
         debug = False
-        preprocess_only = False
+        interpreter.preprocess_only = False
         for arg in arguments:
             if arg.startswith("-"):
                 if arg == "-h":
@@ -1672,7 +1672,7 @@ if __name__ == "__main__":
                     debug = True
                     interpreter.debug_interpreter(interpreter, file_path, running_from_file, arguments)
                 if arg == "-p":
-                    preprocess_only = True
+                    interpreter.preprocess_only = True
         if debug == False:
             interpreter.interpret_file(file_path, *arguments)
         sys.exit()
