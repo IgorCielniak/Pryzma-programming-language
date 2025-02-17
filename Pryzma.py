@@ -75,6 +75,20 @@ class PryzmaInterpreter:
 
         lines = re.split(r';(?=(?:[^"]*"[^"]*")*[^"]*$)', program)
         lines = [stmt.strip() for stmt in lines if stmt.strip()]
+        
+        if preprocess_only == True:
+            list_or_lines = input("format to lines or to a list (lines/list): ")
+            if list_or_lines == "list":
+                print(lines)
+            elif list_or_lines == "lines":
+                for line in lines:
+                    print(line)
+            else:
+                print("Invalid choice dafaulting to lines")
+                for line in lines:
+                    print(line)
+            sys.exit()
+
         for line in lines:
             self.current_line += 1
             line = line.strip()
@@ -1653,12 +1667,20 @@ if __name__ == "__main__":
         file_path = sys.argv[1]
         arguments = sys.argv[1:]
         debug = False
+        preprocess_only = False
         for arg in arguments:
             if arg.startswith("-"):
+                if arg == "-h":
+                    print("""
+                        -d - debug mode
+                        -p - preprocces only
+                    """)
                 if arg == "-d":
                     arguments.remove(arg)
                     debug = True
                     interpreter.debug_interpreter(interpreter, file_path, running_from_file, arguments)
+                if arg == "-p":
+                    preprocess_only = True
         if debug == False:
             interpreter.interpret_file(file_path, *arguments)
         sys.exit()
