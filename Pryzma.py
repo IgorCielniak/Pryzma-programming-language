@@ -128,8 +128,9 @@ class PryzmaInterpreter:
                 elif line.startswith("use"):
                     file_path = line[len("use"):].strip()
                     self.import_functions(file_path)
-                elif line.startswith("if(") and line.endswith("}"):
-                    condition, action = line[3:-1].split("){")
+                elif line.startswith("if"):
+                    line = line[2:]
+                    condition, action = line.strip()[1:-1].split("){")
                     action = action.replace("$", "|")
                     actions = action.split("|")
                     if "==" in condition:
