@@ -6,4 +6,4 @@ a = 1
 
 b = 1
 
-if (a==b).(@add(a))
+if(a==b){@add(a)}

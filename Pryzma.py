@@ -40,18 +40,29 @@ class PryzmaInterpreter:
         self.functions[name] = body
 
     def interpret(self, program):
-
+        program = program.replace('\n', ";")
+        program = program.splitlines()
+        prog = ""
+        for line in program:
+            line = line.strip()
+            prog += line
+        program = prog
         rep_in_func = False
+        in_if = False
         char_ = 0
         prog = list(program)
         for char in prog:
-            if char == "{":
+            if char == "i" and char_ + 1 < len(prog) and prog[char_ + 1] == "f":
+                in_if = True
+            elif in_if and char == "}":
+                in_if = False
+            elif char == "{" and not in_if:
                 rep_in_func = True
-            if char == "}":
+            elif char == "}" and not in_if:
                 rep_in_func = False
-            if rep_in_func and char == "\n":
-                prog[char_] = ""
-            if rep_in_func  and char == ";":
+            elif in_if and char == ";":
+                prog[char_] = "$"
+            elif rep_in_func  and char == ";":
                 prog[char_] = "|"
             char_ += 1
         prog2 = ""
@@ -59,13 +70,11 @@ class PryzmaInterpreter:
             prog2+=char
         program = prog2
 
-        program = program.replace('\n', ";")
         if not self.in_func:
             self.current_line = 0
 
         lines = re.split(r';(?=(?:[^"]*"[^"]*")*[^"]*$)', program)
         lines = [stmt.strip() for stmt in lines if stmt.strip()]
-
         for line in lines:
             self.current_line += 1
             line = line.strip()
@@ -117,41 +126,46 @@ class PryzmaInterpreter:
                 elif line.startswith("use"):
                     file_path = line[len("use"):].strip()
                     self.import_functions(file_path)
-                elif line.startswith("if"):
-                    line = line[2:]
-                    line = line.split(".")
-                    condition = line[0].strip()[1:-1]
-                    action = line[1].strip()[1:-1]
+                elif line.startswith("if(") and line.endswith("}"):
+                    condition, action = line[3:-1].split("){")
+                    action = action.replace("$", "|")
+                    actions = action.split("|")
                     if "==" in condition:
                         value1 = self.evaluate_expression(condition.split("==")[0])
                         value2 = self.evaluate_expression(condition.split("==")[1])
                         if value1 == value2:
-                            self.interpret(action)
+                            for action in actions:
+                                self.interpret(action)
                     elif "!=" in condition:
                         value1 = self.evaluate_expression(condition.split("!=")[0])
                         value2 = self.evaluate_expression(condition.split("!=")[1])
                         if value1 != value2:
-                            self.interpret(action)
+                            for action in actions:
+                                self.interpret(action)
                     elif "<=" in condition:
                         value1 = self.evaluate_expression(condition.split("<=")[0])
                         value2 = self.evaluate_expression(condition.split("<=")[1])
                         if value1 <= value2:
-                            self.interpret(action)
+                            for action in actions:
+                                self.interpret(action)
                     elif ">=" in condition:
                         value1 = self.evaluate_expression(condition.split(">=")[0])
                         value2 = self.evaluate_expression(condition.split(">=")[1])
                         if value1 >= value2:
-                            self.interpret(action)
+                            for action in actions:
+                                self.interpret(action)
                     elif "<" in condition:
                         value1 = self.evaluate_expression(condition.split("<")[0])
                         value2 = self.evaluate_expression(condition.split("<")[1])
                         if value1 < value2:
-                            self.interpret(action)
+                            for action in actions:
+                                self.interpret(action)
                     elif ">" in condition:
                         value1 = self.evaluate_expression(condition.split(">")[0])
                         value2 = self.evaluate_expression(condition.split(">")[1])
                         if value1 > value2:
-                            self.interpret(action)
+                            for action in actions:
+                                self.interpret(action)
                 elif line.startswith("/"):
                     function_definition = line[1:].split("{")
                     if len(function_definition) == 2:
