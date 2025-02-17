@@ -78,7 +78,9 @@ class PryzmaInterpreter:
         for line in lines:
             self.current_line += 1
             line = line.strip()
-            
+
+            if line == "" or line.startswith("#"):
+                continue       
             if "#" in line:
                 line = line.split("#")[0]
             
@@ -608,15 +610,12 @@ class PryzmaInterpreter:
                     input("Press any key to continue...")
                     break
                 else:
-                    if line == "" or line.startswith("#"):
-                        continue
-                    else:
-                        if not handled:
-                            if self.in_try_block:
-                                self.variables["err"] = 21
-                            else:
-                                self.in_func_err()
-                                print(f"Invalid statement at line {self.current_line}: {line}")
+                    if not handled:
+                        if self.in_try_block:
+                            self.variables["err"] = 21
+                        else:
+                            self.in_func_err()
+                            print(f"Invalid statement at line {self.current_line}: {line}")
             except Exception as e:
                 if self.in_try_block:
                     self.variables["err"] = 22
