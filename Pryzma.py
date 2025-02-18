@@ -1077,8 +1077,38 @@ limitations under the License.
             print(f"File '{file_path}' not found.")
             return
 
-        program = program.replace('&\n', '')
         program = program.replace('\n', ";")
+        program = program.splitlines()
+        prog = ""
+        for line in program:
+            line = line.strip()
+            prog += line
+        program = prog
+        rep_in_func = False
+        in_if = False
+        char_ = 0
+        prog = list(program)
+        for char in prog:
+            if char == "i" and char_ + 1 < len(prog) and prog[char_ + 1] == "f":
+                in_if = True
+            elif in_if and char == "}":
+                in_if = False
+            elif char == "{" and not in_if:
+                rep_in_func = True
+            elif char == "}" and not in_if:
+                rep_in_func = False
+            elif in_if and char == ";":
+                prog[char_] = "$"
+            elif rep_in_func  and char == ";":
+                prog[char_] = "|"
+            char_ += 1
+        prog2 = ""
+        for char in prog:
+            prog2+=char
+        program = prog2
+
+        if not self.in_func:
+            self.current_line = 0
 
         lines = re.split(r';(?=(?:[^"]*"[^"]*")*[^"]*$)', program)
         lines = [stmt.strip() for stmt in lines if stmt.strip()]
@@ -1664,9 +1694,11 @@ if __name__ == "__main__":
             if arg.startswith("-"):
                 if arg == "-h":
                     print("""
-                        -d - debug mode
-                        -p - preprocces only
+flags:
+    -d - debug mode
+    -p - preprocces only
                     """)
+                    sys.exit()
                 if arg == "-d":
                     arguments.remove(arg)
                     debug = True
