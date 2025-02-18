@@ -884,12 +884,15 @@ class PryzmaInterpreter:
         return None
 
     def print_value(self, value):
-        evaluated_value = self.evaluate_expression(value)
-        if evaluated_value is not None:
-            if isinstance(evaluated_value, str) and '\\n' in evaluated_value:
-                print(evaluated_value.replace('\\n', '\n'))
-            else:
-                print(evaluated_value)
+        parts = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', value)
+        part_count = 0
+        for part in parts:
+            parts[part_count] = self.evaluate_expression(parts[part_count])
+            if isinstance(parts[part_count], str):
+                parts[part_count] = parts[part_count].replace("\\n", "\n")
+            part_count += 1
+        for part in parts:
+            print(part, end="")
 
     def custom_input(self, variable):
         if "::" in variable:
