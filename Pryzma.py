@@ -41,7 +41,6 @@ class PryzmaInterpreter:
 
     def interpret(self, program):
         program = program.replace('\n', ";")
-        program = program.splitlines()
         prog = ""
         for line in program:
             line = line.strip()
