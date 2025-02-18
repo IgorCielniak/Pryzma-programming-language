@@ -41,11 +41,6 @@ class PryzmaInterpreter:
 
     def interpret(self, program):
         program = program.replace('\n', ";")
-        prog = ""
-        for line in program:
-            line = line.strip()
-            prog += line
-        program = prog
         rep_in_func = False
         in_if = False
         char_ = 0
@@ -1077,12 +1072,6 @@ limitations under the License.
             return
 
         program = program.replace('\n', ";")
-        program = program.splitlines()
-        prog = ""
-        for line in program:
-            line = line.strip()
-            prog += line
-        program = prog
         rep_in_func = False
         in_if = False
         char_ = 0
