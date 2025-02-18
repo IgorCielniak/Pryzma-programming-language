@@ -176,7 +176,7 @@ class PryzmaInterpreter:
                             for action in actions:
                                 self.interpret(action)
                 elif line.startswith("/"):
-                    function_definition = line[1:].split("{")
+                    function_definition = line[1:].split("{", 1)
                     if len(function_definition) == 2:
                         function_name = function_definition[0].strip()
                         function_body = function_definition[1].strip().rstrip("}")
