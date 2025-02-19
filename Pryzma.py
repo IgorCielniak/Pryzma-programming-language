@@ -1101,17 +1101,11 @@ limitations under the License.
         char_ = 0
         prog = list(program)
         for char in prog:
-            if char == "i" and char_ + 1 < len(prog) and prog[char_ + 1] == "f":
-                in_if = True
-            elif in_if and char == "}":
-                in_if = False
-            elif char == "{" and not in_if:
-                rep_in_func = True
+            if char == "{":
+                rep_in_func += 1
             elif char == "}" and not in_if:
-                rep_in_func = False
-            elif in_if and char == ";":
-                prog[char_] = "|"
-            elif rep_in_func  and char == ";":
+                rep_in_func -= 1
+            elif rep_in_func != 0  and char == ";":
                 prog[char_] = "|"
             char_ += 1
         prog2 = ""
