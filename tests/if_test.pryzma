@@ -1,9 +1,15 @@
+/func2{
+    a = 7
+    b = 6
 
+    if(a!=b){
+        print "true"
+        if(b<a){
+            print "yes"
+        }
+    }
+    print "hello"
+    print "world\n"
+}
 
-/add{print args[0]}
-
-a = 1
-
-b = 1
-
-if(a==b){@add(a)}
+@func2
