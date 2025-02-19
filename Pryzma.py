@@ -42,13 +42,12 @@ class PryzmaInterpreter:
     def interpret(self, program):
         program = program.replace('\n', ";")
         rep_in_func = 0
-        in_if = False
         char_ = 0
         prog = list(program)
         for char in prog:
             if char == "{":
                 rep_in_func += 1
-            elif char == "}" and not in_if:
+            elif char == "}":
                 rep_in_func -= 1
             elif rep_in_func != 0  and char == ";":
                 prog[char_] = "|"
@@ -1097,13 +1096,12 @@ limitations under the License.
 
         program = program.replace('\n', ";")
         rep_in_func = False
-        in_if = False
         char_ = 0
         prog = list(program)
         for char in prog:
             if char == "{":
                 rep_in_func += 1
-            elif char == "}" and not in_if:
+            elif char == "}":
                 rep_in_func -= 1
             elif rep_in_func != 0  and char == ";":
                 prog[char_] = "|"
