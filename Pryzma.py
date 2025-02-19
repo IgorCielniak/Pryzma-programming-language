@@ -41,22 +41,16 @@ class PryzmaInterpreter:
 
     def interpret(self, program):
         program = program.replace('\n', ";")
-        rep_in_func = False
+        rep_in_func = 0
         in_if = False
         char_ = 0
         prog = list(program)
         for char in prog:
-            if char == "i" and char_ + 1 < len(prog) and prog[char_ + 1] == "f":
-                in_if = True
-            elif in_if and char == "}":
-                in_if = False
-            elif char == "{" and not in_if:
-                rep_in_func = True
+            if char == "{":
+                rep_in_func += 1
             elif char == "}" and not in_if:
-                rep_in_func = False
-            elif in_if and char == ";":
-                prog[char_] = "$"
-            elif rep_in_func  and char == ";":
+                rep_in_func -= 1
+            elif rep_in_func != 0  and char == ";":
                 prog[char_] = "|"
             char_ += 1
         prog2 = ""
@@ -130,9 +124,22 @@ class PryzmaInterpreter:
                     self.import_functions(file_path)
                 elif line.startswith("if"):
                     line = line[2:]
-                    condition, action = line.strip()[1:-1].split("){")
-                    action = action.replace("$", "|")
-                    actions = action.split("|")
+                    condition, action = line.strip()[1:-1].split("){", 1)
+                    char_ = 0
+                    rep_in_if = 0
+                    if_body = list(action)
+                    for char in if_body:
+                        if char == "{":
+                            rep_in_if += 1
+                        elif char == "}":
+                            rep_in_if -= 1
+                        elif rep_in_if == 0  and char == "|":
+                            if_body[char_] = "&$"
+                        char_ += 1
+                    if_body2 = ""
+                    for char in if_body:
+                        if_body2 += char
+                    actions = if_body2.split("&$")
                     if "==" in condition:
                         value1 = self.evaluate_expression(condition.split("==")[0])
                         value2 = self.evaluate_expression(condition.split("==")[1])
@@ -174,8 +181,22 @@ class PryzmaInterpreter:
                     if len(function_definition) == 2:
                         function_name = function_definition[0].strip()
                         function_body = function_definition[1].strip().rstrip("}")
-                        function_body2 = function_body.split("|")
-                        self.define_function(function_name, function_body2)
+                        char_ = 0
+                        rep_in_func = 0
+                        function_body = list(function_body)
+                        for char in function_body:
+                            if char == "{":
+                                rep_in_func += 1
+                            elif char == "}":
+                                rep_in_func -= 1
+                            elif rep_in_func == 0  and char == "|":
+                                function_body[char_] = "&$"
+                            char_ += 1
+                        function_body2 = ""
+                        for char in function_body:
+                            function_body2 += char
+                        function_body = function_body2.split("&$")
+                        self.define_function(function_name, function_body)
                     else:
                         if not self.in_try_block:
                             self.in_func_err()
@@ -1089,7 +1110,7 @@ limitations under the License.
             elif char == "}" and not in_if:
                 rep_in_func = False
             elif in_if and char == ";":
-                prog[char_] = "$"
+                prog[char_] = "|"
             elif rep_in_func  and char == ";":
                 prog[char_] = "|"
             char_ += 1
