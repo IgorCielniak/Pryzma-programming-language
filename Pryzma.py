@@ -772,7 +772,7 @@ class PryzmaInterpreter:
             else:
                 return self.evaluate_expression(val)
         elif expression.startswith("type(") and expression.endswith(")"):
-            return str(type(self.variables[expression[5:-1]]))
+            return str(type(self.variables[expression[5:-1]]).__name__)
         elif expression.startswith("len(") and expression.endswith(")"):
             return len(self.variables[expression[4:-1]])
         elif expression.startswith("splitby(") and expression.endswith(")"):
