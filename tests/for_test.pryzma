@@ -1,5 +1,12 @@
 /func{
-for i,0:len(args),print args[i];
+    for(i, 1:4){
+        for(j, 1:4){
+            print i
+            print "\n"
+            print args[0]
+            print "\n"
+        }
+    }
 }
 
-@func("hello\n", "world")
+@func("hello")

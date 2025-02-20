@@ -109,10 +109,25 @@ class PryzmaInterpreter:
                     variable = line[len("input"):].strip()
                     self.custom_input(variable)
                 elif line.startswith("for"):
-                    loop_statement = line[len("for"):].strip()
-                    loop_var = loop_statement.split(",")[0]
-                    range_expr = loop_statement.split(",")[1]
-                    actions = loop_statement.split(",")[2:]
+                    line = line[len("for"):].strip()
+                    range_expr, action = line.strip()[1:-1].split("){", 1)
+                    char_ = 0
+                    rep_in_for = 0
+                    for_body = list(action)
+                    for char in for_body:
+                        if char == "{":
+                            rep_in_for += 1
+                        elif char == "}":
+                            rep_in_for -= 1
+                        elif rep_in_for == 0  and char == "|":
+                            for_body[char_] = "&$"
+                        char_ += 1
+
+                    for_body2 = ""
+                    for char in for_body:
+                        for_body2 += char
+                    actions = for_body2.split("&$")
+                    loop_var, range_expr = range_expr.split(",")
                     loop_var = loop_var.strip()
                     range_expr = range_expr.strip()
                     for action in actions:
