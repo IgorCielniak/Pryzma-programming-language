@@ -1739,13 +1739,18 @@ if __name__ == "__main__":
         arguments = sys.argv[1:]
         debug = False
         interpreter.preprocess_only = False
+        interpret_line = False
         for arg in arguments:
+            if interpret_line == True:
+                interpreter.interpret(arg)
+                sys.exit()
             if arg.startswith("-"):
                 if arg == "-h":
                     print("""
 flags:
     -d - debug mode
     -p - preprocces only
+    -l '<pryzma code>' - execute a single line
                     """)
                     sys.exit()
                 if arg == "-d":
@@ -1754,6 +1759,8 @@ flags:
                     interpreter.debug_interpreter(interpreter, file_path, running_from_file, arguments)
                 if arg == "-p":
                     interpreter.preprocess_only = True
+                if arg == "-l":
+                    interpret_line = True
         if debug == False:
             interpreter.interpret_file(file_path, *arguments)
         sys.exit()
