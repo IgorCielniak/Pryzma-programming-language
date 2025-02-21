@@ -190,6 +190,72 @@ class PryzmaInterpreter:
                         if value1 > value2:
                             for action in actions:
                                 self.interpret(action)
+                elif line.startswith("while"):
+                    line = line[5:]
+                    condition, action = line.strip()[1:-1].split("){", 1)
+                    char_ = 0
+                    rep_in_if = 0
+                    if_body = list(action)
+                    for char in if_body:
+                        if char == "{":
+                            rep_in_if += 1
+                        elif char == "}":
+                            rep_in_if -= 1
+                        elif rep_in_if == 0  and char == "|":
+                            if_body[char_] = "%$"
+                        char_ += 1
+                    if_body2 = ""
+                    for char in if_body:
+                        if_body2 += char
+                    actions = if_body2.split("%$")
+                    if "==" in condition:
+                        value1 = self.evaluate_expression(condition.split("==")[0])
+                        value2 = self.evaluate_expression(condition.split("==")[1])
+                        while value1 == value2:
+                            for action in actions:
+                                self.interpret(action)
+                                value1 = self.evaluate_expression(condition.split("==")[0])
+                                value2 = self.evaluate_expression(condition.split("==")[1])
+                    if "!=" in condition:
+                        value1 = self.evaluate_expression(condition.split("!=")[0])
+                        value2 = self.evaluate_expression(condition.split("!=")[1])
+                        while value1 != value2:
+                            for action in actions:
+                                self.interpret(action)
+                                value1 = self.evaluate_expression(condition.split("!=")[0])
+                                value2 = self.evaluate_expression(condition.split("!=")[1])
+                    if "<=" in condition:
+                        value1 = self.evaluate_expression(condition.split("<=")[0])
+                        value2 = self.evaluate_expression(condition.split("<=")[1])
+                        while value1 <= value2:
+                            for action in actions:
+                                self.interpret(action)
+                                value1 = self.evaluate_expression(condition.split("<=")[0])
+                                value2 = self.evaluate_expression(condition.split("<=")[1])
+                    if ">=" in condition:
+                        value1 = self.evaluate_expression(condition.split(">=")[0])
+                        value2 = self.evaluate_expression(condition.split(">=")[1])
+                        while value1 >= value2:
+                            for action in actions:
+                                self.interpret(action)
+                                value1 = self.evaluate_expression(condition.split(">=")[0])
+                                value2 = self.evaluate_expression(condition.split(">=")[1])
+                    if "<" in condition:
+                        value1 = self.evaluate_expression(condition.split("<")[0])
+                        value2 = self.evaluate_expression(condition.split("<")[1])
+                        while value1 < value2:
+                            for action in actions:
+                                self.interpret(action)
+                                value1 = self.evaluate_expression(condition.split("<")[0])
+                                value2 = self.evaluate_expression(condition.split("<")[1])
+                    if ">" in condition:
+                        value1 = self.evaluate_expression(condition.split(">")[0])
+                        value2 = self.evaluate_expression(condition.split(">")[1])
+                        while value1 > value2:
+                            for action in actions:
+                                self.interpret(action)
+                                value1 = self.evaluate_expression(condition.split(">")[0])
+                                value2 = self.evaluate_expression(condition.split(">")[1])
                 elif line.startswith("/"):
                     function_definition = line[1:].split("{", 1)
                     if len(function_definition) == 2:
@@ -396,42 +462,6 @@ class PryzmaInterpreter:
                     else:
                         key_word = self.variables[key_word]
                     self.deleted_key_words.append(key_word)
-                elif line.startswith("whilen"):
-                    condition_action = line[len("whilen"):].split(",", 2)
-                    if len(condition_action) != 3:
-                        if not self.in_try_block:
-                            self.in_func_err()
-                            print(f"Error near line {self.current_line}: Invalid while loop syntax. Expected format: while condition, value, action")
-                        else:
-                            self.variables["err"] = 8
-                        continue
-                    condition = condition_action[0].strip()
-                    value = condition_action[1].strip()
-                    action = condition_action[2].strip()
-                    if (condition.startswith('"') and condition.endswith('"')) or (value.startswith('"') and value.endswith('"')):
-                        while str(self.evaluate_expression(condition)) == str(self.evaluate_expression(value)):
-                            self.interpret(action)
-                    else:
-                        while str(self.variables[condition]) != str(self.variables[value]):
-                            self.interpret(action)
-                elif line.startswith("while"):
-                    condition_action = line[len("while"):].split(",", 2)
-                    if len(condition_action) != 3:
-                        if not self.in_try_block:
-                            self.in_func_err()
-                            print(f"Error near line {self.current_line}: Invalid while loop syntax. Expected format: while condition, value, action")
-                        else:
-                            self.variables["err"] = 9
-                        continue
-                    condition = condition_action[0].strip()
-                    value = condition_action[1].strip()
-                    action = condition_action[2].strip()
-                    if (condition.startswith('"') and condition.endswith('"')) or (value.startswith('"') and value.endswith('"')):
-                        while str(self.evaluate_expression(condition)) == str(self.evaluate_expression(value)):
-                            self.interpret(action)
-                    else:
-                        while str(self.variables[condition]) == str(self.variables[value]):
-                            self.interpret(action)
                 elif "++" in line:
                     variable = line.replace("++", "").strip()
                     self.increment_variable(variable)

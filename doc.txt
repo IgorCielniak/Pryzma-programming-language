@@ -258,11 +258,12 @@ hello
 3
 hello
 
-while a, b, print i
+While:
+
+while(a==b){print i}
 
 while value of a equals value of b value of i will be printed
-
-there is also whilen that execute the action as long as value a doesn't equal value b
+it supports the same operators as if
 
 incrementing by one:
 
