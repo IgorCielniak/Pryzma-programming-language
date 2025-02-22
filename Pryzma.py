@@ -935,6 +935,12 @@ class PryzmaInterpreter:
                 return None
         elif expression == "timenow":
             return datetime.datetime.now()
+        elif expression.startswith("startswith(") and expression.endswith(")"):
+            parts = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', expression[11:-1])
+            return self.evaluate_expression(parts[1]).startswith(self.evaluate_expression(parts[0]))
+        elif expression.startswith("endswith(") and expression.endswith(")"):
+            parts = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', expression[11:-1])
+            return self.evaluate_expression(parts[1]).endsswith(self.evaluate_expression(parts[0]))
         elif expression in self.variables:
             return self.variables[expression]
         else:
