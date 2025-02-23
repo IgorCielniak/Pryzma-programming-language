@@ -193,6 +193,16 @@ Output will be:
 
 ['text', 'text']
 
+there is also resplit() that allows for spliting with a regex:
+
+e = "123abc456def"
+f = resplit("\d+", e)
+print f
+
+Output:
+
+["", "abc", "def"]
+
 Replace:
 
 a = "ddd"

@@ -1,0 +1,14 @@
+# Split a string by commas
+a = "apple,banana,cherry"
+b = resplit(",", a)
+print b  # Output: ["apple", "banana", "cherry"]
+
+# Split a string by whitespace
+c = "hello world"
+d = resplit("\s+", c)
+print d  # Output: ["hello", "world"]
+
+# Split a string by a custom regex pattern
+e = "123abc456def"
+f = resplit("\d+", e)
+print f  # Output: ["", "abc", "def"]

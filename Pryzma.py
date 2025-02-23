@@ -770,6 +770,45 @@ class PryzmaInterpreter:
             return int(expression)
         elif re.match(r'^".*"$', expression):
             return expression[1:-1]
+        elif expression.startswith("resplit(") and expression.endswith(")"):
+            args = expression[8:-1].strip()
+            parts = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', args)
+            if len(parts) != 2:
+                if not self.in_try_block:
+                    self.in_func_err()
+                    print(f"Error near line {self.current_line}: Invalid number of arguments for resplit(). Expected 2 arguments.")
+                else:
+                    self.variables["err"] = 47
+                return None
+    
+            regex_pattern = self.evaluate_expression(parts[0].strip())
+            string_to_split = self.evaluate_expression(parts[1].strip())
+    
+            if not isinstance(regex_pattern, str):
+                if not self.in_try_block:
+                    self.in_func_err()
+                    print(f"Error near line {self.current_line}: The first argument of resplit() must be a string (regex pattern).")
+                else:
+                    self.variables["err"] = 48
+                return None
+            regex_pattern = r"{}".format(regex_pattern) 
+            if not isinstance(string_to_split, str):
+                if not self.in_try_block:
+                    self.in_func_err()
+                    print(f"Error near line {self.current_line}: The second argument of resplit() must be a string.")
+                else:
+                    self.variables["err"] = 49
+                return None
+    
+            try:
+                return re.split(regex_pattern, string_to_split)
+            except re.error as e:
+                if not self.in_try_block:
+                    self.in_func_err()
+                    print(f"Error near line {self.current_line}: Invalid regex pattern: {e}")
+                else:
+                    self.variables["err"] = 50
+                return None
         elif "+" in expression:
             parts = expression.split("+")
             evaluated_parts = [self.evaluate_expression(part.strip()) for part in parts]
@@ -1516,6 +1555,10 @@ commands:
 44 - List does not exist for append function
 45 - Index out of range for pop function
 46 - List does not exist for pop function
+47 - Invalid number of arguments for resplit()
+48 - The first argument of resplit() must be a string (regex pattern)
+49 - The second argument of resplit() must be a string
+50 - Invalid regex pattern
 """ 
 )
 
