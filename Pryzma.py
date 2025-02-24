@@ -984,6 +984,8 @@ class PryzmaInterpreter:
             range_ = expression[8:-1]
             range_ = range_.split(",")
             return random.randint(self.evaluate_expression(range_[0]), self.evaluate_expression(range_[1]))
+        elif expression.startswith("strip(") and expression.endswith(")"):
+            return self.evaluate_expression(expression[6:-1]).strip()
         elif expression in self.variables:
             return self.variables[expression]
         else:

@@ -618,6 +618,18 @@ print a
 
 prints a random number in range 1 to 100
 
+strip:
+
+a = "     h       "
+
+b = strip(a)
+
+print b
+
+output:
+
+h
+
 Running Programs:
 
 To run a Pryzma program, save the code in a text file execute it by lunching the
