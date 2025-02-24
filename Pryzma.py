@@ -9,7 +9,7 @@ import shutil
 import zipfile
 import platform
 import requests
-
+import random
 
 class PryzmaInterpreter:
     
@@ -980,6 +980,10 @@ class PryzmaInterpreter:
         elif expression.startswith("endswith(") and expression.endswith(")"):
             parts = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', expression[11:-1])
             return self.evaluate_expression(parts[1]).endsswith(self.evaluate_expression(parts[0]))
+        elif expression.startswith("randint(") and expression.endswith(")"):
+            range_ = expression[8:-1]
+            range_ = range_.split(",")
+            return random.randint(self.evaluate_expression(range_[0]), self.evaluate_expression(range_[1]))
         elif expression in self.variables:
             return self.variables[expression]
         else:

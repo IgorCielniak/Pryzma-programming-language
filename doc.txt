@@ -610,6 +610,13 @@ output:
 
 False
 
+randint:
+
+a = randint(1,100)
+
+print a
+
+prints a random number in range 1 to 100
 
 Running Programs:
 
