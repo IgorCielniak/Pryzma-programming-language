@@ -221,7 +221,7 @@ Replace:
 
 a = "ddd"
 
-replace(a,"d","f")
+a = replace(a,"d","f")
 
 print a
 

@@ -642,26 +642,6 @@ class PryzmaInterpreter:
                     call_statement = line[len("call"):].strip()
                     file_name, function_name, args = self.parse_call_statement(call_statement)
                     self.call_function_from_file(file_name, function_name, args)
-                elif line.startswith("replace(") and line.endswith(")"):
-                    args = line[8:-1].split(",")
-                    if len(args) != 3:
-                        if not self.in_try_block:
-                            self.in_func_err()
-                            print(f"Error near line {self.current_line}: Invalid number of arguments for replace function.")
-                        else:
-                            self.variables["err"] = 20
-                        continue
-                    string = self.variables[args[0]]
-                    if args[1].startswith('"') and args[1].endswith('"'):
-                        old = args[1][1:-1]
-                    else:
-                        old = self.variables[args[1]]
-                    if args[2].startswith('"') and args[2].endswith('"'):
-                        new= args[2][1:-1]
-                    else:
-                        new = self.variables[args[2]]
-                    string = string.replace(old,new)
-                    self.variables[args[0]] = string
                 elif line.startswith("load(") and line.endswith(")"):
                     module_path = line[5:-1]
                     if module_path.startswith('"') and module_path.endswith('"'):
@@ -855,10 +835,23 @@ class PryzmaInterpreter:
             if string_to_split.startswith('"') and string_to_split.endswith('"'):
                 string_to_split = string_to_split[1:-1]
             return string_to_split.split(char_to_split)
+        elif expression.startswith("replace(") and expression.endswith(")"):
+            expression = expression[8:-1]
+            parts = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', expression)
+            if len(parts) != 3:
+                if not self.in_try_block:
+                    self.in_func_err()
+                    print(f"Error near line {self.current_line}: Invalid number of arguments for replace function.")
+                else:
+                    self.variables["err"] = 20
+                    return None
+            value = self.evaluate_expression(parts[0].strip())
+            old = self.evaluate_expression(parts[1].strip())
+            new = self.evaluate_expression(parts[2].strip())
+            return value.replace(old,new)
         elif "+" in expression:
             parts = expression.split("+")
             evaluated_parts = [self.evaluate_expression(part.strip()) for part in parts]
-
             if all(isinstance(part, str) for part in evaluated_parts):
                 return "".join(evaluated_parts)
             elif all(isinstance(part, (int, float)) for part in evaluated_parts):
