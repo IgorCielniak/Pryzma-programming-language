@@ -818,6 +818,43 @@ class PryzmaInterpreter:
                 else:
                     self.variables["err"] = 50
                 return None
+        elif expression.startswith("in(") and expression.endswith(")"):
+            list_name, value = expression[3:-1].split(",")
+            list_name = list_name.strip()
+            value = value.strip()
+            if value.startswith('"') and value.endswith('"'):
+                value = value[1:-1]
+                return value in self.variables[list_name]
+            elif value.isnumeric():
+                return int(value) in self.variables[list_name]
+            elif value in self.variables:
+                return self.variables[value] in self.variables[list_name]
+            else:
+                if not self.in_try_block:
+                    self.in_func_err()
+                    print(f"Error near line {self.current_line}: Variable '{value}' is not defined.")
+                else:
+                    self.variables["err"] = 32
+        elif expression.startswith("splitby(") and expression.endswith(")"):
+            args = expression[8:-1].split(",")
+            if len(args) != 2:
+                if not self.in_try_block:
+                    self.in_func_err()
+                    print(f"Error near line {self.current_line}: Invalid number of arguments for splitby function.")
+                else:
+                    self.variables["err"] = 30
+                return None
+            char_to_split = args[0].strip()
+            string_to_split = args[1].strip()
+            if string_to_split in self.variables:
+                string_to_split = self.variables[string_to_split]
+            if char_to_split in self.variables:
+                char_to_split = self.variables[char_to_split]
+            if char_to_split.startswith('"') and char_to_split.endswith('"'):
+                char_to_split = char_to_split[1:-1]
+            if string_to_split.startswith('"') and string_to_split.endswith('"'):
+                string_to_split = string_to_split[1:-1]
+            return string_to_split.split(char_to_split)
         elif "+" in expression:
             parts = expression.split("+")
             evaluated_parts = [self.evaluate_expression(part.strip()) for part in parts]
@@ -853,26 +890,6 @@ class PryzmaInterpreter:
             return str(type(self.variables[expression[5:-1]]).__name__)
         elif expression.startswith("len(") and expression.endswith(")"):
             return len(self.variables[expression[4:-1]])
-        elif expression.startswith("splitby(") and expression.endswith(")"):
-            args = expression[8:-1].split(",")
-            if len(args) != 2:
-                if not self.in_try_block:
-                    self.in_func_err()
-                    print(f"Error near line {self.current_line}: Invalid number of arguments for splitby function.")
-                else:
-                    self.variables["err"] = 30
-                return None
-            char_to_split = args[0].strip()
-            string_to_split = args[1].strip()
-            if string_to_split in self.variables:
-                string_to_split = self.variables[string_to_split]
-            if char_to_split in self.variables:
-                char_to_split = self.variables[char_to_split]
-            if char_to_split.startswith('"') and char_to_split.endswith('"'):
-                char_to_split = char_to_split[1:-1]
-            if string_to_split.startswith('"') and string_to_split.endswith('"'):
-                string_to_split = string_to_split[1:-1]
-            return string_to_split.split(char_to_split)
         elif expression.startswith("split(") and expression.endswith(")"):
             expression = expression[6:-1]
             if expression in self.variables:
@@ -894,23 +911,6 @@ class PryzmaInterpreter:
                 else:
                     self.variables["err"] = 31
                 return ""
-        elif expression.startswith("in(") and expression.endswith(")"):
-            list_name, value = expression[3:-1].split(",")
-            list_name = list_name.strip()
-            value = value.strip()
-            if value.startswith('"') and value.endswith('"'):
-                value = value[1:-1]
-                return value in self.variables[list_name]
-            elif value.isnumeric():
-                return int(value) in self.variables[list_name]
-            elif value in self.variables:
-                return self.variables[value] in self.variables[list_name]
-            else:
-                if not self.in_try_block:
-                    self.in_func_err()
-                    print(f"Error near line {self.current_line}: Variable '{value}' is not defined.")
-                else:
-                    self.variables["err"] = 32
         elif expression.startswith("index(") and expression.endswith(")"):
             args = expression[6:-1].split(",")
             if len(args) != 2:
