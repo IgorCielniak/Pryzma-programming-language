@@ -672,6 +672,15 @@ class PryzmaInterpreter:
                 elif line.startswith("wait(") and line.endswith(")"):
                     time_to_wait = float(line[5:-1])
                     time.sleep(time_to_wait)
+                elif line.startswith("push(") and line.endswith(")"):
+                    dict_name, key, value = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', line[5:-1])
+                    key = self.evaluate_expression(key)
+                    value = self.evaluate_expression(value)
+                    self.variables[dict_name][key] = value
+                elif line.startswith("dpop(") and line.endswith(")"):
+                    dict_name, key = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', line[5:-1])
+                    key = self.evaluate_expression(key)
+                    self.variables[dict_name].pop(key)
                 elif line == "stop":
                     input("Press any key to continue...")
                     break
@@ -986,6 +995,10 @@ class PryzmaInterpreter:
             return random.randint(self.evaluate_expression(range_[0]), self.evaluate_expression(range_[1]))
         elif expression.startswith("strip(") and expression.endswith(")"):
             return self.evaluate_expression(expression[6:-1]).strip()
+        elif expression.startswith("get(") and expression.endswith(")"):
+            dict_name, key = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', expression[4:-1])
+            key = self.evaluate_expression(key)
+            return self.variables[dict_name][key]
         elif expression in self.variables:
             return self.variables[expression]
         else:

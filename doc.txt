@@ -100,6 +100,20 @@ print a
 
 output will be [3, 2, 1, 4, 5]
 
+in dictionaries you can do:
+
+push(dict_name,key,value)
+
+to push a value in to a dictionary
+
+a = get(dict_name,key)
+
+to retrive a value from a dictionary
+
+dpop(dict_name,key)
+
+to pop a value from a dictionary
+
 Type conversion:
 
 variable = int(variable)
