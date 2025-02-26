@@ -757,6 +757,22 @@ class PryzmaInterpreter:
     def evaluate_expression(self, expression):
         if re.match(r"^\d+$", expression):
             return int(expression)
+        elif expression.startswith("replace(") and expression.endswith(")"):
+            expression = expression[8:-1]
+            parts = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', expression)
+            if len(parts) != 3:
+                if not self.in_try_block:
+                    self.in_func_err()
+                    print(f"Error near line {self.current_line}: Invalid number of arguments for replace function.")
+                else:
+                    self.variables["err"] = 20
+                    return None
+            value = self.evaluate_expression(parts[0].strip())
+            old = self.evaluate_expression(parts[1].strip())
+            new = self.evaluate_expression(parts[2].strip())
+            if old == "\\n":
+                old = "\n"
+            return value.replace(old,new)
         elif re.match(r'^".*"$', expression):
             return expression[1:-1]
         elif expression.startswith("resplit(") and expression.endswith(")"):
@@ -835,20 +851,6 @@ class PryzmaInterpreter:
             if string_to_split.startswith('"') and string_to_split.endswith('"'):
                 string_to_split = string_to_split[1:-1]
             return string_to_split.split(char_to_split)
-        elif expression.startswith("replace(") and expression.endswith(")"):
-            expression = expression[8:-1]
-            parts = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', expression)
-            if len(parts) != 3:
-                if not self.in_try_block:
-                    self.in_func_err()
-                    print(f"Error near line {self.current_line}: Invalid number of arguments for replace function.")
-                else:
-                    self.variables["err"] = 20
-                    return None
-            value = self.evaluate_expression(parts[0].strip())
-            old = self.evaluate_expression(parts[1].strip())
-            new = self.evaluate_expression(parts[2].strip())
-            return value.replace(old,new)
         elif "+" in expression:
             parts = expression.split("+")
             evaluated_parts = [self.evaluate_expression(part.strip()) for part in parts]
