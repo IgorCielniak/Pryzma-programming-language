@@ -323,22 +323,14 @@ class PryzmaInterpreter:
                             self.variables["err"] = 4
                     self.in_func = False
                     self.current_func_name = None
-                elif line.startswith("interpret_pryzma(") and line.endswith(")"):
-                    code = line[17:-1]
+                elif line.startswith("eval(") and line.endswith(")"):
+                    code = line[5:-1]
                     if "|" in code:
                         code = code.split("|")
                         for part in code:
-                            if part.startswith('"') and part.endswith('"'):
-                                part = part[1:-1]
-                            else:
-                                part = self.variables[part]
-                            self.interpret(part)
+                            self.interpret(self.evaluate_expression(part))
                     else:
-                        if code.startswith('"') and code.endswith('"'):
-                            code = code[1:-1]
-                        else:
-                            code = self.variables[code]
-                        self.interpret(code)
+                        self.interpret(self.evaluate_expression(code))
                 elif line.startswith("try(") and line.endswith(")"):
                     self.in_try_block = True
                     instructions = line[4:-1].split("|")

@@ -502,11 +502,11 @@ the output will be the same as in the earlier example
 you can also delfunc to to delete a function in the same way or
 delkeyword() to delete a key word (yes this actually works)
 
-interpret_pryzma:
+eval:
 
-there is a function called interpret_pryzma that as the name suggests interprets pryzm code:
+there is a function called eval that as the name suggests evaluates pryzma code:
 
-interpret_pryzma("a = 10"|"print a")
+eval("a = 10"|"print a")
 
 and it will output 10
 
