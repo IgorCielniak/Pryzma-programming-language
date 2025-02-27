@@ -772,6 +772,8 @@ class PryzmaInterpreter:
             new = self.evaluate_expression(parts[2].strip())
             if old == "\\n":
                 old = "\n"
+            if new == "\\n":
+               new = "\n"
             return value.replace(old,new)
         elif re.match(r'^".*"$', expression):
             return expression[1:-1]
