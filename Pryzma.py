@@ -8,7 +8,6 @@ import json
 import shutil
 import zipfile
 import platform
-import requests
 import random
 
 class PryzmaInterpreter:
@@ -1653,6 +1652,7 @@ Available commands:
         print(help_text)
     
     def execute_ppm_command(self,user_input):
+        import requests
         if user_input[0] == "help":
             self.display_help(PackageManager)
         elif user_input[0] == "remove":
