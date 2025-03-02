@@ -390,7 +390,11 @@ class PryzmaInterpreter:
                     variable, expression = line.split('=', 1)
                     variable = variable.strip()
                     expression = expression.strip()
-                    self.variables[variable] = self.evaluate_expression(expression)
+                    if "[" in variable and "]" in variable:
+                        variable, index = variable[:-1].split("[",1)
+                        self.variables[variable][int(self.evaluate_expression(index))] = self.evaluate_expression(expression)
+                    else:
+                        self.variables[variable] = self.evaluate_expression(expression)
                 elif line.startswith("copy"):
                     list1, list2 = line[len("copy"):].split(",")
                     list1 = list1.strip()
@@ -490,13 +494,9 @@ class PryzmaInterpreter:
                             self.variables["err"] = 12
                         continue
                     list_name = instructions[2].strip()
-                    index_1 = int(instructions[0].strip())
-                    index_2 = int(instructions[1].strip())
-                    if index_1 in self.variables:
-                        index_1 = self.variables[index_1]
-                    if index_2 in self.variables:
-                        index_2 = self.variables[index_2]
                     try:
+                        index_1 = int(self.evaluate_expression(instructions[0].strip()))
+                        index_2 = int(self.evaluate_expression(instructions[1].strip()))
                         self.variables[list_name][index_1], self.variables[list_name][index_2] = self.variables[list_name][index_2], self.variables[list_name][index_1]
                     except ValueError:
                         if not self.in_try_block:
@@ -849,7 +849,9 @@ class PryzmaInterpreter:
             evaluated_parts = [self.evaluate_expression(part.strip()) for part in parts]
             if all(isinstance(part, str) for part in evaluated_parts):
                 return "".join(evaluated_parts)
-            elif all(isinstance(part, (int, float)) for part in evaluated_parts):
+            elif all(isinstance(part, (int)) for part in evaluated_parts):
+                return sum(int(part) for part in evaluated_parts)
+            elif all(isinstance(part, (float)) for part in evaluated_parts):
                 return sum(float(part) for part in evaluated_parts)
             elif any(isinstance(part, str) for part in evaluated_parts) and any(isinstance(part, (int, float)) for part in evaluated_parts): 
                 for parts in evaluated_parts:
@@ -1027,7 +1029,7 @@ class PryzmaInterpreter:
         start, end = range_expr.split(":")
         start_val = self.evaluate_expression(start)
         end_val = self.evaluate_expression(end)
-        
+
         if isinstance(start_val, int) and isinstance(end_val, int):
             for val in range(start_val, end_val):
                 self.variables[loop_var] = val

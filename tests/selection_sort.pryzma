@@ -1,0 +1,32 @@
+
+
+/sort{
+    len = len(arr)
+    for(i,0:len){
+
+        min_idx = i
+        hh = i+1
+        for(j,hh:len){
+
+            if(arr[j] < arr[min_idx]){
+
+                min_idx = j
+
+            }
+
+            swap(i, min_idx, arr)
+
+        }
+
+    }
+
+}
+
+
+
+arr = [2,5,5,1,7,4,9,8]
+
+@sort
+
+print arr
+
