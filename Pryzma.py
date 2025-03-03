@@ -259,7 +259,7 @@ class PryzmaInterpreter:
                     function_definition = line[1:].split("{", 1)
                     if len(function_definition) == 2:
                         function_name = function_definition[0].strip()
-                        function_body = function_definition[1].strip().rstrip("}")
+                        function_body = function_definition[1].strip()[:-1]
                         char_ = 0
                         rep_in_func = 0
                         function_body = list(function_body)
@@ -1596,25 +1596,32 @@ class PackageManager:
 
     def install_package(self, package_name):
         package_url = f"{self.package_api_url}/{package_name}"
+        import_err = False
         try:
-            response = requests.get(package_url)
-            if response.status_code == 200:
-                package_dir = os.path.join(self.user_packages_path, package_name)
-                os.makedirs(package_dir, exist_ok=True)
+            import requests
+        except ImportError:
+            import_err = True
+            print("module requests not found")
+        if not import_err:
+            try:
+                response = requests.get(package_url)
+                if response.status_code == 200:
+                    package_dir = os.path.join(self.user_packages_path, package_name)
+                    os.makedirs(package_dir, exist_ok=True)
     
-                package_file_path = os.path.join(package_dir, f"{package_name}.zip")
-                with open(package_file_path, 'wb') as file:
-                    file.write(response.content)
+                    package_file_path = os.path.join(package_dir, f"{package_name}.zip")
+                    with open(package_file_path, 'wb') as file:
+                        file.write(response.content)
+
+                    with zipfile.ZipFile(package_file_path, 'r') as zip_ref:
+                        zip_ref.extractall(package_dir)
     
-                with zipfile.ZipFile(package_file_path, 'r') as zip_ref:
-                    zip_ref.extractall(package_dir)
-    
-                os.remove(package_file_path)
-                print("Package", package_name, "downloaded and installed successfully.")
-            else:
-                print("Package", package_name, "not found in the repository.")
-        except requests.exceptions.ConnectionError as ex:
-            print("Connection error, check your inernet connection.")
+                    os.remove(package_file_path)
+                    print("Package", package_name, "downloaded and installed successfully.")
+                else:
+                    print("Package", package_name, "not found in the repository.")
+            except requests.exceptions.ConnectionError as ex:
+                print("Connection error, check your inernet connection.")
 
 
     def update_package(self, package_name=None):
@@ -1654,7 +1661,6 @@ Available commands:
         print(help_text)
     
     def execute_ppm_command(self,user_input):
-        import requests
         if user_input[0] == "help":
             self.display_help(PackageManager)
         elif user_input[0] == "remove":
