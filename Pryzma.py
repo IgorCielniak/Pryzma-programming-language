@@ -1311,12 +1311,6 @@ limitations under the License.
                     error_message = f"Error executing line {current_line + 1}: {e}"
                     print(error_message)
                     log_message(error_message)
-
-                print("Variables:", interpreter.variables)
-                print("Functions:", interpreter.functions)
-                log_message(f"Variables: {interpreter.variables}")
-                log_message(f"Functions: {interpreter.functions}")
-
             current_line += 1
 
             while True:
@@ -1339,11 +1333,6 @@ limitations under the License.
                                 error_message = f"Error executing line {current_line + 1}: {e}"
                                 print(error_message)
                                 log_message(error_message)
-
-                            print("Variables:", interpreter.variables)
-                            print("Functions:", interpreter.functions)
-                            log_message(f"Variables: {interpreter.variables}")
-                            log_message(f"Functions: {interpreter.functions}")
                         current_line += 1
                     break
                 elif command.startswith('b '):
