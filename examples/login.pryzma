@@ -1,0 +1,8 @@
+input p::"initial password:"
+
+/login{input pass::"password:"|if (p==pass){print "correct password\n"}|if (p!=pass){@incorrect}}
+
+/incorrect{print "incorretc password\n"|@login}
+
+@login
+
