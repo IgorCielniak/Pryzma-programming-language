@@ -153,42 +153,9 @@ class PryzmaInterpreter:
                     for char in if_body:
                         if_body2 += char
                     actions = if_body2.split("&$")
-                    if "==" in condition:
-                        value1 = self.evaluate_expression(condition.split("==")[0])
-                        value2 = self.evaluate_expression(condition.split("==")[1])
-                        if value1 == value2:
-                            for action in actions:
-                                self.interpret(action)
-                    elif "!=" in condition:
-                        value1 = self.evaluate_expression(condition.split("!=")[0])
-                        value2 = self.evaluate_expression(condition.split("!=")[1])
-                        if value1 != value2:
-                            for action in actions:
-                                self.interpret(action)
-                    elif "<=" in condition:
-                        value1 = self.evaluate_expression(condition.split("<=")[0])
-                        value2 = self.evaluate_expression(condition.split("<=")[1])
-                        if value1 <= value2:
-                            for action in actions:
-                                self.interpret(action)
-                    elif ">=" in condition:
-                        value1 = self.evaluate_expression(condition.split(">=")[0])
-                        value2 = self.evaluate_expression(condition.split(">=")[1])
-                        if value1 >= value2:
-                            for action in actions:
-                                self.interpret(action)
-                    elif "<" in condition:
-                        value1 = self.evaluate_expression(condition.split("<")[0])
-                        value2 = self.evaluate_expression(condition.split("<")[1])
-                        if value1 < value2:
-                            for action in actions:
-                                self.interpret(action)
-                    elif ">" in condition:
-                        value1 = self.evaluate_expression(condition.split(">")[0])
-                        value2 = self.evaluate_expression(condition.split(">")[1])
-                        if value1 > value2:
-                            for action in actions:
-                                self.interpret(action)
+                    if eval(condition, {}, self.variables):
+                         for action in actions:
+                            self.interpret(action)
                 elif line.startswith("while"):
                     line = line[5:]
                     condition, action = line.strip()[1:-1].split("){", 1)
@@ -201,60 +168,15 @@ class PryzmaInterpreter:
                         elif char == "}":
                             rep_in_if -= 1
                         elif rep_in_if == 0  and char == "|":
-                            if_body[char_] = "%$"
+                            if_body[char_] = "&$"
                         char_ += 1
                     if_body2 = ""
                     for char in if_body:
                         if_body2 += char
-                    actions = if_body2.split("%$")
-                    if "==" in condition:
-                        value1 = self.evaluate_expression(condition.split("==")[0])
-                        value2 = self.evaluate_expression(condition.split("==")[1])
-                        while value1 == value2:
-                            for action in actions:
-                                self.interpret(action)
-                                value1 = self.evaluate_expression(condition.split("==")[0])
-                                value2 = self.evaluate_expression(condition.split("==")[1])
-                    if "!=" in condition:
-                        value1 = self.evaluate_expression(condition.split("!=")[0])
-                        value2 = self.evaluate_expression(condition.split("!=")[1])
-                        while value1 != value2:
-                            for action in actions:
-                                self.interpret(action)
-                                value1 = self.evaluate_expression(condition.split("!=")[0])
-                                value2 = self.evaluate_expression(condition.split("!=")[1])
-                    if "<=" in condition:
-                        value1 = self.evaluate_expression(condition.split("<=")[0])
-                        value2 = self.evaluate_expression(condition.split("<=")[1])
-                        while value1 <= value2:
-                            for action in actions:
-                                self.interpret(action)
-                                value1 = self.evaluate_expression(condition.split("<=")[0])
-                                value2 = self.evaluate_expression(condition.split("<=")[1])
-                    if ">=" in condition:
-                        value1 = self.evaluate_expression(condition.split(">=")[0])
-                        value2 = self.evaluate_expression(condition.split(">=")[1])
-                        while value1 >= value2:
-                            for action in actions:
-                                self.interpret(action)
-                                value1 = self.evaluate_expression(condition.split(">=")[0])
-                                value2 = self.evaluate_expression(condition.split(">=")[1])
-                    if "<" in condition:
-                        value1 = self.evaluate_expression(condition.split("<")[0])
-                        value2 = self.evaluate_expression(condition.split("<")[1])
-                        while value1 < value2:
-                            for action in actions:
-                                self.interpret(action)
-                                value1 = self.evaluate_expression(condition.split("<")[0])
-                                value2 = self.evaluate_expression(condition.split("<")[1])
-                    if ">" in condition:
-                        value1 = self.evaluate_expression(condition.split(">")[0])
-                        value2 = self.evaluate_expression(condition.split(">")[1])
-                        while value1 > value2:
-                            for action in actions:
-                                self.interpret(action)
-                                value1 = self.evaluate_expression(condition.split(">")[0])
-                                value2 = self.evaluate_expression(condition.split(">")[1])
+                    actions = if_body2.split("&$")
+                    while eval(condition, {}, self.variables):
+                         for action in actions:
+                            self.interpret(action)
                 elif line.startswith("/"):
                     function_definition = line[1:].split("{", 1)
                     if len(function_definition) == 2:
