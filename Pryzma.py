@@ -738,7 +738,7 @@ class PryzmaInterpreter:
             except Exception as e:
                 if not self.in_try_block:
                     self.in_func_err()
-                    print(f"Error near line {self.current_line}: {e}")
+                    print(f"in() function error near line {self.current_line}: {e}")
                 else:
                     self.variables["err"] = 32
         elif expression.startswith("splitby(") and expression.endswith(")"):
@@ -1455,7 +1455,7 @@ commands:
 29 - Error writing to file
 30 - Invalid number of arguments for splitby function
 31 - File not found
-32 - Variable not defined for in()
+32 - in() function error
 33 - Invalid number of arguments for index function 
 34 - Value not found in list for index function
 35 - Variable is not a list for index function
