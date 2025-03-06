@@ -730,20 +730,15 @@ class PryzmaInterpreter:
                     self.variables["err"] = 50
                 return None
         elif expression.startswith("in(") and expression.endswith(")"):
-            list_name, value = expression[3:-1].split(",")
-            list_name = list_name.strip()
-            value = value.strip()
-            if value.startswith('"') and value.endswith('"'):
-                value = value[1:-1]
-                return value in self.variables[list_name]
-            elif value.isnumeric():
-                return int(value) in self.variables[list_name]
-            elif value in self.variables:
-                return self.variables[value] in self.variables[list_name]
-            else:
+            value1, value2 = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', expression[3:-1])
+            value1 = self.evaluate_expression(value1.strip())
+            value2 = self.evaluate_expression(value2.strip())
+            try:
+                return value2 in value1
+            except Exception as e:
                 if not self.in_try_block:
                     self.in_func_err()
-                    print(f"Error near line {self.current_line}: Variable '{value}' is not defined.")
+                    print(f"Error near line {self.current_line}: {e}")
                 else:
                     self.variables["err"] = 32
         elif expression.startswith("splitby(") and expression.endswith(")"):
