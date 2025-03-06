@@ -1157,7 +1157,7 @@ limitations under the License.
             elif command.startswith('b '):
                 try:
                     line_num = int(command.split()[1])
-                    breakpoints.add(line_num)
+                    breakpoints.add(line_num-1)
                     print(f"Breakpoint added at line {line_num}.")
                     log_message(f"Breakpoint added at line {line_num}.")
                 except ValueError:
