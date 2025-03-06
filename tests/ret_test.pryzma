@@ -1,0 +1,5 @@
+/func{var = args[0]|code = var+"="hello""|eval(code)}
+
+@func("b")
+
+print b

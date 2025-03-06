@@ -1,0 +1,41 @@
+variables = {}
+
+
+/eval{
+    handeled=False
+    value = strip(args[0])
+    check = startswith(""",value)
+    check2 = startswith(""",value)
+
+    if(check == True){if(check2 == True){result = value[1:-1]|handeled=True}}
+    if(handeled == False){is_num = isanumber(value)|if(is_num == True){result = value|handeled=True}}
+    if(handeled == False){result = variables[value]|handeled = True}
+    if(handeled == False){result = None}
+}
+
+/interpret{
+    line = args[0]
+    check = startswith("print",line)
+    if(check == True){
+        line = line[5:]
+        @eval(line)
+        print result
+    }
+
+    check = in(line,"=")
+
+    if(check==True){
+        expr = splitby("=",line)
+        var = strip(expr[0])
+        value = strip(expr[1])
+        @eval(value)
+        push(variables,var,result)
+    }
+}
+program = read(pargs[1])
+program = replace(program,"\n",";")
+lines = splitby(";",program)
+for(line_count,0:len(lines)){
+    line = lines[line_count]
+    @interpret(line)
+}
