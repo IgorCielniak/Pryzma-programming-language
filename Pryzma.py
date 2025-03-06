@@ -212,23 +212,9 @@ class PryzmaInterpreter:
                         self.current_func_name = function_name
                         arg = arg.strip(")")
                         if arg:
-                            arg = arg.split(",")
+                            arg = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', arg)
                             for args in range(len(arg)):
-                                arg[args] = arg[args].lstrip()
-                            for args in range(len(arg)):
-                                if arg[args].startswith('"') and arg[args].endswith('"'):
-                                    arg[args] = arg[args][1:-1]
-                                elif arg[args] in self.variables:
-                                    arg[args] = self.variables[arg[args]]
-                                elif arg[args].isdigit():
-                                    arg[args] = int(arg[args])
-                                else:
-                                    if not self.in_try_block:
-                                        self.in_func_err()
-                                        print(f"Invalid argument at line {self.current_line}")
-                                    else:
-                                        self.variables["err"] = 3
-                                    break
+                                arg[args] = self.evaluate_expression(arg[args].strip())
                             self.variables["args"] = arg
                     self.current_func_name = function_name
                     if function_name in self.functions:
@@ -1426,54 +1412,53 @@ commands:
 """
 1 - Error keyword deleted 
 2 - Invalid function definition 
-3 - Invalid argument
-4 - Function not defined
-5 - Too much arguments for +=
-6 - Too much arguments for -=
-7 - Invalid number of arguments for write()
-8 - Invalid syntax for while
-9 - Invalid syntax for whilen
-10 - Invalid move() instruction syntax
-11 - Invalid index for move() instruction
-12 - Invalid swap() instruction syntax
-13 - Invalid index for swap() instruction
-14 - Invalid create_button command
-15 - Invalid create_label command
-16 - Invalid create_entry command
-17 - Invalid get_entry_text command
-18 - Invalid set_entry_text command
-19 - Tkintet isn't enabled
-20 - Invalid number of arguments for replace().
-21 - Invalid statement
-22 - Unknown error
-23 - Module does not have a 'start' function."
-24 - Error loading module
-25 - Cannot decrement non-integer variable
-26 - Variable not found for decrement function
-27 - Cannot increment non-integer variable
-28 - Variable not found for increment function
-29 - Error writing to file
-30 - Invalid number of arguments for splitby function
-31 - File not found
-32 - in() function error
-33 - Invalid number of arguments for index function 
-34 - Value not found in list for index function
-35 - Variable is not a list for index function
-36 - List not defined for all()
-37 - Variable is not defined for isanumber()
-38 - Invalid argument for dir()
-39 - Unknown variable or expression
-40 - Invalid range expression for loop
-41 - Invalid function definition in imported file
-42 - Invalid statement in imported file
-43 - File not found for use function 
-44 - List does not exist for append function
-45 - Index out of range for pop function
-46 - List does not exist for pop function
-47 - Invalid number of arguments for resplit()
-48 - The first argument of resplit() must be a string (regex pattern)
-49 - The second argument of resplit() must be a string
-50 - Invalid regex pattern
+3 - Function not defined
+4 - Too much arguments for +=
+5 - Too much arguments for -=
+6 - Invalid number of arguments for write()
+7 - Invalid syntax for while
+8 - Invalid syntax for whilen
+9 - Invalid move() instruction syntax
+10 - Invalid index for move() instruction
+11 - Invalid swap() instruction syntax
+12 - Invalid index for swap() instruction
+13 - Invalid create_button command
+14 - Invalid create_label command
+15 - Invalid create_entry command
+16 - Invalid get_entry_text command
+17 - Invalid set_entry_text command
+18 - Tkintet isn't enabled
+19 - Invalid number of arguments for replace().
+20 - Invalid statement
+21 - Unknown error
+22 - Module does not have a 'start' function."
+23 - Error loading module
+24 - Cannot decrement non-integer variable
+25 - Variable not found for decrement function
+26 - Cannot increment non-integer variable
+27 - Variable not found for increment function
+28 - Error writing to file
+29 - Invalid number of arguments for splitby function
+30 - File not found
+31 - in() function error
+32 - Invalid number of arguments for index function 
+33 - Value not found in list for index function
+34 - Variable is not a list for index function
+35 - List not defined for all()
+36 - Variable is not defined for isanumber()
+37 - Invalid argument for dir()
+38 - Unknown variable or expression
+39 - Invalid range expression for loop
+40 - Invalid function definition in imported file
+41 - Invalid statement in imported file
+42 - File not found for use function 
+43 - List does not exist for append function
+44 - Index out of range for pop function
+45 - List does not exist for pop function
+46 - Invalid number of arguments for resplit()
+47 - The first argument of resplit() must be a string (regex pattern)
+48 - The second argument of resplit() must be a string
+49 - Invalid regex pattern
 """ 
 )
 
