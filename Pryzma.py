@@ -36,9 +36,6 @@ class PryzmaInterpreter:
         except FileNotFoundError:
             print(f"File '{self.file_path}' not found.")
 
-    def define_function(self, name, body):
-        self.functions[name] = body
-
     def interpret(self, program):
         program = program.replace('\n', ";")
         rep_in_func = 0
@@ -198,7 +195,7 @@ class PryzmaInterpreter:
                         for char in function_body:
                             function_body2 += char
                         function_body = function_body2.split("&$")
-                        self.define_function(function_name, function_body)
+                        self.functions[function_name] = function_body
                     else:
                         if not self.in_try_block:
                             self.in_func_err()
@@ -979,7 +976,7 @@ class PryzmaInterpreter:
                     line = line.strip()
                     if line.startswith("/"):
                         if function_def:
-                            self.define_function(function_name, function_body)
+                            self.functions[function_name] = function_body
                             function_def = False
                         function_definition = line[1:].split("{")
                         if len(function_definition) == 2:
@@ -1005,7 +1002,7 @@ class PryzmaInterpreter:
                         else:
                             self.variables["err"] = 43
                 if function_def:
-                    self.define_function(function_name, function_body)
+                    self.functions[function_name] = function_body
         except FileNotFoundError:
             if not self.in_try_block:
                 self.in_func_err()
