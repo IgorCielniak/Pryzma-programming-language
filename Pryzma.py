@@ -23,6 +23,7 @@ class PryzmaInterpreter:
         self.in_func = False
         self.current_func_name = None
         self.preprocess_only = False
+        self.return_val = None
 
     def interpret_file(self, file_path, *args):
         self.file_path = file_path.strip('"')
@@ -220,11 +221,8 @@ class PryzmaInterpreter:
                     if function_name in self.functions:
                         command = 0
                         while command < len(self.functions[function_name]):
-                            if self.functions[function_name][command].startswith("return"):
-                                return self.evaluate_expression(self.functions[function_name][command][6:].strip())
-                            else:
-                                self.interpret(self.functions[function_name][command])
-                                command += 1
+                            self.interpret(self.functions[function_name][command])
+                            command += 1
                     else:
                         if not self.in_try_block:
                             self.in_func_err()
@@ -563,6 +561,8 @@ class PryzmaInterpreter:
                     dict_name, key = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', line[5:-1])
                     key = self.evaluate_expression(key)
                     self.variables[dict_name].pop(key)
+                elif line.startswith("return"):
+                    self.ret_val = self.evaluate_expression(line[6:])
                 elif line == "stop":
                     input("Press any key to continue...")
                     break
@@ -896,7 +896,9 @@ class PryzmaInterpreter:
             key = self.evaluate_expression(key)
             return self.variables[dict_name][key]
         elif expression.startswith("@"):
-            return self.interpret(expression)
+            self.ret_val = None
+            self.interpret(expression)
+            return self.ret_val
         elif expression in self.variables:
             return self.variables[expression]
         else:

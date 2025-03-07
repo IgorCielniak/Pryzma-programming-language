@@ -7,10 +7,10 @@ variables = {}
     check = startswith(""",value)
     check2 = startswith(""",value)
 
-    if(check == True){if(check2 == True){result = value[1:-1]|handeled=True}}
-    if(handeled == False){is_num = isanumber(value)|if(is_num == True){result = value|handeled=True}}
-    if(handeled == False){result = variables[value]|handeled = True}
-    if(handeled == False){result = None}
+    if(check == True){if(check2 == True){result = value[1:-1]|handeled=True|return result}}
+    if(handeled == False){is_num = isanumber(value)|if(is_num == True){result = value|handeled=True|return result}}
+    if(handeled == False){result = variables[value]|handeled = True|return result}
+    if(handeled == False){return None}
 }
 
 /interpret{
@@ -18,7 +18,7 @@ variables = {}
     check = startswith("print",line)
     if(check == True){
         line = line[5:]
-        @eval(line)
+        result = @eval(line)
         print result
     }
 
@@ -28,7 +28,7 @@ variables = {}
         expr = splitby("=",line)
         var = strip(expr[0])
         value = strip(expr[1])
-        @eval(value)
+        result = @eval(value)
         push(variables,var,result)
     }
 }
