@@ -220,8 +220,11 @@ class PryzmaInterpreter:
                     if function_name in self.functions:
                         command = 0
                         while command < len(self.functions[function_name]):
-                            self.interpret(self.functions[function_name][command])
-                            command += 1
+                            if self.functions[function_name][command].startswith("return"):
+                                return self.evaluate_expression(self.functions[function_name][command][6:].strip())
+                            else:
+                                self.interpret(self.functions[function_name][command])
+                                command += 1
                     else:
                         if not self.in_try_block:
                             self.in_func_err()
@@ -892,6 +895,8 @@ class PryzmaInterpreter:
             dict_name, key = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', expression[4:-1])
             key = self.evaluate_expression(key)
             return self.variables[dict_name][key]
+        elif expression.startswith("@"):
+            return self.interpret(expression)
         elif expression in self.variables:
             return self.variables[expression]
         else:

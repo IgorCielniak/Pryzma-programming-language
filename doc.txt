@@ -420,6 +420,17 @@ to call a function without argument you can do
 
 @add
 
+a function can return a value using the return keyword:
+
+/func{return "hello"}
+
+a = @func
+
+print a
+
+output:
+
+hello
 
 Loops:
 
