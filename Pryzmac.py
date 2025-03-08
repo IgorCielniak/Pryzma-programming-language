@@ -37,7 +37,10 @@ class Pryzmac:
                     else:
                         c_code.append(line+"()")
             elif line.startswith("@"):
-                c_code.append(line[1:]+";")
+                if not line.endswith(")"):
+                    c_code.append(line[1:]+"();")
+                else:
+                    c_code.append(line[1:]+";")
             elif "=" in line:
                 c_code.append(self.convert_assignment(line))
             elif line == "}":
@@ -109,7 +112,7 @@ def main():
 
     f = open("out.c", "w")
     f.write("#include <stdio.h>\n")
-    f.write("int main(){" + c_code + "};")
+    f.write(c_code + ";")
     f.close()
 
 
