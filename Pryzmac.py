@@ -41,6 +41,8 @@ class Pryzmac:
                     c_code.append(line[1:]+"();")
                 else:
                     c_code.append(line[1:]+";")
+            elif line.startswith("return"):
+                c_code.append(line+";")
             elif "=" in line:
                 c_code.append(self.convert_assignment(line))
             elif line == "}":
