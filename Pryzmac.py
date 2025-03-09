@@ -4,6 +4,7 @@ import re
 class Pryzmac:
     def __init__(self):
         self.variables = set()
+        self.variables.add("args")
         self.indent_level = 0
 
     def convert(self, pryzma_code):
@@ -21,7 +22,7 @@ class Pryzmac:
                 c_code.append(self.convert_str_declaration(line))
             elif line.startswith("print "):
                 c_code.append(self.convert_print(line))
-            elif line.startswith("if "):
+            elif line.startswith("if"):
                 c_code.append(self.convert_if(line))
             elif line.startswith("for("):
                 c_code.append(self.convert_for(line))
@@ -33,14 +34,22 @@ class Pryzmac:
                     c_code.append(line)
                 else:
                     if line.endswith("{"):
-                        c_code.append(line[:-1]+"(){")
+                        if "main" in line:
+                            c_code.append(line[:-1]+"(){")
+                        else:
+                            c_code.append(line[:-1]+"(char args[]){")
                     else:
-                        c_code.append(line+"()")
+                        c_code.append(line+"(args)")
             elif line.startswith("@"):
                 if not line.endswith(")"):
-                    c_code.append(line[1:]+"();")
+                    c_code.append(line[1:]+"(args);")
+                    args_def = "char args[] = {};"
+                    c_code.append(args_def)
                 else:
-                    c_code.append(line[1:]+";")
+                    func_name, args = line[1:-1].strip(")").split("(")
+                    args_def = "char args[] = {"+args+"};"
+                    c_code.append(args_def)
+                    c_code.append(func_name+"(args);")
             elif line.startswith("return"):
                 c_code.append(line+";")
             elif "=" in line:
@@ -66,7 +75,16 @@ class Pryzmac:
 
     def convert_print(self, line):
         value = line[len("print "):].strip()
-        if value in self.variables:
+        value_name = value
+        if "[" in value:
+            value_name = value.split("[")[0]
+        if value.startswith("int(") and value.endswith(")"):
+            value = "(int)"+value[4:-1]
+        elif value.startswith("str(") and value.endswith(")"):
+            value = "(char[])"+value[4:-1]
+        if "[" in value:
+            return f'printf("%s",&{value});'
+        if value_name in self.variables:
             return f'printf("%d",{value});'
         else:
             return f'printf({value});'
