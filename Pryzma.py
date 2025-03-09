@@ -990,42 +990,18 @@ class PryzmaInterpreter:
                 function_name = ""
                 function_body = []
                 for line in lines:
-                    line = line.strip()
                     if line.startswith("/"):
-                        if function_def:
-                            self.functions[function_name] = function_body
-                            function_def = False
-                        function_definition = line[1:].split("{")
-                        if len(function_definition) == 2:
-                            function_name = function_definition[0].strip()
-                            if function_name.startswith(name + "."):
-                                function_name = function_definition[0].strip()
-                            else:
-                                function_name = name + "." + function_definition[0].strip()
-                            function_body = function_definition[1].strip().rstrip("}").split("|")
-                            function_def = True
+                        if line[1:].startswith(name):
+                            line = "/" + line[1:]
                         else:
-                            if not self.in_try_block:
-                                self.in_func_err()
-                                print(f"Error near line {self.current_line}: Invalid function definition in imported file: {line}")
-                            else:
-                                self.variables["err"] = 42
-                    elif line.startswith("") or line.startswith("#"):
-                        continue
-                    else:
-                        if not self.in_try_block:
-                            self.in_func_err()
-                            print(f"Error near line {self.current_line}: Invalid statement in imported file: {line}")
-                        else:
-                            self.variables["err"] = 43
-                if function_def:
-                    self.functions[function_name] = function_body
+                            line = "/" + name + "."  + line[1:]
+                        self.interpret(line)
         except FileNotFoundError:
             if not self.in_try_block:
                 self.in_func_err()
                 print(f"Error near line {self.current_line}: File '{file_path}' not found.")
             else:
-                self.variables["err"] = 44
+                self.variables["err"] = 42
 
     def get_input(self, prompt):
         if sys.stdin.isatty():
@@ -1067,7 +1043,7 @@ limitations under the License.
                 self.in_func_err()
                 print(f"Error near line {self.current_line}: List '{list_name}' does not exist.")
             else:
-                self.variables["err"] = 45
+                self.variables["err"] = 43
 
     def pop_from_list(self, list_name, index):
         if list_name in self.variables:
@@ -1082,13 +1058,13 @@ limitations under the License.
                     self.in_func_err()
                     print(f"Error near line {self.current_line}: Index {index} out of range for list '{list_name}'.")
                 else:
-                    self.variables["err"] = 46
+                    self.variables["err"] = 44
         else:
             if not self.in_try_block:
                 self.in_func_err()
                 print(f"Error near line {self.current_line}: List '{list_name}' does not exist.")
             else:
-                self.variables["err"] = 47
+                self.variables["err"] = 45
 
 
     def execute_function_from_file(self):
@@ -1317,7 +1293,7 @@ limitations under the License.
                 if not self.in_try_block:
                     print("Invalid number of arguments for call")
                 else:
-                    self.variables["err"] = 48
+                    self.variables["err"] = 46
             
             file_name = parts[0]
             function_name = parts[1]
@@ -1343,7 +1319,7 @@ limitations under the License.
             if not self.in_try_block:
                 print("Invalid call statement format. Expected format: call(file_name, function_name, arg1, arg2, ...)")
             else:
-                self.variables["err"] = 49
+                self.variables["err"] = 47
 
     def call_function_from_file(self, file_name, function_name, args):
         if not os.path.isfile(file_name):
@@ -1472,14 +1448,12 @@ commands:
 39 - Invalid argument for dir()
 40 - Unknown variable or expression
 41 - Invalid range expression for loop
-42 - Invalid function definition in imported file
-43 - Invalid statement in imported file
-44 - File not found for use function
-45 - List does not exist for append function
-46 - Index out of range for pop function
-47 - List does not exist for pop function
-48 - Invalid number of arguments for call.
-49 - Invalid call statement format.
+42 - File not found for use function
+43 - List does not exist for append function
+44 - Index out of range for pop function
+45 - List does not exist for pop function
+46 - Invalid number of arguments for call.
+47 - Invalid call statement format.
 """ 
 )
 
