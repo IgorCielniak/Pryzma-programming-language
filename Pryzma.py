@@ -301,6 +301,19 @@ class PryzmaInterpreter:
                         self.variables[variable][int(self.evaluate_expression(index))] = self.evaluate_expression(expression)
                     else:
                         self.variables[variable] = self.evaluate_expression(expression)
+                elif line.startswith("copy_file(") and line.endswith(")"):
+                    values = line[len("copy_file("):-1].strip()
+                    src, dest = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', values)
+                    src = self.evaluate_expression(src)
+                    dest = self.evaluate_expression(dest)
+                    try:
+                        shutil.copy(src, dest)
+                    except Exception as e:
+                        if self.in_try_block:
+                            self.variables["err"] = 50
+                        else:
+                            self.in_func_err()
+                            print(f"Error copying file '{src}' to '{dest}': {e}")
                 elif line.startswith("copy"):
                     list1, list2 = line[len("copy"):].split(",")
                     list1 = list1.strip()
@@ -560,6 +573,18 @@ class PryzmaInterpreter:
                     self.variables[dict_name].pop(key)
                 elif line.startswith("return"):
                     self.ret_val = self.evaluate_expression(line[6:])
+                elif line.startswith("delete_file(") and line.endswith(")"):
+                    path = self.evaluate_expression(line[len("delete_file("):1].strip())
+                    try:
+                        os.remove(path)
+                    except FileNotFoundError:
+                        if self.in_try_block:
+                            self.variables["err"] = 48
+                        else:
+                            self.in_func_err()
+                            print(f"Error: File '{path}' not found.")
+                    except Exception as e:
+                        print(f"Error deleting file '{path}': {e}")
                 elif line == "stop":
                     input("Press any key to continue...")
                     break
@@ -896,6 +921,19 @@ class PryzmaInterpreter:
             self.ret_val = None
             self.interpret(expression)
             return self.ret_val
+        elif expression.startswith("file_exists(") and expression.endswith(")"):
+            value = expression[len("file_exists("):-1].strip()
+            path = self.evaluate_expression(value)
+            try:
+                return os.path.isfile(path)
+            except Exception as e:
+                if not self.in_try_block:
+                    self.in_func_err()
+                    print(f"Error near line {self.current_line}: Invalid argument for file_exists() function")
+                else:
+                    self.variables["err"] = 49 
+                return None
+
         elif expression in self.variables:
             return self.variables[expression]
         else:
@@ -1490,8 +1528,11 @@ commands:
 43 - List does not exist for append function
 44 - Index out of range for pop function
 45 - List does not exist for pop function
-46 - Invalid number of arguments for call.
-47 - Invalid call statement format.
+46 - Invalid number of arguments for call
+47 - Invalid call statement format
+48 - Error deleting file, file not found
+49 - Invalid argument for file_exists() function
+50 - Error while copying a file
 """ 
 )
 

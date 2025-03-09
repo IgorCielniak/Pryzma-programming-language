@@ -580,6 +580,12 @@ C:\Users\User\Desktop\
 
 as the argument you can also pass a variable
 
+copy_file:
+
+you can copy files like this:
+
+copy_file(file_path,destination)
+
 Extending the interpreters functionality:
 
 you can define csutom keywords by making and loading a pyyhon extesnion for the interpreter, example extension:
