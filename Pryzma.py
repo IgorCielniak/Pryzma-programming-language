@@ -833,7 +833,7 @@ class PryzmaInterpreter:
         elif expression.startswith("all(") and expression.endswith(")"):
             list_name = expression[4:-1]
             if list_name in self.variables and isinstance(self.variables[list_name], list):
-                return " ".join(map(str, self.variables[list_name]))
+                return "".join(map(str, self.variables[list_name]))
             else:
                 if not self.in_try_block:
                     self.in_func_err()
