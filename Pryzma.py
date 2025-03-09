@@ -889,7 +889,7 @@ class PryzmaInterpreter:
             self.interpret(expression)
             return self.ret_val
         elif expression.startswith("char(") and expression.endswith(")"):
-            return chr(int(expression[5:-1]))
+            return chr(self.evaluate_expression(expression[5:-1]))
         elif expression in self.variables:
             return self.variables[expression]
         else:
