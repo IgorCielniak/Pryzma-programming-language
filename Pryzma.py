@@ -963,9 +963,26 @@ class PryzmaInterpreter:
         try:
             with open(file_path, 'r') as file:
                 program = file.read()
-
-                program = program.replace('&\n', '')
                 program = program.replace('\n', ";")
+                rep_in_func = 0
+                char_ = 0
+                prog = list(program)
+                for char in prog:
+                    if char == "{":
+                        rep_in_func += 1
+                    elif char == "}":
+                        rep_in_func -= 1
+                    elif rep_in_func != 0  and char == ";":
+                        prog[char_] = "|"
+                    char_ += 1
+                prog2 = ""
+                for char in prog:
+                    prog2+=char
+                program = prog2
+
+                if not self.in_func:
+                    self.current_line = 0
+
                 lines = re.split(r';(?=(?:[^"]*"[^"]*")*[^"]*$)', program)
                 lines = [stmt.strip() for stmt in lines if stmt.strip()]
 
