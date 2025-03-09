@@ -132,7 +132,10 @@ def main():
 
     f = open("out.c", "w")
     f.write("#include <stdio.h>\n")
-    f.write(c_code + ";")
+    if not "main()" in c_code:
+        f.write("void main(){" + c_code + "};")
+    else:
+        f.write(c_code + ";")
     f.close()
 
 
