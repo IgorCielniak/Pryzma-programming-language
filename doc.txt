@@ -361,6 +361,9 @@ after import you can use functions from the imported file
 
 if you add ./ before the file path it will look for the given file in the same folder as the file,
 and if you just give the module name it will look for it in the packages folder that is created while installing packages with ppm.
+you can also import files over http and https like this:
+
+use https://raw.githubusercontent.com/IgorCielniak/Pryzma-packages/main/net/net.pryzma
 
 Comments:
 

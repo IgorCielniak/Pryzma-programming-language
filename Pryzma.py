@@ -951,8 +951,46 @@ class PryzmaInterpreter:
 
     def import_functions(self, file_path):
         file_path = file_path.strip('"')
-        
-        if '/' in file_path or '\\' in file_path:
+    
+        if file_path.startswith("https://") or file_path.startswith("http://"):
+            import requests
+            name = os.path.basename(file_path).split(".")[0]
+            f = requests.get(file_path)
+            program = f.text
+            program = program.replace('\n', ";")
+            rep_in_func = 0
+            char_ = 0
+            prog = list(program)
+            for char in prog:
+                if char == "{":
+                    rep_in_func += 1
+                elif char == "}":
+                    rep_in_func -= 1
+                elif rep_in_func != 0  and char == ";":
+                    prog[char_] = "|"
+                char_ += 1
+            prog2 = ""
+            for char in prog:
+                prog2+=char
+            program = prog2
+
+            if not self.in_func:
+                self.current_line = 0
+
+            lines = re.split(r';(?=(?:[^"]*"[^"]*")*[^"]*$)', program)
+            lines = [stmt.strip() for stmt in lines if stmt.strip()]
+
+            function_def = False
+            function_name = ""
+            function_body = []
+            for line in lines:
+                if line.startswith("/"):
+                    if line[1:].startswith(name):
+                        line = "/" + line[1:]
+                    else:
+                        line = "/" + name + "."  + line[1:]
+                    self.interpret(line)
+        elif '/' in file_path or '\\' in file_path:
             self.load_functions_from_file(file_path)
         else:
             file_path = f"{PackageManager.user_packages_path}/{file_path}/{file_path}.pryzma"
