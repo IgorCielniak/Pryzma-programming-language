@@ -736,16 +736,8 @@ class PryzmaInterpreter:
                 else:
                     self.variables["err"] = 32
                 return None
-            char_to_split = args[0].strip()
-            string_to_split = args[1].strip()
-            if string_to_split in self.variables:
-                string_to_split = self.variables[string_to_split]
-            if char_to_split in self.variables:
-                char_to_split = self.variables[char_to_split]
-            if char_to_split.startswith('"') and char_to_split.endswith('"'):
-                char_to_split = char_to_split[1:-1]
-            if string_to_split.startswith('"') and string_to_split.endswith('"'):
-                string_to_split = string_to_split[1:-1]
+            char_to_split = self.evaluate_expression(args[0].strip())
+            string_to_split = self.evaluate_expression(args[1].strip())
             return string_to_split.split(char_to_split)
         elif "+" in expression:
             parts = expression.split("+")
@@ -896,6 +888,8 @@ class PryzmaInterpreter:
             self.ret_val = None
             self.interpret(expression)
             return self.ret_val
+        elif expression.startswith("char(") and expression.endswith(")"):
+            return chr(int(expression[5:-1]))
         elif expression in self.variables:
             return self.variables[expression]
         else:
