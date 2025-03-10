@@ -20,7 +20,7 @@ functions = {}
 
     check_if = startswith("if",line)
 
-    if(check_if == True){h = char(41)+char(123)|line2 = splitby(h,line)|line2[0] = line2[0][3:]|line2[1] = line2[1][:-1]|check2 = pyeval(line2[0])|if(check2==True){actions = splitby(char(124),line2[1])|for(action,0:len(actions)){@interpret(actions[action])}}}
+    if(check_if == True){h = char(41)+char(123)|line2 = splitby(h,line)|line2[0] = line2[0][3:]|line2[1] = line2[1][:-1]|check2 = pyeval(line2[0],variables)|if(check2==True){actions = splitby(char(124),line2[1])|for(action,0:len(actions)){@interpret(actions[action])}}}
 
     line = args[0]
 

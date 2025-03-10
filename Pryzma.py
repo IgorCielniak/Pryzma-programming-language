@@ -657,7 +657,11 @@ class PryzmaInterpreter:
         if re.match(r"^\d+$", expression):
             return int(expression)
         elif expression.startswith("pyeval(") and expression.endswith(")"):
-            return eval(self.evaluate_expression(expression[7:-1]))
+            parts = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', expression[7:-1])
+            if len(parts) == 1:
+                return eval(self.evaluate_expression(parts[0]))
+            else:
+                return eval(self.evaluate_expression(parts[0]),self.evaluate_expression(parts[1]))
         elif expression.startswith("replace(") and expression.endswith(")"):
             expression = expression[8:-1]
             parts = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', expression)

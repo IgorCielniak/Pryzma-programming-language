@@ -682,13 +682,15 @@ hello
 
 pyeval:
 
-result = pyeval("1==1")
+result = pyeval("1==1",stack)
 
 print result
 
 output:
 
 True
+
+the stack is an optional argument so you can pass your won stack
 
 Running Programs:
 
