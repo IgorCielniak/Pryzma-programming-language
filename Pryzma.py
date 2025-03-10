@@ -562,7 +562,7 @@ class PryzmaInterpreter:
                     self.ret_val = self.evaluate_expression(line[6:])
                 elif line == "stop":
                     input("Press any key to continue...")
-                    break
+                    sys.exit()
                 else:
                     if not handled:
                         if self.in_try_block:

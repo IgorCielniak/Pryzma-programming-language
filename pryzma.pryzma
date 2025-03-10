@@ -48,7 +48,7 @@ functions = {}
         actions = functions[func_name]
         actions_count = len(actions)
         for(i,0:actions_count){
-            action =  functions[func_name][i]
+            action = strip(functions[func_name][i])
             @interpret(action)
         }
     }
@@ -56,9 +56,30 @@ functions = {}
 }
 program = read(pargs[1])
 program = replace(program,"\n",";")
+prog = list(program)
+
+h = char(123)
+h2 = char(125)
+h3 = char(59)
+in_func = False
+
+for(char,0:len(prog)){
+    if (prog[char]==h){
+        in_func = True
+    }
+    if (prog[char]==h2){
+        in_func = False
+    }
+    if (in_func == True and prog[char] == h3){
+        prog[char] = char(124)
+    }
+}
+
+program = all(prog)
+
 lines = splitby(";",program)
 for(line_count,0:len(lines)-1){
-    line = lines[line_count]
+    line = strip(lines[line_count])
     if(line!=""){
         @interpret(line)
     }
