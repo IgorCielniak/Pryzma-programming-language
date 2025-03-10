@@ -9,10 +9,11 @@ functions = {}
 
     if(check == True){if(check2 == True){result = value[1:-1]|handeled=True|return result}}
     if(handeled == False){is_num = isanumber(value)|if(is_num == True){result = int(value)|handeled=True|return result}}
-    if(handeled == False){check = in(value,"[")|if(check==True){value = splitby("[",value[:-1])|var_name = value[0]|index = value[1]|index = @eval(index)|return variables[var_name][index]}}
+    if(handeled == False){check = in(value,char(93))|if(check==True){value = splitby(char(91),value[:-1])|var_name = value[0]|index = value[1]|index = @eval(index)|handeled = True|return variables[var_name][index]}}
     if(handeled == False){result = variables[value]|handeled = True|return result}
     if(handeled == False){return None}
 }
+
 
 /interpret{
     line = args[0]
@@ -23,7 +24,7 @@ functions = {}
         print result
     }
 
-    check = in(line,"=")
+    check = in(line,char(61))
 
     if(check==True){
         expr = splitby("=",line)
@@ -33,7 +34,6 @@ functions = {}
         push(variables,var,result)
     }
 
-
     check = startswith("/",line)
 
     if(check == True){
@@ -42,6 +42,7 @@ functions = {}
         func_body = splitby(char(124),line2[1])
         push(functions,func_name,func_body)
     }
+
 
     check = startswith("@",line)
     if(check == True){
@@ -64,11 +65,13 @@ functions = {}
         actions_count = len(actions)
         for(i,0:actions_count){
             action = strip(functions[func_name][i])
-            @interpret(action)
+            if(action!=""){
+                @interpret(action)
+            }
         }
     }
-
 }
+
 program = read(pargs[1])
 program = replace(program,"\n",";")
 prog = list(program)
@@ -76,16 +79,16 @@ prog = list(program)
 h = char(123)
 h2 = char(125)
 h3 = char(59)
-in_func = False
+in_func = 0
 
 for(char,0:len(prog)){
     if (prog[char]==h){
-        in_func = True
+        in_func += 1
     }
     if (prog[char]==h2){
-        in_func = False
+        in_func -= 1
     }
-    if (in_func == True and prog[char] == h3){
+    if (in_func == 1 and prog[char] == h3){
         prog[char] = char(124)
     }
 }
@@ -93,9 +96,12 @@ for(char,0:len(prog)){
 program = all(prog)
 
 lines = splitby(";",program)
+
 for(line_count,0:len(lines)-1){
     line = strip(lines[line_count])
     if(line!=""){
         @interpret(line)
     }
 }
+
+
