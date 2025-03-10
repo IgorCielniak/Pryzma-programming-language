@@ -895,6 +895,11 @@ class PryzmaInterpreter:
             return self.ret_val
         elif expression.startswith("char(") and expression.endswith(")"):
             return chr(self.evaluate_expression(expression[5:-1]))
+        elif expression.startswith("join(") and expression.endswith(")"):
+            char, value = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', expression[5:-1])
+            char = self.evaluate_expression(char)
+            value = self.evaluate_expression(value)
+            return char.join(value)
         elif expression in self.variables:
             return self.variables[expression]
         else:
