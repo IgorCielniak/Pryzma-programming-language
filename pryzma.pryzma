@@ -1,5 +1,5 @@
 variables = {}
-
+functions = {}
 
 /eval{
     handeled=False
@@ -31,11 +31,35 @@ variables = {}
         result = @eval(value)
         push(variables,var,result)
     }
+
+
+    check = startswith("/",line)
+
+    if(check == True){
+        line2 = splitby(char(123),line[:-1])
+        func_name = line2[0][1:]
+        func_body = splitby(char(124),line2[1])
+        push(functions,func_name,func_body)
+    }
+
+    check = startswith("@",line)
+    if(check == True){
+        func_name = line[1:]
+        actions = functions[func_name]
+        actions_count = len(actions)
+        for(i,0:actions_count){
+            action =  functions[func_name][i]
+            @interpret(action)
+        }
+    }
+
 }
 program = read(pargs[1])
 program = replace(program,"\n",";")
 lines = splitby(";",program)
-for(line_count,0:len(lines)){
+for(line_count,0:len(lines)-1){
     line = lines[line_count]
-    @interpret(line)
+    if(line!=""){
+        @interpret(line)
+    }
 }
