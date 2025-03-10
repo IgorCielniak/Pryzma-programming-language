@@ -17,23 +17,34 @@ functions = {}
 
 /interpret{
     line = args[0]
+
+    check_if = startswith("if",line)
+
+    if(check_if == True){h = char(41)+char(123)|line2 = splitby(h,line)|line2[0] = line2[0][3:]|line2[1] = line2[1][:-1]|check2 = pyeval(line2[0])|if(check2==True){actions = splitby(char(124),line2[1])|for(action,0:len(actions)){@interpret(actions[action])}}}
+
+    line = args[0]
+
+    if(check_if != True){
+
+        check = in(line,"=")
+
+        if(check==True){
+            expr = splitby("=",line)
+            var = strip(expr[0])
+            value = strip(expr[1])
+            result = @eval(value)
+            push(variables,var,result)
+        }
+    }
+
     check = startswith("print",line)
+
     if(check == True){
         line = line[5:]
         result = @eval(line)
         print result
     }
-
-    check = in(line,char(61))
-
-    if(check==True){
-        expr = splitby("=",line)
-        var = strip(expr[0])
-        value = strip(expr[1])
-        result = @eval(value)
-        push(variables,var,result)
-    }
-
+    
     check = startswith("/",line)
 
     if(check == True){
