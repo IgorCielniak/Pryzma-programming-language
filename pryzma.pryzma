@@ -8,7 +8,8 @@ functions = {}
     check2 = startswith(""",value)
 
     if(check == True){if(check2 == True){result = value[1:-1]|handeled=True|return result}}
-    if(handeled == False){is_num = isanumber(value)|if(is_num == True){result = value|handeled=True|return result}}
+    if(handeled == False){is_num = isanumber(value)|if(is_num == True){result = int(value)|handeled=True|return result}}
+    if(handeled == False){check = in(value,"[")|if(check==True){value = splitby("[",value[:-1])|var_name = value[0]|index = value[1]|index = @eval(index)|return variables[var_name][index]}}
     if(handeled == False){result = variables[value]|handeled = True|return result}
     if(handeled == False){return None}
 }
@@ -45,6 +46,20 @@ functions = {}
     check = startswith("@",line)
     if(check == True){
         func_name = line[1:]
+        check = in(func_name,char(40))
+        if(check==True){
+            func = func_name[:-1]
+            h4 = char(40)
+            func = splitby(h4,func)
+            func_name = func[0]
+            h5 = char(44)
+            args = func[1]
+            args = splitby(h5,args)
+            for(arg,0:len(args)){
+                args[arg] = @eval(args[arg])
+            }
+            push(variables,"args",args)
+        }
         actions = functions[func_name]
         actions_count = len(actions)
         for(i,0:actions_count){
