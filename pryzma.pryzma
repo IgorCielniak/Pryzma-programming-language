@@ -10,6 +10,7 @@ functions = {}
     if(check == True){if(check2 == True){result = value[1:-1]|handeled=True|return result}}
     if(handeled == False){is_num = isanumber(value)|if(is_num == True){result = int(value)|handeled=True|return result}}
     if(handeled == False){check = in(value,char(93))|if(check==True){value = splitby(char(91),value[:-1])|var_name = value[0]|index = value[1]|index = @eval(index)|handeled = True|return variables[var_name][index]}}
+    if(handeled == False){value = pyeval(value,variables)|handeled = True|return value}
     if(handeled == False){result = variables[value]|handeled = True|return result}
     if(handeled == False){return None}
 }
