@@ -207,6 +207,8 @@ Output will be:
 
 ['text', 'text']
 
+as the third argument you can pass how many times you want to split like in python
+
 there is also resplit() that allows for spliting with a regex:
 
 e = "123abc456def"

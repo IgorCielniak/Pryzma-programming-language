@@ -6,10 +6,12 @@ functions = {}
     value = strip(args[0])
     check = startswith(""",value)
     check2 = startswith(""",value)
+    h91 = char(91)
+    h93 = char(93)
 
     if(check == True){if(check2 == True){result = value[1:-1]|handeled=True|return result}}
     if(handeled == False){is_num = isanumber(value)|if(is_num == True){result = int(value)|handeled=True|return result}}
-    if(handeled == False){check = in(value,char(93))|if(check==True){value = splitby(char(91),value[:-1])|var_name = value[0]|index = value[1]|index = @eval(index)|handeled = True|return variables[var_name][index]}}
+    if(handeled == False){check = in(value,h93)|if(check==True){value = splitby(h91,value[:-1],1)|var_name = value[0]|index = value[1]|index = @eval(index)|handeled = True|return variables[var_name][index]}}
     if(handeled == False){value = pyeval(value,variables)|handeled = True|return value}
     if(handeled == False){check = in(variables,value)|if(check==True){result = variables[value]|handeled = True|return result}}
     if(handeled == False){return None}
@@ -23,12 +25,29 @@ functions = {}
 
     if(check_if == True){
         h6 = char(41)+char(123)
-        line2 = splitby(h6,line)
+        line2 = splitby(h6,line,1)
         line2[0] = line2[0][3:]
         line2[1] = line2[1][:-1]
         check2 = pyeval(line2[0],variables)
         if(check2==True){
-            actions = splitby(char(124),line2[1])
+            prog = list(line2[1])
+            in_func = 0
+
+            for(char,0:len(prog)){
+                if (prog[char]==h){
+                    in_func += 1
+                }
+                if (prog[char]==h2){
+                    in_func -= 1
+                }
+                if (in_func == 0 and prog[char] == h8){
+                    prog[char] = h7
+                }
+            }
+
+            program = all(prog)
+
+            actions = splitby(h7,program)
             for(action,0:len(actions)){
                 @interpret(actions[action])
             }
@@ -61,9 +80,26 @@ functions = {}
     check = startswith("/",line)
 
     if(check == True){
-        line2 = splitby(char(123),line[:-1])
+        line2 = splitby(char(123),line[:-1],1)
         func_name = line2[0][1:]
-        func_body = splitby(char(124),line2[1])
+        prog = list(line2[1])
+        in_func = 0
+
+        for(char,0:len(prog)){
+            if (prog[char]==h){
+                in_func += 1
+            }
+            if (prog[char]==h2){
+                in_func -= 1
+            }
+            if (in_func == 0 and prog[char] == h8){
+                prog[char] = h7
+            }
+        }
+
+        program = all(prog)
+
+        func_body = splitby(h7,program)
         push(functions,func_name,func_body)
     }
 
@@ -101,8 +137,10 @@ program = replace(program,"\n",";")
 prog = list(program)
 
 h = char(123)
+h8 = char(124)
 h2 = char(125)
 h3 = char(59)
+h7 = char(38)+char(36)
 in_func = 0
 
 for(char,0:len(prog)){
@@ -112,7 +150,7 @@ for(char,0:len(prog)){
     if (prog[char]==h2){
         in_func -= 1
     }
-    if (in_func == 1 and prog[char] == h3){
+    if (in_func != 0 and prog[char] == h3){
         prog[char] = char(124)
     }
 }
@@ -121,10 +159,11 @@ program = all(prog)
 
 lines = splitby(";",program)
 
+
 for(line_count,0:len(lines)-1){
     line = strip(lines[line_count])
     if(line!=""){
-        @interpret(line)
+        try(@interpret(line))
     }
 }
 

@@ -734,8 +734,8 @@ class PryzmaInterpreter:
                 else:
                     self.variables["err"] = 31
         elif expression.startswith("splitby(") and expression.endswith(")"):
-            args = expression[8:-1].split(",")
-            if len(args) != 2:
+            args = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', expression[8:-1])
+            if len(args) < 2:
                 if not self.in_try_block:
                     self.in_func_err()
                     print(f"Error near line {self.current_line}: Invalid number of arguments for splitby function.")
@@ -744,7 +744,10 @@ class PryzmaInterpreter:
                 return None
             char_to_split = self.evaluate_expression(args[0].strip())
             string_to_split = self.evaluate_expression(args[1].strip())
-            return string_to_split.split(char_to_split)
+            if len(args) == 3:
+                return string_to_split.split(char_to_split,self.evaluate_expression(args[2]))
+            else:
+                return string_to_split.split(char_to_split)
         elif "+" in expression:
             parts = expression.split("+")
             evaluated_parts = [self.evaluate_expression(part.strip()) for part in parts]
