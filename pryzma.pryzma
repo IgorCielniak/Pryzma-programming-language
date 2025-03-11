@@ -49,6 +49,7 @@ functions = {}
 
             actions = splitby(h7,program)
             for(action,0:len(actions)){
+                actions[action] = strip(actions[action])
                 @interpret(actions[action])
             }
         }
@@ -97,9 +98,9 @@ functions = {}
             }
         }
 
-        program = all(prog)
+        func_body = all(prog)
 
-        func_body = splitby(h7,program)
+        func_body = splitby(h7,func_body)
         push(functions,func_name,func_body)
     }
 
@@ -132,15 +133,16 @@ functions = {}
     }
 }
 
-program = read(pargs[1])
-program = replace(program,"\n",";")
-prog = list(program)
-
 h = char(123)
 h8 = char(124)
 h2 = char(125)
 h3 = char(59)
 h7 = char(38)+char(36)
+
+program = read(pargs[1])
+program = replace(program,"\n",h3)
+prog = list(program)
+
 in_func = 0
 
 for(char,0:len(prog)){
@@ -157,8 +159,13 @@ for(char,0:len(prog)){
 
 program = all(prog)
 
-lines = splitby(";",program)
+chars_ascii = [59,40,63,61,40,63,58,91,94,34,93,42,34,91,94,34,93,42,34,41,42,91,94,34,93,42,36,41]
+for(i,0:len(chars_ascii)){
+    chars_ascii[i] = char(chars_ascii[i])
+}
+regex = all(chars_ascii)
 
+lines = resplit(regex, program)
 
 for(line_count,0:len(lines)-1){
     line = strip(lines[line_count])
