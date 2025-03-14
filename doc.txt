@@ -382,13 +382,15 @@ If statement:
 
 input variable::"var1:"
 input variable2::"var2:"
-if(variable==variable2){print "true"|print "text"}
+if(variable==variable2){print "true"|print "text"}else{print "no"}
 
 or
 
 if(variable==variable2){
-print "true";
-print "text";
+print "true"
+print "text"
+}else{
+print "no"
 }
 
 you can use operators like: ==, !=, <=, >=, < and >

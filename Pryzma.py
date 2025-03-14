@@ -134,6 +134,12 @@ class PryzmaInterpreter:
                     file_path = line[len("use"):].strip()
                     self.import_functions(file_path)
                 elif line.startswith("if"):
+                    else_ = False
+                    if "else" in line:
+                        else_ = True
+                        sline = line.split("else")
+                        line = sline[0]
+                        else_part = sline[1]
                     line = line[2:]
                     condition, action = line.strip()[1:-1].split("){", 1)
                     char_ = 0
@@ -154,6 +160,25 @@ class PryzmaInterpreter:
                     if eval(condition, {}, self.variables):
                          for action in actions:
                             self.interpret(action)
+                    else:
+                        if else_:
+                            char_ = 0
+                            rep_in_if = 0
+                            body = list(else_part[1:-1])
+                            for char in body:
+                                if char == "{":
+                                    rep_in_if += 1
+                                elif char == "}":
+                                    rep_in_if -= 1
+                                elif rep_in_if == 0  and char == "|":
+                                    body[char_] = "&$"
+                                char_ += 1
+                            body2 = ""
+                            for char in body:
+                                body2 += char
+                            actions = body2.split("&$")
+                            for action in actions:
+                                self.interpret(action)
                 elif line.startswith("while"):
                     line = line[5:]
                     condition, action = line.strip()[1:-1].split("){", 1)
