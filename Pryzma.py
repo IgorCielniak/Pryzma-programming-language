@@ -28,7 +28,7 @@ class PryzmaInterpreter:
     def interpret_file(self, file_path, *args):
         self.file_path = file_path.strip('"')
         self.variables["pargs"] = args
-        self.variables["file"] = os.path.abspath(file_path)
+        self.variables["__file__"] = os.path.abspath(file_path)
         try:
             with open(self.file_path, 'r') as file:
                 program = file.read()
