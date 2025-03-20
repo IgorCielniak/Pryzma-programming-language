@@ -12,8 +12,8 @@ functions = {}
     if(check == True){if(check2 == True){result = value[1:-1]|handeled=True|return result}}
     if(handeled == False){is_num = isanumber(value)|if(is_num == True){result = int(value)|handeled=True|return result}}
     if(handeled == False){check = in(value,h93)|if(check==True){value = splitby(h91,value[:-1],1)|var_name = value[0]|index = value[1]|index = @eval(index)|handeled = True|return variables[var_name][index]}}
-    if(handeled == False){value = pyeval(value,variables)|handeled = True|return value}
     if(handeled == False){check = in(variables,value)|if(check==True){result = variables[value]|handeled = True|return result}}
+    if(handeled == False){value = pyeval(value,variables)|handeled = True|return value}
     if(handeled == False){return None}
 }
 
@@ -59,6 +59,7 @@ functions = {}
 
     line = args[0]
 
+
     if(check_if != True){
 
         check = in(line,"=")
@@ -67,8 +68,26 @@ functions = {}
             expr = splitby("=",line)
             var = strip(expr[0])
             value = strip(expr[1])
-            result = @eval(value)
-            push(variables,var,result)
+            eqcheck = in(var,"[")
+            eqcheck2 = startswith("[",value)
+            if(eqcheck2==True){
+                aresult = pyeval(value)
+            }
+
+            if(eqcheck2==False){
+                aresult = @eval(value)
+            }
+            if(eqcheck==False){
+                push(variables,var,aresult)
+            }
+
+            if(eqcheck==True){
+                var_ = splitby("[",var)
+                var = var_[0]
+                var1 = var_[1]
+                index = @eval(var1[:-1])
+                variables[var][index] = aresult
+            }
         }
     }
 
