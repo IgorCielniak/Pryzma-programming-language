@@ -40,8 +40,10 @@ functions = {}
                 if (prog[char]==h2){
                     in_func -= 1
                 }
-                if (in_func == 0 and prog[char] == h8){
-                    prog[char] = h7
+                if (in_func < 1){
+                    if(prog[char] == h8){
+                        prog[char] = h7
+                    }
                 }
             }
 
@@ -152,7 +154,7 @@ for(char,0:len(prog)){
     if (prog[char]==h2){
         in_func -= 1
     }
-    if (in_func != 0 and prog[char] == h3){
+    if (in_func > 0 and prog[char] == h3){
         prog[char] = char(124)
     }
 }
