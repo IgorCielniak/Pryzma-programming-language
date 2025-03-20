@@ -413,9 +413,15 @@ class PryzmaInterpreter:
                     variable, expression = line.split('=', 1)
                     variable = variable.strip()
                     expression = expression.strip()
-                    if "[" in variable and "]" in variable:
+                    if "][" in variable:
+                        variable, indexes = variable.split("[",1)
+                        indexes = indexes[:-1].split("][")
+                        index1 = self.evaluate_expression(indexes[0])
+                        index2 = self.evaluate_expression(indexes[1])
+                        self.variables[variable][index1][index2] = self.evaluate_expression(expression)
+                    elif "[" in variable and "]" in variable:
                         variable, index = variable[:-1].split("[",1)
-                        self.variables[variable][int(self.evaluate_expression(index))] = self.evaluate_expression(expression)
+                        self.variables[variable][self.evaluate_expression(index)] = self.evaluate_expression(expression)
                     else:
                         self.variables[variable] = self.evaluate_expression(expression)
                 elif line.startswith("copy"):
@@ -1204,7 +1210,10 @@ limitations under the License.
         print(license_text)
     
     def append_to_list(self, list_name, value):
-        if list_name in self.variables:
+        if "[" in list_name:
+            list_name, index = list_name[:-1].split("[")
+            self.variables[list_name][self.evaluate_expression(index)].append(self.evaluate_expression(value))
+        elif list_name in self.variables:
             self.variables[list_name].append(self.evaluate_expression(value))
         else:
             if not self.in_try_block:
