@@ -23,6 +23,7 @@ class PryzmaInterpreter:
         self.in_func = False
         self.current_func_name = None
         self.preprocess_only = False
+        self.forward_declare = False
         self.return_val = None
 
     def interpret_file(self, file_path, *args):
@@ -64,6 +65,13 @@ class PryzmaInterpreter:
             for line in lines:
                 print(line)
             sys.exit()
+
+        if self.forward_declare == True:
+            self.forward_declare = False
+            for line in lines:
+                if line.startswith("/"):
+                    self.interpret(line)
+                    lines.remove(line)
 
         for line in lines:
             self.current_line += 1
@@ -1859,9 +1867,10 @@ if __name__ == "__main__":
                 if arg == "-h":
                     print("""
 flags:
-    -d - debug mode
-    -p - preprocces only
+    -d  - debug mode
+    -p  - preprocces only
     -l '<pryzma code>' - execute a single line
+    -fd - forward declare all functions
                     """)
                     sys.exit()
                 if arg == "-d":
@@ -1872,6 +1881,8 @@ flags:
                     interpreter.preprocess_only = True
                 if arg == "-l":
                     interpret_line = True
+                if arg == "-fd":
+                    interpreter.forward_declare = True
         if debug == False:
             interpreter.interpret_file(file_path, *arguments)
         sys.exit()
