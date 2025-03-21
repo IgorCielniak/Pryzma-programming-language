@@ -192,6 +192,8 @@ regex = all(chars_ascii)
 
 lines = resplit(regex, program)
 
+variables["pargs"] = pargs[1:]
+
 for(line_count,0:len(lines)-1){
     line = strip(lines[line_count])
     if(line!=""){
