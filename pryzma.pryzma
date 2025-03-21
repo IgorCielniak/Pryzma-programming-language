@@ -54,8 +54,10 @@ functions = {}
         program = all(prog)
 
         actions = splitby(h7,program)
+        push(variables,var,i)
+
         for(i,start_var:end_var){
-            push(variables,var,i)
+            variables[var] = i
             for(action,0:len(actions)){
                 actions[action] = strip(actions[action])
                 @interpret(actions[action])
