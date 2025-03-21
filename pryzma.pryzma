@@ -61,7 +61,7 @@ functions = {}
                 @interpret(actions[action])
             }
         }
-
+        dpop(variables, var)
     }
 
     check_if = False
