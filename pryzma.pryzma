@@ -24,7 +24,44 @@ functions = {}
     check_for = startswith("for",line)
 
     if(check_for == True){
-        print line
+        line = line[3:]
+        h6 = char(41)+char(123)
+        line = splitby(h6,line,1)
+        l = line[0][1:]
+        l = splitby(",",l)
+        range = splitby(":",l[1])
+        start_var = @eval(range[0])
+        end_var = @eval(range[1])
+        var = strip(l[0])
+        actions = line[1][:-1]
+        prog = list(actions)
+        fin = 0
+
+        for(char,0:len(prog)){
+            if (prog[char]==h){
+                fin += 1
+            }
+            if (prog[char]==h2){
+                fin -= 1
+            }
+            if (fin == 0){
+                if(prog[char] == h8){
+                    prog[char] = h7
+                }
+            }
+        }
+
+        program = all(prog)
+
+        actions = splitby(h7,program)
+        for(i,start_var:end_var){
+            push(variables,var,i)
+            for(action,0:len(actions)){
+                actions[action] = strip(actions[action])
+                @interpret(actions[action])
+            }
+        }
+
     }
 
     check_if = False
@@ -95,16 +132,16 @@ functions = {}
         }
         if(cond_check==True){
             prog = list(line2[1])
-            in_func = 0
+            in_if = 0
 
             for(char,0:len(prog)){
                 if (prog[char]==h){
-                    in_func += 1
+                    in_if += 1
                 }
                 if (prog[char]==h2){
-                    in_func -= 1
+                    in_if -= 1
                 }
-                if (in_func == 0){
+                if (in_if == 0){
                     if(prog[char] == h8){
                         prog[char] = h7
                     }
