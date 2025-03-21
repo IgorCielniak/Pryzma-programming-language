@@ -13,7 +13,7 @@ functions = {}
     if(handeled == False){is_num = isanumber(value)|if(is_num == True){result = int(value)|handeled=True|return result}}
     if(handeled == False){check = in(value,h93)|if(check==True){value = splitby(h91,value[:-1],1)|var_name = value[0]|index = value[1]|index = @eval(index)|handeled = True|return variables[var_name][index]}}
     if(handeled == False){check = in(variables,value)|if(check==True){result = variables[value]|handeled = True|return result}}
-    if(handeled == False){value = pyeval(value,variables)|handeled = True|return value}
+    if(handeled == False){check = startswith("[",value)|if(check==True){value = pyeval(value,variables)|handeled = True|return value}}
     if(handeled == False){return None}
 }
 
