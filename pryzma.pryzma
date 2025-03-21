@@ -21,15 +21,79 @@ functions = {}
 /interpret{
     line = args[0]
 
-    check_if = startswith("if",line)
+    check_for = startswith("for",line)
+
+    if(check_for == True){
+        print line
+    }
+
+    check_if = False
+
+    if(check_for == False){
+        check_if = startswith("if",line)
+    }
 
     if(check_if == True){
         h6 = char(41)+char(123)
         line2 = splitby(h6,line,1)
         line2[0] = line2[0][3:]
         line2[1] = line2[1][:-1]
-        check2 = pyeval(line2[0],variables)
-        if(check2==True){
+        cond = line2[0]
+        heq2 = char(61) + char(61)
+        if(in(cond,heq2)==True){
+            cond = splitby(heq2,cond)
+            cond[0] = @eval(cond[0])
+            cond[1] = @eval(cond[1])
+            if(cond[0] == cond[1]){
+                cond_check = True
+            }
+        }
+        hneq2 = char(34) + char(61)
+        if(in(cond,hneq2)==True){
+            cond = splitby(hneq2,cond)
+            cond[0] = @eval(cond[0])
+            cond[1] = @eval(cond[1])
+            if(cond[0] != cond[1]){
+                cond_check = True
+            }
+        }
+        hseq2 = char(60) + char(61)
+        if(in(cond,hseq2)==True){
+            cond = splitby(hseq2,cond)
+            cond[0] = @eval(cond[0])
+            cond[1] = @eval(cond[1])
+            if(cond[0] <= cond[1]){
+                cond_check = True
+            }
+        }
+        hbeq2 = char(62) + char(61)
+        if(in(cond,hbeq2)==True){
+            cond = splitby(hbeq2,cond)
+            cond[0] = @eval(cond[0])
+            cond[1] = @eval(cond[1])
+            if(cond[0] >= cond[1]){
+                cond_check = True
+            }
+        }
+        hb2 = char(62)
+        if(in(cond,hb2)==True){
+            cond = splitby(hb2,cond)
+            cond[0] = @eval(cond[0])
+            cond[1] = @eval(cond[1])
+            if(cond[0] > cond[1]){
+                cond_check = True
+            }
+        }
+        hs2 = char(60)
+        if(in(cond,hs2)==True){
+            cond = splitby(hs2,cond)
+            cond[0] = @eval(cond[0])
+            cond[1] = @eval(cond[1])
+            if(cond[0] < cond[1]){
+                cond_check = True
+            }
+        }
+        if(cond_check==True){
             prog = list(line2[1])
             in_func = 0
 
