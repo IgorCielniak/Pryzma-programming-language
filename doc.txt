@@ -284,12 +284,14 @@ hello
 3
 hello
 
+you can use break statements
+
 While:
 
 while(a==b){print i}
 
 while value of a equals value of b value of i will be printed
-it supports the same operators as if
+it supports the same operators as if and break statements
 
 incrementing by one:
 
@@ -604,7 +606,7 @@ load("/home/user/Desktop/new.py")
 customfunc hello
 
 this code will load the module and print "hello"
-the arg fot the load() function can also be a variable
+the arg for the load() function can also be a variable
 the funcion in the python module code needs to be named "start"
 
 Try:

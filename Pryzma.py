@@ -25,6 +25,7 @@ class PryzmaInterpreter:
         self.preprocess_only = False
         self.forward_declare = False
         self.return_val = None
+        self.break_ = False
 
     def interpret_file(self, file_path, *args):
         self.file_path = file_path.strip('"')
@@ -243,6 +244,7 @@ class PryzmaInterpreter:
                     if_body2 = ""
                     for char in if_body:
                         if_body2 += char
+                    self.break_ = False
                     actions = if_body2.split("%$")
                     if "==" in condition:
                         value1 = self.evaluate_expression(condition.split("==")[0])
@@ -252,6 +254,10 @@ class PryzmaInterpreter:
                                 self.interpret(action)
                                 value1 = self.evaluate_expression(condition.split("==")[0])
                                 value2 = self.evaluate_expression(condition.split("==")[1])
+                                if self.break_ == True:
+                                    break
+                            if self.break_ == True:
+                                break
                     if "!=" in condition:
                         value1 = self.evaluate_expression(condition.split("!=")[0])
                         value2 = self.evaluate_expression(condition.split("!=")[1])
@@ -260,6 +266,10 @@ class PryzmaInterpreter:
                                 self.interpret(action)
                                 value1 = self.evaluate_expression(condition.split("!=")[0])
                                 value2 = self.evaluate_expression(condition.split("!=")[1])
+                                if self.break_ == True:
+                                    break
+                            if self.break_ == True:
+                                break
                     if "<=" in condition:
                         value1 = self.evaluate_expression(condition.split("<=")[0])
                         value2 = self.evaluate_expression(condition.split("<=")[1])
@@ -268,6 +278,10 @@ class PryzmaInterpreter:
                                 self.interpret(action)
                                 value1 = self.evaluate_expression(condition.split("<=")[0])
                                 value2 = self.evaluate_expression(condition.split("<=")[1])
+                                if self.break_ == True:
+                                    break
+                            if self.break_ == True:
+                                break
                     if ">=" in condition:
                         value1 = self.evaluate_expression(condition.split(">=")[0])
                         value2 = self.evaluate_expression(condition.split(">=")[1])
@@ -276,6 +290,10 @@ class PryzmaInterpreter:
                                 self.interpret(action)
                                 value1 = self.evaluate_expression(condition.split(">=")[0])
                                 value2 = self.evaluate_expression(condition.split(">=")[1])
+                                if self.break_ == True:
+                                    break
+                            if self.break_ == True:
+                                break
                     if "<" in condition:
                         value1 = self.evaluate_expression(condition.split("<")[0])
                         value2 = self.evaluate_expression(condition.split("<")[1])
@@ -284,6 +302,10 @@ class PryzmaInterpreter:
                                 self.interpret(action)
                                 value1 = self.evaluate_expression(condition.split("<")[0])
                                 value2 = self.evaluate_expression(condition.split("<")[1])
+                                if self.break_ == True:
+                                    break
+                            if self.break_ == True:
+                                break
                     if ">" in condition:
                         value1 = self.evaluate_expression(condition.split(">")[0])
                         value2 = self.evaluate_expression(condition.split(">")[1])
@@ -292,6 +314,10 @@ class PryzmaInterpreter:
                                 self.interpret(action)
                                 value1 = self.evaluate_expression(condition.split(">")[0])
                                 value2 = self.evaluate_expression(condition.split(">")[1])
+                                if self.break_ == True:
+                                    break
+                            if self.break_ == True:
+                                break
                 elif line.startswith("/"):
                     function_definition = line[1:].split("{", 1)
                     if len(function_definition) == 2:
@@ -683,6 +709,8 @@ class PryzmaInterpreter:
                     self.variables[dict_name].pop(key)
                 elif line.startswith("return"):
                     self.ret_val = self.evaluate_expression(line[6:])
+                elif line == "break":
+                    self.break_ = True
                 elif line == "stop":
                     input("Press any key to continue...")
                     sys.exit()
@@ -1072,12 +1100,18 @@ class PryzmaInterpreter:
         start, end = range_expr.split(":")
         start_val = self.evaluate_expression(start)
         end_val = self.evaluate_expression(end)
+        self.break_ = False
 
         if isinstance(start_val, int) and isinstance(end_val, int):
             for val in range(start_val, end_val):
                 self.variables[loop_var] = val
                 for action in actions:
                     self.interpret(action)
+                    if self.break_ == True:
+                        break
+                if self.break_ == True:
+                    break
+
         else:
             if not self.in_try_block:
                 self.in_func_err()
