@@ -1189,7 +1189,10 @@ class PryzmaInterpreter:
         try:
             with open(file_path, 'r') as file:
                 program = file.read()
-                program = program.replace('\n', ";")
+                program = program.splitlines()
+                for line in range(0,len(program)-1):
+                    program[line] = program[line].split("#")[0]
+                program = ";".join(program)
                 rep_in_func = 0
                 char_ = 0
                 prog = list(program)
