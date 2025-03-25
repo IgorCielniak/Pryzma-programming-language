@@ -160,7 +160,7 @@ ret_var = None
                 cond_check = True
             }
         }
-        hneq2 = char(34) + char(61)
+        hneq2 = char(33) + char(61)
         if(in(cond,hneq2)==True){
             cond = splitby(hneq2,cond)
             cond[0] = @eval(cond[0])
