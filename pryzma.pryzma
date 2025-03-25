@@ -1,5 +1,6 @@
 variables = {}
 functions = {}
+ret_var = None
 
 /eval{
     handeled=False
@@ -10,7 +11,8 @@ functions = {}
     h93 = char(93)
 
     if(check == True){if(check2 == True){result = value[1:-1]|handeled=True|return result}}
-    if(handeled == False){is_num = isanumber(value)|if(is_num == True){result = int(value)|handeled=True|return result}}
+    if(handeled == False){if(startswith("@",value)==True){@interpret(value)|handeled = True|r = ret_var|return r}}
+    if(handeled == False){is_num = isanumber(value)|if(is_num == True){result = int(value)|handeled = True|return result}}
     if(handeled == False){check = in(value,h93)|if(check==True){value = splitby(h91,value[:-1],1)|var_name = value[0]|index = value[1]|index = @eval(index)|handeled = True|return variables[var_name][index]}}
     if(handeled == False){check = in(variables,value)|if(check==True){result = variables[value]|handeled = True|return result}}
     if(handeled == False){check = startswith("[",value)|if(check==True){value = pyeval(value,variables)|handeled = True|return value}}
@@ -20,6 +22,12 @@ functions = {}
 
 /interpret{
     line = args[0]
+
+    check_ret = startswith("return",line)
+
+    if(check_ret == True){
+        ret_var = @eval(line[6:])
+    }
 
     check_for = startswith("for",line)
 
@@ -65,6 +73,71 @@ functions = {}
         }
         dpop(variables, var)
     }
+
+    check = startswith("print",line)
+
+    if(check == True){
+        line = line[5:]
+        result = @eval(line)
+        print result
+    }
+    
+    check_func = startswith("/",line)
+
+    if(check_func == True){
+        line2 = splitby(char(123),line[:-1],1)
+        func_name = line2[0][1:]
+        prog = list(line2[1])
+        in_func = 0
+
+        for(char,0:len(prog)){
+            if (prog[char]==h){
+                in_func += 1
+            }
+            if (prog[char]==h2){
+                in_func -= 1
+            }
+            if (in_func == 0){
+                if(prog[char] == h8){
+                    prog[char] = h7
+                }
+            }
+        }
+
+        func_body = all(prog)
+
+        func_body = splitby(h7,func_body)
+        push(functions,func_name,func_body)
+    }
+
+
+    check = startswith("@",line)
+    if(check == True){
+        func_name = line[1:]
+        check = in(func_name,char(40))
+        if(check==True){
+            func = func_name[:-1]
+            h4 = char(40)
+            func = splitby(h4,func)
+            func_name = func[0]
+            h5 = char(44)
+            args = func[1]
+            args = splitby(h5,args)
+            for(arg,0:len(args)){
+                args[arg] = @eval(args[arg])
+            }
+            push(variables,"args",args)
+        }
+        actions = functions[func_name]
+        actions_count = len(actions)
+        for(i,0:actions_count){
+            action = strip(functions[func_name][i])
+            if(action!=""){
+                @interpret(action)
+            }
+        }
+    }
+
 
     check_if = False
 
@@ -164,96 +237,37 @@ functions = {}
 
 
     if(check_if != True){
+        if(check_func == False){
 
-        check = in(line,"=")
+            check = in(line,"=")
 
-        if(check==True){
-            expr = splitby("=",line)
-            var = strip(expr[0])
-            value = strip(expr[1])
-            eqcheck = in(var,"[")
-            eqcheck2 = startswith("[",value)
-            if(eqcheck2==True){
-                aresult = pyeval(value)
-            }
-
-            if(eqcheck2==False){
-                aresult = @eval(value)
-            }
-            if(eqcheck==False){
-                push(variables,var,aresult)
-            }
-
-            if(eqcheck==True){
-                var_ = splitby("[",var)
-                var = var_[0]
-                var1 = var_[1]
-                index = @eval(var1[:-1])
-                variables[var][index] = aresult
-            }
-        }
-    }
-
-    check = startswith("print",line)
-
-    if(check == True){
-        line = line[5:]
-        result = @eval(line)
-        print result
-    }
-    
-    check = startswith("/",line)
-
-    if(check == True){
-        line2 = splitby(char(123),line[:-1],1)
-        func_name = line2[0][1:]
-        prog = list(line2[1])
-        in_func = 0
-
-        for(char,0:len(prog)){
-            if (prog[char]==h){
-                in_func += 1
-            }
-            if (prog[char]==h2){
-                in_func -= 1
-            }
-            if (in_func == 0){
-                if(prog[char] == h8){
-                    prog[char] = h7
+            if(check==True){
+                expr = splitby("=",line)
+                var = strip(expr[0])
+                value = strip(expr[1])
+                eqcheck = in(var,"[")
+                eqcheck2 = startswith("[",value)
+                ccheck = startswith("@",value)
+                if(ccheck==True){var_name=var}
+                if(ccheck==True){@interpret(value)|r = ret_var|push(variables,var_name,r)}
+                if(ccheck==False){
+                    if(eqcheck2==True){
+                        aresult = pyeval(value)
+                    }
+                    if(eqcheck2==False){
+                        aresult = @eval(value)
+                    }
+                    if(eqcheck==False){
+                        push(variables,var,aresult)
+                    }
+                    if(eqcheck==True){
+                        var_ = splitby("[",var)
+                        var = var_[0]
+                        var1 = var_[1]
+                        index = @eval(var1[:-1])
+                        variables[var][index] = aresult
+                    }
                 }
-            }
-        }
-
-        func_body = all(prog)
-
-        func_body = splitby(h7,func_body)
-        push(functions,func_name,func_body)
-    }
-
-
-    check = startswith("@",line)
-    if(check == True){
-        func_name = line[1:]
-        check = in(func_name,char(40))
-        if(check==True){
-            func = func_name[:-1]
-            h4 = char(40)
-            func = splitby(h4,func)
-            func_name = func[0]
-            h5 = char(44)
-            args = func[1]
-            args = splitby(h5,args)
-            for(arg,0:len(args)){
-                args[arg] = @eval(args[arg])
-            }
-            push(variables,"args",args)
-        }
-        actions = functions[func_name]
-        actions_count = len(actions)
-        for(i,0:actions_count){
-            action = strip(functions[func_name][i])
-            if(action!=""){
-                @interpret(action)
             }
         }
     }
