@@ -39,6 +39,10 @@ class PryzmaInterpreter:
             print(f"File '{self.file_path}' not found.")
 
     def interpret(self, program):
+        program = program.splitlines()
+        for line in range(0,len(program)-1):
+            program[line] = program[line].split("#")[0]
+        program = ";".join(program)
         program = program.replace('\n', ";")
         rep_in_func = 0
         char_ = 0
@@ -79,10 +83,10 @@ class PryzmaInterpreter:
             line = line.strip()
 
             if line == "" or line.startswith("#"):
-                continue       
+                continue
             if "#" in line:
                 line = line.split("#")[0]
-            
+
             deleted_keyword = False
 
             for key_word in self.deleted_key_words:
