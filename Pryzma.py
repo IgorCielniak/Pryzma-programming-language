@@ -25,7 +25,7 @@ class PryzmaInterpreter:
         self.preprocess_only = False
         self.forward_declare = False
         self.return_val = None
-        self.break_ = False
+        self.break_stack = []
 
     def interpret_file(self, file_path, *args):
         self.file_path = file_path.strip('"')
@@ -249,75 +249,87 @@ class PryzmaInterpreter:
                     if "==" in condition:
                         value1 = self.evaluate_expression(condition.split("==")[0])
                         value2 = self.evaluate_expression(condition.split("==")[1])
+                        self.break_stack.append(False)
                         while value1 == value2:
                             for action in actions:
                                 self.interpret(action)
                                 value1 = self.evaluate_expression(condition.split("==")[0])
                                 value2 = self.evaluate_expression(condition.split("==")[1])
-                                if self.break_ == True:
+                                if self.break_stack[-1]:
                                     break
-                            if self.break_ == True:
+                            if self.break_stack[-1]:
                                 break
+                        self.break_stack.pop()
                     if "!=" in condition:
                         value1 = self.evaluate_expression(condition.split("!=")[0])
                         value2 = self.evaluate_expression(condition.split("!=")[1])
+                        self.break_stack.append(False)
                         while value1 != value2:
                             for action in actions:
                                 self.interpret(action)
                                 value1 = self.evaluate_expression(condition.split("!=")[0])
                                 value2 = self.evaluate_expression(condition.split("!=")[1])
-                                if self.break_ == True:
+                                if self.break_stack[-1]:
                                     break
-                            if self.break_ == True:
+                            if self.break_stack[-1]:
                                 break
+                        self.break_stack.pop()
                     if "<=" in condition:
                         value1 = self.evaluate_expression(condition.split("<=")[0])
                         value2 = self.evaluate_expression(condition.split("<=")[1])
+                        self.break_stack.append(False)
                         while value1 <= value2:
                             for action in actions:
                                 self.interpret(action)
                                 value1 = self.evaluate_expression(condition.split("<=")[0])
                                 value2 = self.evaluate_expression(condition.split("<=")[1])
-                                if self.break_ == True:
+                                if self.break_stack[-1]:
                                     break
-                            if self.break_ == True:
+                            if self.break_stack[-1]:
                                 break
+                        self.break_stack.pop()
                     if ">=" in condition:
                         value1 = self.evaluate_expression(condition.split(">=")[0])
                         value2 = self.evaluate_expression(condition.split(">=")[1])
+                        self.break_stack.append(False)
                         while value1 >= value2:
                             for action in actions:
                                 self.interpret(action)
                                 value1 = self.evaluate_expression(condition.split(">=")[0])
                                 value2 = self.evaluate_expression(condition.split(">=")[1])
-                                if self.break_ == True:
+                                if self.break_stack[-1]:
                                     break
-                            if self.break_ == True:
+                            if self.break_stack[-1]:
                                 break
+                        self.break_stack.pop()
                     if "<" in condition:
                         value1 = self.evaluate_expression(condition.split("<")[0])
                         value2 = self.evaluate_expression(condition.split("<")[1])
+                        self.break_stack.append(False)
                         while value1 < value2:
                             for action in actions:
                                 self.interpret(action)
                                 value1 = self.evaluate_expression(condition.split("<")[0])
                                 value2 = self.evaluate_expression(condition.split("<")[1])
-                                if self.break_ == True:
+                                if self.break_stack[-1]:
                                     break
-                            if self.break_ == True:
+                            if self.break_stack[-1]:
                                 break
+                        self.break_stack.pop()
                     if ">" in condition:
                         value1 = self.evaluate_expression(condition.split(">")[0])
                         value2 = self.evaluate_expression(condition.split(">")[1])
+                        self.break_stack.append(False)
                         while value1 > value2:
                             for action in actions:
                                 self.interpret(action)
                                 value1 = self.evaluate_expression(condition.split(">")[0])
                                 value2 = self.evaluate_expression(condition.split(">")[1])
-                                if self.break_ == True:
+                                if self.break_stack[-1]:
                                     break
-                            if self.break_ == True:
+                            if self.break_stack[-1]:
                                 break
+                        self.break_stack.pop()
                 elif line.startswith("/"):
                     function_definition = line[1:].split("{", 1)
                     if len(function_definition) == 2:
@@ -710,7 +722,7 @@ class PryzmaInterpreter:
                 elif line.startswith("return"):
                     self.ret_val = self.evaluate_expression(line[6:])
                 elif line == "break":
-                    self.break_ = True
+                    self.break_stack[-1] = True
                 elif line == "stop":
                     input("Press any key to continue...")
                     sys.exit()
@@ -1096,28 +1108,31 @@ class PryzmaInterpreter:
         value = self.get_input(prompt)
         self.variables[variable_name] = value
 
+
     def for_loop(self, loop_var, range_expr, actions):
         start, end = range_expr.split(":")
         start_val = self.evaluate_expression(start)
         end_val = self.evaluate_expression(end)
-        self.break_ = False
+
+        self.break_stack.append(False)
 
         if isinstance(start_val, int) and isinstance(end_val, int):
             for val in range(start_val, end_val):
                 self.variables[loop_var] = val
                 for action in actions:
                     self.interpret(action)
-                    if self.break_ == True:
+                    if self.break_stack[-1]:
                         break
-                if self.break_ == True:
+                if self.break_stack[-1]:
                     break
-
         else:
             if not self.in_try_block:
                 self.in_func_err()
                 print(f"Error near line {self.current_line}: Invalid range expression for loop.")
             else:
                 self.variables["err"] = 41
+
+        self.break_stack.pop()
 
     def import_functions(self, file_path):
         file_path = file_path.strip('"')
