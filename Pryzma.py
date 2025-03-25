@@ -43,7 +43,6 @@ class PryzmaInterpreter:
         for line in range(0,len(program)-1):
             program[line] = program[line].split("#")[0]
         program = ";".join(program)
-        program = program.replace('\n', ";")
         rep_in_func = 0
         char_ = 0
         prog = list(program)
