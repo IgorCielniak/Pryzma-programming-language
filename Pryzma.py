@@ -23,6 +23,7 @@ class PryzmaInterpreter:
         self.in_func = False
         self.current_func_name = None
         self.preprocess_only = False
+        self.no_preproc = False
         self.forward_declare = False
         self.return_val = None
         self.break_stack = []
@@ -43,21 +44,38 @@ class PryzmaInterpreter:
         for line in range(0,len(program)-1):
             program[line] = program[line].split("#")[0]
         program = ";".join(program)
-        rep_in_func = 0
-        char_ = 0
-        prog = list(program)
-        for char in prog:
-            if char == "{":
-                rep_in_func += 1
-            elif char == "}":
-                rep_in_func -= 1
-            elif rep_in_func != 0  and char == ";":
-                prog[char_] = "|"
-            char_ += 1
-        prog2 = ""
-        for char in prog:
-            prog2+=char
-        program = prog2
+
+        self.no_preproc = False
+
+        first_line = program.split(";")[0]
+
+        if first_line.startswith("preproc"):
+            preproc_line = first_line
+            if "=" in preproc_line:
+                args = preproc_line.split("=")[1].split(",")
+                for arg in range(0,len(args)):
+                    args[arg] = args[arg].strip()
+                if "fd" in args:
+                    self.forward_declare = True
+                if "np" in args:
+                    self.no_preproc = True
+
+        if not self.no_preproc:
+            rep_in_func = 0
+            char_ = 0
+            prog = list(program)
+            for char in prog:
+                if char == "{":
+                    rep_in_func += 1
+                elif char == "}":
+                    rep_in_func -= 1
+                elif rep_in_func != 0  and char == ";":
+                    prog[char_] = "|"
+                char_ += 1
+            prog2 = ""
+            for char in prog:
+                prog2+=char
+            program = prog2
 
         if not self.in_func:
             self.current_line = 0
@@ -77,11 +95,12 @@ class PryzmaInterpreter:
                     self.interpret(line)
                     lines.remove(line)
 
+
         for line in lines:
             self.current_line += 1
             line = line.strip()
 
-            if line == "" or line.startswith("#"):
+            if line == "" or line.startswith("#") or line.startswith("preproc"):
                 continue
             if "#" in line:
                 line = line.split("#")[0]
@@ -1195,24 +1214,38 @@ class PryzmaInterpreter:
                 for line in range(0,len(program)-1):
                     program[line] = program[line].split("#")[0]
                 program = ";".join(program)
-                rep_in_func = 0
-                char_ = 0
-                prog = list(program)
-                for char in prog:
-                    if char == "{":
-                        rep_in_func += 1
-                    elif char == "}":
-                        rep_in_func -= 1
-                    elif rep_in_func != 0  and char == ";":
-                        prog[char_] = "|"
-                    char_ += 1
-                prog2 = ""
-                for char in prog:
-                    prog2+=char
-                program = prog2
 
-                if not self.in_func:
-                    self.current_line = 0
+                self.no_preproc = False
+
+                first_line = program.split(";")[0]
+
+                if first_line.startswith("preproc"):
+                    preproc_line = first_line
+                    if "=" in preproc_line:
+                        args = preproc_line.split("=")[1].split(",")
+                        for arg in range(0,len(args)):
+                            args[arg] = args[arg].strip()
+                        if "fd" in args:
+                            self.forward_declare = True
+                        if "np" in args:
+                            self.no_preproc = True
+
+                if not self.no_preproc:
+                    rep_in_func = 0
+                    char_ = 0
+                    prog = list(program)
+                    for char in prog:
+                        if char == "{":
+                            rep_in_func += 1
+                        elif char == "}":
+                            rep_in_func -= 1
+                        elif rep_in_func != 0  and char == ";":
+                            prog[char_] = "|"
+                        char_ += 1
+                    prog2 = ""
+                    for char in prog:
+                        prog2+=char
+                    program = prog2
 
                 lines = re.split(r';(?=(?:[^"]*"[^"]*")*[^"]*$)', program)
                 lines = [stmt.strip() for stmt in lines if stmt.strip()]
@@ -1935,6 +1968,7 @@ if __name__ == "__main__":
 flags:
     -d  - debug mode
     -p  - preprocces only
+    -np - no preprocessing
     -l '<pryzma code>' - execute a single line
     -fd - forward declare all functions
                     """)
@@ -1945,6 +1979,8 @@ flags:
                     interpreter.debug_interpreter(interpreter, file_path, running_from_file, arguments)
                 if arg == "-p":
                     interpreter.preprocess_only = True
+                if arg == "-np":
+                    interpreter.no_preproc = True
                 if arg == "-l":
                     interpret_line = True
                 if arg == "-fd":

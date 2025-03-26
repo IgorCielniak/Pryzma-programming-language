@@ -704,6 +704,16 @@ a = defined(b)
 
 if b is defined a will be True and if b is not defined a will be False
 
+preprocessor flags from code:
+
+preproc = np,fd
+
+fd - forward declare runctions
+np - don't preprocess
+
+the preprocessor directives must be in the first line
+otherwise they will be ignored
+
 Running Programs:
 
 To run a Pryzma program, save the code in a text file execute it by lunching the
