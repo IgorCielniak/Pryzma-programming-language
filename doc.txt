@@ -698,6 +698,12 @@ True
 
 the stack is an optional argument so you can pass your won stack
 
+defined():
+
+a = defined(b)
+
+if b is defined a will be True and if b is not defined a will be False
+
 Running Programs:
 
 To run a Pryzma program, save the code in a text file execute it by lunching the

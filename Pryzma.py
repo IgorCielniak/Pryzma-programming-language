@@ -1075,6 +1075,8 @@ class PryzmaInterpreter:
             char = self.evaluate_expression(char)
             value = self.evaluate_expression(value)
             return char.join(value)
+        elif expression.startswith("defined(") and expression.endswith(")"):
+            return expression[8:-1] in self.variables
         elif expression in self.variables:
             return self.variables[expression]
         else:
