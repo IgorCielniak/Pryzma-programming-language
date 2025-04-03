@@ -136,6 +136,50 @@ class PryzmaInterpreter:
                 elif line.startswith("input"):
                     variable = line[len("input"):].strip()
                     self.custom_input(variable)
+                elif line.startswith("foreach"):
+                    line = line[len("foreach"):].strip()
+                    args, action = line.strip()[1:-1].split("){", 1)
+                    char_ = 0
+                    rep_in_for = 0
+                    for_body = list(action)
+                    for char in for_body:
+                        if char == "{":
+                            rep_in_for += 1
+                        elif char == "}":
+                            rep_in_for -= 1
+                        elif rep_in_for == 0  and char == "|":
+                            for_body[char_] = "&$"
+                        char_ += 1
+
+                    for_body2 = ""
+                    for char in for_body:
+                        for_body2 += char
+                    actions = for_body2.split("&$")
+                    loop_var, list_name = args.split(",")
+                    loop_var = loop_var.strip()
+                    list_name = list_name.strip()
+                    for action in actions:
+                        action = action.strip()
+
+                    self.break_stack.append(False)
+
+                    if list_name in self.variables:
+                        for val in self.variables[list_name]:
+                            self.variables[loop_var] = val
+                            for action in actions:
+                                self.interpret(action)
+                                if self.break_stack[-1]:
+                                    break
+                            if self.break_stack[-1]:
+                                break
+                    else:
+                        if not self.in_try_block:
+                            self.in_func_err()
+                            print(f"Error near line {self.current_line}: Invalid range expression for loop.")
+                        else:
+                            self.variables["err"] = 41
+
+                    self.break_stack.pop()
                 elif line.startswith("for"):
                     line = line[len("for"):].strip()
                     range_expr, action = line.strip()[1:-1].split("){", 1)
@@ -161,6 +205,7 @@ class PryzmaInterpreter:
                     for action in actions:
                         action = action.strip()
                     self.for_loop(loop_var, range_expr, actions)
+
                 elif line.startswith("use"):
                     file_path = line[len("use"):].strip()
                     self.import_functions(file_path)

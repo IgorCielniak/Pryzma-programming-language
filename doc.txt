@@ -284,6 +284,12 @@ hello
 3
 hello
 
+there is also foreach to iterate lists:
+
+a = ["h","e","l","l","o"]
+
+foreach(element,a){print element}
+
 you can use break statements
 
 While:
