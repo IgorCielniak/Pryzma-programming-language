@@ -790,8 +790,9 @@ class PryzmaInterpreter:
                     self.ret_val = self.evaluate_expression(line[6:])
                 elif line == "break":
                     self.break_stack[-1] = True
+                elif line.startswith("!"):
+                    exec(line[1:])
                 elif line == "stop":
-                    input("Press any key to continue...")
                     sys.exit()
                 else:
                     if not handled:

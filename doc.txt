@@ -706,6 +706,14 @@ True
 
 the stack is an optional argument so you can pass your won stack
 
+the usage of "!":
+
+if a line startswith "!":
+
+!print("hello")
+
+it gets executed by python
+
 defined():
 
 a = defined(b)
