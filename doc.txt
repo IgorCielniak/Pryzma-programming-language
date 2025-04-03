@@ -375,6 +375,8 @@ you can also import files over http and https like this:
 
 use https://raw.githubusercontent.com/IgorCielniak/Pryzma-packages/main/net/net.pryzma
 
+in imported files if thres is a funcrion "on_import" it will be called instantly when importing the wile
+
 Comments:
 
 Comments in Pryzma start with the # symbol and continue to the end of the line.

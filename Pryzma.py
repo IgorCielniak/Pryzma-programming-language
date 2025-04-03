@@ -1305,6 +1305,8 @@ class PryzmaInterpreter:
                         else:
                             line = "/" + name + "."  + line[1:]
                         self.interpret(line)
+                        if line.startswith("/"+name+".on_import"):
+                            self.interpret("@"+name+".on_import")
         except FileNotFoundError:
             if not self.in_try_block:
                 self.in_func_err()
