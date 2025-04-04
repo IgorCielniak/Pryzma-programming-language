@@ -730,6 +730,26 @@ np - don't preprocess
 the preprocessor directives must be in the first line
 otherwise they will be ignored
 
+inline asm:
+
+a = 10
+b = 20
+c = 0
+
+asm{
+    mov rax, a
+    add rax, b
+    mov c, rax
+}
+
+print c
+
+output will be:
+
+30
+
+for now it only supports integers
+
 Running Programs:
 
 To run a Pryzma program, save the code in a text file execute it by lunching the

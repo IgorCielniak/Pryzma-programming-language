@@ -10,6 +10,7 @@ import zipfile
 import platform
 import random
 
+
 class PryzmaInterpreter:
     
     def __init__(self):
@@ -792,6 +793,29 @@ class PryzmaInterpreter:
                     self.break_stack[-1] = True
                 elif line.startswith("!"):
                     exec(line[1:])
+                elif line.startswith("asm{") and line.endswith("}"):
+                    try:
+                        from asm import X86Emulator
+                        asm_emulator = X86Emulator()
+                    except ImportError:
+                        asm_emulator = None
+                        print("ERROR: x86 emulation not available (missing keystone/unicorn)")
+                        continue
+                    code = line.split("|")
+                    code = "\n".join(code)
+                    asm_vars = {}
+                    for i in self.variables:
+                        if type(self.variables[i]) == int:
+                            asm_vars[i] = self.variables[i]
+                    if asm_emulator:
+                        try:
+                            results = asm_emulator.run(code, asm_vars)
+                            for var, val in results.items():
+                                self.variables[var] = val
+                        except Exception as e:
+                            print(f"ASM emulation error: {e}")
+                    else:
+                        print("ASM emulation not available")
                 elif line == "stop":
                     sys.exit()
                 else:
