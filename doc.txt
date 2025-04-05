@@ -737,9 +737,9 @@ b = 20
 c = 0
 
 asm{
-    mov rax, a
-    add rax, b
-    mov c, rax
+    "mov rax, a"
+    "add rax, b"
+    "mov c, rax"
 }
 
 print c

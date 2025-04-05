@@ -800,8 +800,12 @@ class PryzmaInterpreter:
                         asm_emulator = None
                         print("ERROR: x86 emulation not available (probably missing keystone/unicorn)")
                         continue
+                    line = line[4:-1]
                     code = line.split("|")
-                    code = "\n".join(code)
+                    code = list(filter(None, code))
+                    for line in range(len(code)):
+                        code[line] = self.evaluate_expression(code[line].strip())
+                    code = "asm{\n"+"\n".join(code)+"\n}"
                     asm_vars = {}
                     for i in self.variables:
                         if type(self.variables[i]) == int:
