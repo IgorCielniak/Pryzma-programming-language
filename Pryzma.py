@@ -795,11 +795,10 @@ class PryzmaInterpreter:
                     exec(line[1:])
                 elif line.startswith("asm{") and line.endswith("}"):
                     try:
-                        from asm import X86Emulator
                         asm_emulator = X86Emulator()
                     except ImportError:
                         asm_emulator = None
-                        print("ERROR: x86 emulation not available (missing keystone/unicorn)")
+                        print("ERROR: x86 emulation not available (probably missing keystone/unicorn)")
                         continue
                     code = line.split("|")
                     code = "\n".join(code)
@@ -1795,6 +1794,122 @@ commands:
 47 - Invalid call statement format.
 """ 
 )
+
+
+class X86Emulator:
+    def __init__(self):
+        from keystone import Ks, KS_ARCH_X86, KS_MODE_64
+        from unicorn import Uc, UC_ARCH_X86, UC_MODE_64, UcError
+        from unicorn.x86_const import (
+            UC_X86_REG_RAX,
+            UC_X86_REG_RBX,
+            UC_X86_REG_RCX,
+            UC_X86_REG_RDX,
+            UC_X86_REG_RSI,
+            UC_X86_REG_RDI,
+            UC_X86_REG_RSP,
+        )
+
+        self.Ks = Ks
+        self.KS_ARCH_X86 = KS_ARCH_X86
+        self.KS_MODE_64 = KS_MODE_64
+        self.Uc = Uc
+        self.UC_ARCH_X86 = UC_ARCH_X86
+        self.UC_MODE_64 = UC_MODE_64
+        self.UcError = UcError
+
+        self.UC_X86_REG_RAX = UC_X86_REG_RAX
+        self.UC_X86_REG_RBX = UC_X86_REG_RBX
+        self.UC_X86_REG_RCX = UC_X86_REG_RCX
+        self.UC_X86_REG_RDX = UC_X86_REG_RDX
+        self.UC_X86_REG_RSI = UC_X86_REG_RSI
+        self.UC_X86_REG_RDI = UC_X86_REG_RDI
+        self.UC_X86_REG_RSP = UC_X86_REG_RSP
+
+        self.BASE_ADDR = 0x1000000
+        self.MEM_SIZE = 2 * 1024 * 1024
+        self.STACK_ADDR = self.BASE_ADDR + self.MEM_SIZE - 0x1000
+
+        self.register_order = [
+            self.UC_X86_REG_RAX,
+            self.UC_X86_REG_RBX,
+            self.UC_X86_REG_RCX,
+            self.UC_X86_REG_RDX,
+            self.UC_X86_REG_RSI,
+            self.UC_X86_REG_RDI
+        ]
+
+    def _get_reg_name(self, uc_reg):
+        return {
+            self.UC_X86_REG_RAX: 'rax',
+            self.UC_X86_REG_RBX: 'rbx',
+            self.UC_X86_REG_RCX: 'rcx',
+            self.UC_X86_REG_RDX: 'rdx',
+            self.UC_X86_REG_RSI: 'rsi',
+            self.UC_X86_REG_RDI: 'rdi',
+        }.get(uc_reg, 'unknown')
+
+    def _parse_script(self, script: str, variables: dict):
+        asm_match = re.search(r'asm\s*{(.*?)}', script, re.DOTALL)
+        return asm_match.group(1).strip() if asm_match else ""
+
+    def _resolve_variables(self, asm: str, variables: dict):
+        reg_map = {}
+        mem_map = {}
+        resolved_asm = asm
+        mem_cursor = 0x1000
+
+        for i, (var, val) in enumerate(variables.items()):
+            if i < len(self.register_order):
+                reg = self.register_order[i]
+                reg_map[var] = (reg, val)
+                resolved_asm = re.sub(rf'\b{var}\b', self._get_reg_name(reg), resolved_asm)
+            else:
+                addr = self.BASE_ADDR + mem_cursor
+                mem_map[var] = (addr, val)
+                resolved_asm = re.sub(rf'\b{var}\b', f"[{hex(addr)}]", resolved_asm)
+                mem_cursor += 8
+
+        return resolved_asm, reg_map, mem_map
+
+    def _assemble(self, asm: str) -> bytes:
+        ks = self.Ks(self.KS_ARCH_X86, self.KS_MODE_64)
+        encoding, _ = ks.asm(asm)
+        return bytes(encoding)
+
+    def _emulate(self, code: bytes, reg_map: dict, mem_map: dict):
+        mu = self.Uc(self.UC_ARCH_X86, self.UC_MODE_64)
+        mu.mem_map(self.BASE_ADDR, self.MEM_SIZE)
+        mu.mem_write(self.BASE_ADDR, code)
+        mu.reg_write(self.UC_X86_REG_RSP, self.STACK_ADDR)
+
+        for reg, val in reg_map.values():
+            mu.reg_write(reg, val)
+
+        for addr, val in mem_map.values():
+            mu.mem_write(addr, val.to_bytes(8, 'little'))
+
+        try:
+            mu.emu_start(self.BASE_ADDR, self.BASE_ADDR + len(code))
+        except Exception as e:
+            print("Emulation error:", e)
+
+        results = {}
+        for name, (reg, _) in reg_map.items():
+            val = mu.reg_read(reg)
+            results[name] = val
+
+        for name, (addr, _) in mem_map.items():
+            val = int.from_bytes(mu.mem_read(addr, 8), 'little')
+            results[name] = val
+
+        return results
+
+    def run(self, script: str, variables: dict):
+        asm = self._parse_script(script, variables)
+        resolved_asm, reg_map, mem_map = self._resolve_variables(asm, variables)
+        code = self._assemble(resolved_asm)
+        return self._emulate(code, reg_map, mem_map)
 
 
 class PackageManager:
