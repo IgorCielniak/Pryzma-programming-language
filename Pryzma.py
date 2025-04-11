@@ -791,8 +791,6 @@ class PryzmaInterpreter:
                     self.ret_val = self.evaluate_expression(line[6:])
                 elif line == "break":
                     self.break_stack[-1] = True
-                elif line.startswith("!"):
-                    exec(line[1:])
                 elif line.startswith("asm{") and line.endswith("}"):
                     try:
                         asm_emulator = X86Emulator()
@@ -819,6 +817,13 @@ class PryzmaInterpreter:
                             print(f"ASM emulation error: {e}")
                     else:
                         print("ASM emulation not available")
+                elif line.startswith("py{") and line.endswith("}"):
+                    line = line[3:-1]
+                    code = line.split("|")
+                    code = list(filter(None, code))
+                    for line in range(len(code)):
+                        code[line] = self.evaluate_expression(code[line].strip())
+                    exec(";".join(code), {}, self.variables)
                 elif line == "stop":
                     sys.exit()
                 else:
