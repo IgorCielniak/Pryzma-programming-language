@@ -1,6 +1,0 @@
-file = pargs[1]
-
-command = "python Pryzmac.py " + file
-command += " && gcc out.c && rm out.c"
-
-exec command

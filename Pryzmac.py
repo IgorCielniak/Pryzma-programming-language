@@ -125,7 +125,11 @@ class Pryzmac:
 
 
 def main():
-    pryzma_script = open(sys.argv[1]).read()
+    if len(sys.argv) > 2:
+        pryzma_script = open(sys.argv[1]).read()
+    else:
+        print("Usage: python Pryzmac.py input.pryzma")
+        sys.exit(1)
 
     converter = Pryzmac()
     c_code = converter.convert(pryzma_script)
