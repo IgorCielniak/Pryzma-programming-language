@@ -2139,7 +2139,8 @@ def shell(code):
 
 
 
-def main():
+
+if __name__ == "__main__":
     interpreter = PryzmaInterpreter()
 
     tkinter_enabled = False
@@ -2195,7 +2196,3 @@ To show the license type "license" or "help" to get help.
         elif code == "reboot":
             os.execl(sys.executable, sys.executable, *sys.argv)
         shell(code)
-
-if __name__ == "__main__":
-    main()
-
