@@ -125,7 +125,7 @@ class Pryzmac:
 
 
 def main():
-    if len(sys.argv) > 2:
+    if len(sys.argv) == 2:
         pryzma_script = open(sys.argv[1]).read()
     else:
         print("Usage: python Pryzmac.py input.pryzma")
