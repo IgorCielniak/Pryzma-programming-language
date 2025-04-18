@@ -584,15 +584,6 @@ wait(5)
 
 the "5" in this example is time in seconds that you want to wait
 
-Dir:
-
-print dir("C:\Users\User\Desktop\Untitled-1.txt")
-
-output:
-
-C:\Users\User\Desktop\
-
-as the argument you can also pass a variable
 
 Extending the interpreters functionality:
 
@@ -763,6 +754,57 @@ output will be:
 30
 
 for now it only supports integers
+
+File and directiries operations etc.
+
+
+mkdir(path)
+
+makeidrs(path)
+
+rmdir(path)
+
+removedirs(path)
+
+copy(src, dst)
+
+copyfile(src, dst)
+
+move(src, dst)
+
+rename(src, dst)
+
+remove(path)
+
+symlink(src, dst)
+
+unlink(path)
+
+dirname(path)
+
+is_file(path)
+
+is_dir(path)
+
+exists(path)
+
+file_size(path)
+
+join_path(path1, path2 ...)
+
+abs_path(path)
+
+basename(path)
+
+split_ext(path)
+
+list_dir(path)
+
+walk(path)
+
+is_link(path)
+
+read_link(path)
 
 Running Programs:
 

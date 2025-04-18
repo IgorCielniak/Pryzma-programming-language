@@ -825,6 +825,49 @@ class PryzmaInterpreter:
                     for line in range(len(code)):
                         code[line] = self.evaluate_expression(code[line].strip())
                     exec(";".join(code), {}, self.variables)
+                elif line.startswith("mkdir(") and line.endswith(")"):
+                    path = self.evaluate_expression(line[6:-1])
+                    os.mkdir(path)
+                elif line.startswith("makedirs(") and line.endswith(")"):
+                    path = self.evaluate_expression(line[9:-1])
+                    os.makedirs(path, exist_ok=True)
+                elif line.startswith("rmdir(") and line.endswith(")"):
+                    path = self.evaluate_expression(line[6:-1])
+                    os.rmdir(path)
+                elif line.startswith("removedirs(") and line.endswith(")"):
+                    path = self.evaluate_expression(line[11:-1])
+                    os.removedirs(path)
+                elif line.startswith("copy(") and line.endswith(")"):
+                    args = self.evaluate_expression(line[5:-1]).split(',')
+                    src = args[0].strip()
+                    dst = args[1].strip()
+                    shutil.copy(src, dst)
+                elif line.startswith("copyfile(") and line.endswith(")"):
+                    args = self.evaluate_expression(line[9:-1]).split(',')
+                    src = args[0].strip()
+                    dst = args[1].strip()
+                    shutil.copyfile(src, dst)
+                elif line.startswith("move(") and line.endswith(")"):
+                    args = self.evaluate_expression(line[5:-1]).split(',')
+                    src = args[0].strip()
+                    dst = args[1].strip()
+                    shutil.move(src, dst)
+                elif line.startswith("rename(") and line.endswith(")"):
+                    args = self.evaluate_expression(line[7:-1]).split(',')
+                    src = args[0].strip()
+                    dst = args[1].strip()
+                    os.rename(src, dst)
+                elif line.startswith("remove(") and line.endswith(")"):
+                    path = self.evaluate_expression(line[7:-1])
+                    os.remove(path)
+                elif line.startswith("symlink(") and line.endswith(")"):
+                    args = self.evaluate_expression(line[8:-1]).split(',')
+                    src = args[0].strip()
+                    dst = args[1].strip()
+                    os.symlink(src, dst)
+                elif line.startswith("unlink(") and line.endswith(")"):
+                    path = self.evaluate_expression(line[7:-1])
+                    os.unlink(path)
                 elif line == "stop":
                     sys.exit()
                 else:
@@ -1131,8 +1174,8 @@ class PryzmaInterpreter:
                 else:
                     self.variables["err"] = 38
                 return None
-        elif expression.startswith("dir(") and expression.endswith(")"):
-            expression = expression[4:-1]
+        elif expression.startswith("dirname(") and expression.endswith(")"):
+            expression = expression[8:-1]
             if expression.startswith('"') and expression.endswith('"'):
                 return os.path.dirname(expression[1:-1])
             elif expression in self.variables:
@@ -1140,7 +1183,7 @@ class PryzmaInterpreter:
             else:
                 if not self.in_try_block:
                     self.in_func_err()
-                    print(f"Error near line {self.current_line}: Invalid argument for dir() function")
+                    print(f"Error near line {self.current_line}: Invalid argument for dirname() function")
                 else:
                     self.variables["err"] = 39
                 return None
@@ -1175,6 +1218,43 @@ class PryzmaInterpreter:
             return char.join(value)
         elif expression.startswith("defined(") and expression.endswith(")"):
             return expression[8:-1] in self.variables
+        elif expression.startswith("is_file(") and expression.endswith(")"):
+            path = self.evaluate_expression(expression[8:-1])
+            return os.path.isfile(path)
+        elif expression.startswith("is_dir(") and expression.endswith(")"):
+            path = self.evaluate_expression(expression[7:-1])
+            return os.path.isdir(path)
+        elif expression.startswith("exists(") and expression.endswith(")"):
+            path = self.evaluate_expression(expression[7:-1])
+            return os.path.exists(path)
+        elif expression.startswith("file_size(") and expression.endswith(")"):
+            path = self.evaluate_expression(expression[10:-1])
+            return os.path.getsize(path)
+        elif expression.startswith("join_path(") and expression.endswith(")"):
+            args = self.evaluate_expression(line[10:-1]).split(',')
+            paths = [p.strip() for p in args]
+            return os.path.join(*paths)
+        elif expression.startswith("abs_path(") and expression.endswith(")"):
+            path = self.evaluate_expression(expression[9:-1])
+            return os.path.abspath(path)
+        elif expression.startswith("basename(") and expression.endswith(")"):
+            path = self.evaluate_expression(expression[9:-1])
+            return os.path.basename(path)
+        elif expression.startswith("split_ext(") and expression.endswith(")"):
+            path = self.evaluate_expression(expression[10:-1])
+            return os.path.splitext(path)
+        elif expression.startswith("list_dir(") and expression.endswith(")"):
+            path = self.evaluate_expression(expression[9:-1])
+            return os.listdir(path)
+        elif expression.startswith("walk(") and expression.endswith(")"):
+            path = self.evaluate_expression(expression[5:-1])
+            return list(os.walk(path))
+        elif expression.startswith("is_link(") and expression.endswith(")"):
+            path = self.evaluate_expression(expression[8:-1])
+            return os.path.islink(path)
+        elif expression.startswith("read_link(") and expression.endswith(")"):
+            path = self.evaluate_expression(expression[10:-1])
+            return os.readlink(path)
         elif expression in self.variables:
             return self.variables[expression]
         else:
