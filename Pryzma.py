@@ -20,6 +20,7 @@ class PryzmaInterpreter:
         self.custom_handlers = {}
         self.deleted_key_words = []
         self.variables["interpreter_path"] = __file__
+        self.variables["err"] = 0
         self.in_try_block = False
         self.in_func = False
         self.current_func_name = None
@@ -459,7 +460,7 @@ class PryzmaInterpreter:
                             self.interpret(self.evaluate_expression(part))
                     else:
                         self.interpret(self.evaluate_expression(code))
-                elif line.startswith("try(") and line.endswith(")"):
+                elif line.startswith("try{") and line.endswith("}"):
                     self.in_try_block = True
                     instructions = line[4:-1].split("|")
                     error = 0
