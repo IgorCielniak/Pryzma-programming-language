@@ -631,7 +631,7 @@ try{
     a = 10
 }
 
-a variable err will be created and hold a value of 40 after executing this code
+the variable 'err' will hold a value of 40 after executing this code
 becouse the print instruction tries to acces variable a that is created later so it fails with status code 40
 the err variable is reset to zero only after a next try block is succesfully executed or when changed manually
 
