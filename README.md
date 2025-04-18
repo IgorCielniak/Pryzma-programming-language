@@ -2,7 +2,7 @@ I am to lazy to write an actuall readme so go ahead and install pryzma using thi
 
 ```
 pip3 install --no-cache-dir git+https://github.com/IgorCielniak/Pryzma-programming-language.git
-````
+```
 and run:
 ```
 pryzma
