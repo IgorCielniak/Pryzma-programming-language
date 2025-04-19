@@ -1873,7 +1873,7 @@ commands:
 36 - Variable is not a list for index function
 37 - List not defined for all()
 38 - Variable is not defined for isanumber()
-39 - Invalid argument for dir()
+39 - Invalid argument for dirname()
 40 - Unknown variable or expression
 41 - Invalid range expression for loop
 42 - File not found for use function
