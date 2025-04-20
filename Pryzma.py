@@ -207,7 +207,6 @@ class PryzmaInterpreter:
                     for action in actions:
                         action = action.strip()
                     self.for_loop(loop_var, range_expr, actions)
-
                 elif line.startswith("use"):
                     file_path = line[len("use"):].strip()
                     self.import_functions(file_path)
@@ -272,8 +271,8 @@ class PryzmaInterpreter:
                             for action in actions:
                                 self.interpret(action)
                     elif ">" in condition:
-                        value1 = self.evaluate_expression(condition.split("<")[0])
-                        value2 = self.evaluate_expression(condition.split("<")[1])
+                        value1 = self.evaluate_expression(condition.split(">")[0])
+                        value2 = self.evaluate_expression(condition.split(">")[1])
                         if value1 < value2:
                             handeled = True
                             for action in actions:
