@@ -273,7 +273,7 @@ class PryzmaInterpreter:
                     elif ">" in condition:
                         value1 = self.evaluate_expression(condition.split(">")[0])
                         value2 = self.evaluate_expression(condition.split(">")[1])
-                        if value1 < value2:
+                        if value1 > value2:
                             handeled = True
                             for action in actions:
                                 self.interpret(action)
