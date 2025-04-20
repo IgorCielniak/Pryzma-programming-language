@@ -15,7 +15,7 @@ def print_colored(text, color):
     print(COLORS.get(color, "") + text + COLORS["reset"], end="")
 
 def run_tests():
-    test_dir = os.path.join(os.path.dirname(__file__), "tests")
+    test_dir = "tests"
     
     if not os.path.isdir(test_dir):
         print("No 'tests' directory found.")
