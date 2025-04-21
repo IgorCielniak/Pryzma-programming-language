@@ -2270,6 +2270,7 @@ def main():
     global history
     global running_from_file
     global debug
+    global tkinter_enabled
 
     interpreter = PryzmaInterpreter()
 
