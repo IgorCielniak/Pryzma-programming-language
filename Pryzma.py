@@ -1765,6 +1765,8 @@ limitations under the License.
             
             if len(parts) < 2:
                 if not self.in_try_block:
+                    self.in_func_err()
+                    self.variabes["err"] = 46
                     print("Invalid number of arguments for call")
                 else:
                     self.variables["err"] = 46
