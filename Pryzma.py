@@ -2291,6 +2291,7 @@ def main():
     global running_from_file
     global debug
     global tkinter_enabled
+    global version
 
     interpreter = PryzmaInterpreter()
 
