@@ -404,12 +404,22 @@ print "no"
 }
 
 you can use operators like: ==, !=, <=, >=, < and >,
-you can also yuse it without any operator like this:
+you can also use it without any operator like this:
 
 a = True
 
 if(a){print "True"}else{print "False"}
 
+you can also use turnary operators:
+
+a = True
+b = False
+
+print a if 1 else b
+
+output:
+
+True
 
 Functions:
 
@@ -418,11 +428,11 @@ declare function:
 /function_name{command|command2|command3}
 or
 /func_name{
-command;
-command;
+command
+command
 }
 
-you separate the instruction using the pipe symbol | or ; in multiline functions
+you separate the instruction using the pipe symbol | or ; as well in multiline functions
 
 calling functions:
 
