@@ -878,6 +878,47 @@ class PryzmaInterpreter:
                 elif line.startswith("unlink(") and line.endswith(")"):
                     path = self.evaluate_expression(line[7:-1])
                     os.unlink(path)
+                elif line.startswith("match(") and "{" in line:
+                    line = line[6:-1]
+                    var, cases = line.split("){", 1)
+                    var = self.evaluate_expression(var.strip())
+
+                    processed_cases = ""
+                    depth = 0
+
+                    for char in list(cases):
+                        if char == "{":
+                            processed_cases += char
+                            depth += 1
+                        elif char == "}":
+                            processed_cases += char
+                            depth -= 1
+                        elif depth == 1 and char == "|":
+                            processed_cases += "&@"
+                        else:
+                            processed_cases += char
+
+                    cases = processed_cases.split("|")
+                    cases = list(filter(None, cases))
+
+                    default_case = None
+                    handeled = False
+
+                    for case in cases:
+                        case = case.strip()
+                        case = case[5:-1].split("){")
+                        value = self.evaluate_expression(case[0]) if case[0] != "_" else "_"
+                        if value == "_":
+                            default_case = case
+                            continue
+                        if var == value:
+                            handeled = True
+                            for instruction in case[1].split("&@"):
+                                self.interpret(instruction)
+
+                    if handeled == False and default_case:
+                        for instruction in default_case[1].split("&@"):
+                            self.interpret(instruction)
                 elif line == "stop":
                     sys.exit()
                 else:

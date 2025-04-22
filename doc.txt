@@ -822,6 +822,21 @@ is_link(path)
 
 read_link(path)
 
+match:
+
+x = 4
+match(x){
+    case(1){
+        print "x is 1"
+    }
+    case(2){
+        print "x is 2"
+    }
+    case(_){
+        print "default case"
+    }
+}
+
 Running Programs:
 
 To run a Pryzma program, save the code in a text file execute it by lunching the
