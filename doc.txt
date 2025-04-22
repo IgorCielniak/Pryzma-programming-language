@@ -403,7 +403,13 @@ print "text"
 print "no"
 }
 
-you can use operators like: ==, !=, <=, >=, < and >
+you can use operators like: ==, !=, <=, >=, < and >,
+you can also yuse it without any operator like this:
+
+a = True
+
+if(a){print "True"}else{print "False"}
+
 
 Functions:
 

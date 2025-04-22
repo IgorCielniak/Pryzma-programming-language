@@ -279,6 +279,12 @@ class PryzmaInterpreter:
                             handeled = True
                             for action in actions:
                                 self.interpret(action)
+                    else:
+                        value = self.evaluate_expression(condition)
+                        if value:
+                            handeled = True
+                            for action in actions:
+                                self.interpret(action)
                     if handeled == False and else_:
                         char_ = 0
                         rep_in_if = 0
@@ -330,7 +336,7 @@ class PryzmaInterpreter:
                             if self.break_stack[-1]:
                                 break
                         self.break_stack.pop()
-                    if "!=" in condition:
+                    elif "!=" in condition:
                         value1 = self.evaluate_expression(condition.split("!=")[0])
                         value2 = self.evaluate_expression(condition.split("!=")[1])
                         self.break_stack.append(False)
@@ -344,7 +350,7 @@ class PryzmaInterpreter:
                             if self.break_stack[-1]:
                                 break
                         self.break_stack.pop()
-                    if "<=" in condition:
+                    elif "<=" in condition:
                         value1 = self.evaluate_expression(condition.split("<=")[0])
                         value2 = self.evaluate_expression(condition.split("<=")[1])
                         self.break_stack.append(False)
@@ -358,7 +364,7 @@ class PryzmaInterpreter:
                             if self.break_stack[-1]:
                                 break
                         self.break_stack.pop()
-                    if ">=" in condition:
+                    elif ">=" in condition:
                         value1 = self.evaluate_expression(condition.split(">=")[0])
                         value2 = self.evaluate_expression(condition.split(">=")[1])
                         self.break_stack.append(False)
@@ -372,7 +378,7 @@ class PryzmaInterpreter:
                             if self.break_stack[-1]:
                                 break
                         self.break_stack.pop()
-                    if "<" in condition:
+                    elif "<" in condition:
                         value1 = self.evaluate_expression(condition.split("<")[0])
                         value2 = self.evaluate_expression(condition.split("<")[1])
                         self.break_stack.append(False)
@@ -386,7 +392,7 @@ class PryzmaInterpreter:
                             if self.break_stack[-1]:
                                 break
                         self.break_stack.pop()
-                    if ">" in condition:
+                    elif ">" in condition:
                         value1 = self.evaluate_expression(condition.split(">")[0])
                         value2 = self.evaluate_expression(condition.split(">")[1])
                         self.break_stack.append(False)
@@ -395,6 +401,18 @@ class PryzmaInterpreter:
                                 self.interpret(action)
                                 value1 = self.evaluate_expression(condition.split(">")[0])
                                 value2 = self.evaluate_expression(condition.split(">")[1])
+                                if self.break_stack[-1]:
+                                    break
+                            if self.break_stack[-1]:
+                                break
+                        self.break_stack.pop()
+                    else:
+                        value = self.evaluate_expression(condition)
+                        self.break_stack.append(False)
+                        while value:
+                            for action in actions:
+                                self.interpret(action)
+                                value = self.evaluate_expression(condition)
                                 if self.break_stack[-1]:
                                     break
                             if self.break_stack[-1]:
