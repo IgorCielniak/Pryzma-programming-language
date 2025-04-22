@@ -561,7 +561,7 @@ by running:
 
 python Pryzma.py file_path d df
 
-a list called pargs will be accesable from code and in this example it will contain two variables 'd' and 'df'
+a list called argv will be accesable from code and in this example it will contain two variables 'd' and 'df'
 as well as a '__file__' variable that holds the full path to the current running file and a 'interpreter_path' variable that holds
 the path to the interpreter
 you can pass as many arguments as you wish

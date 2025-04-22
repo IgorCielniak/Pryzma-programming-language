@@ -279,7 +279,7 @@ h2 = char(125)
 h3 = char(59)
 h7 = char(38)+char(36)
 
-program = read(pargs[1])
+program = read(argv[1])
 program = replace(program,"\n",h3)
 prog = list(program)
 
@@ -309,7 +309,7 @@ regex = all(chars_ascii)
 
 lines = resplit(regex, program)
 
-variables["pargs"] = pargs[1:]
+variables["argv"] = argv[1:]
 
 for(line_count,0:len(lines)-1){
     line = strip(lines[line_count])

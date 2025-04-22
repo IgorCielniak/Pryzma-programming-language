@@ -32,7 +32,7 @@ class PryzmaInterpreter:
 
     def interpret_file(self, file_path, *args):
         self.file_path = file_path.strip('"')
-        self.variables["pargs"] = args
+        self.variables["argv"] = args
         self.variables["__file__"] = os.path.abspath(file_path)
         try:
             with open(self.file_path, 'r') as file:
@@ -1573,7 +1573,7 @@ limitations under the License.
         current_line = 0
         breakpoints = set()
         log_file = None
-        self.variables["pargs"] = arguments
+        self.variables["argv"] = arguments
         self.variables["file"] = os.path.abspath(file_path)
 
         if file_path.startswith('"') and file_path.endswith('"'):
