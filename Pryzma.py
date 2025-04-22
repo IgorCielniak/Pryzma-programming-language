@@ -121,7 +121,7 @@ class PryzmaInterpreter:
                     print(f"Error near line {self.current_line}: keyword deleted '{keyword}'")
                 else:
                     self.variables["err"] = 1
-                break
+                continue
 
             handled = False
             for handler in self.custom_handlers.values():
@@ -140,7 +140,7 @@ class PryzmaInterpreter:
                     variable = line[len("input"):].strip()
                     self.custom_input(variable)
                 elif line.startswith("foreach"):
-                    line = line[len("foreach"):].strip()
+                    line = line[7:].strip()
                     args, action = line.strip()[1:-1].split("){", 1)
                     char_ = 0
                     rep_in_for = 0
@@ -185,7 +185,7 @@ class PryzmaInterpreter:
 
                     self.break_stack.pop()
                 elif line.startswith("for"):
-                    line = line[len("for"):].strip()
+                    line = line[3:].strip()
                     range_expr, action = line.strip()[1:-1].split("){", 1)
                     char_ = 0
                     rep_in_for = 0
@@ -210,7 +210,7 @@ class PryzmaInterpreter:
                         action = action.strip()
                     self.for_loop(loop_var, range_expr, actions)
                 elif line.startswith("use"):
-                    file_path = line[len("use"):].strip()
+                    file_path = line[3:].strip()
                     self.import_functions(file_path)
                 elif line.startswith("if"):
                     else_ = False
@@ -285,6 +285,7 @@ class PryzmaInterpreter:
                             handeled = True
                             for action in actions:
                                 self.interpret(action)
+
                     if handeled == False and else_:
                         char_ = 0
                         rep_in_if = 0
@@ -555,18 +556,18 @@ class PryzmaInterpreter:
                     else:
                         self.variables[variable] = self.evaluate_expression(expression)
                 elif line.startswith("copy"):
-                    list1, list2 = line[len("copy"):].split(",")
+                    list1, list2 = line[4:].split(",")
                     list1 = list1.strip()
                     list2 = list2.strip()
                     for element in self.variables[list1]:
                         self.variables[list2].append(element)
                 elif line.startswith("append"):
-                    list_name, value = line[len("append"):].split(",")
+                    list_name, value = line[6:].split(",")
                     list_name = list_name.strip()
                     value = value.strip()
                     self.append_to_list(list_name, value)
                 elif line.startswith("pop"):
-                    list_name, index = line[len("pop"):].split(",")
+                    list_name, index = line[3:].split(",")
                     list_name = list_name.strip()
                     index = index.strip()
                     self.pop_from_list(list_name, index)
@@ -576,12 +577,7 @@ class PryzmaInterpreter:
                     var = var.strip()
                     self.variables[list_name].remove(self.evaluate_expression(var))
                 elif line.startswith("exec"):
-                    line = line[4:].strip()
-                    if line.startswith('"') and line.endswith('"'):
-                        line = line[1:-1]
-                    else:
-                        line = self.variables[line]
-                    os.system(line)
+                    os.system(self.evaluate_expression(line[4:]))
                 elif line.startswith("write(") and line.endswith(")"):
                     line = line[6:-1].split(",")
                     if len(line) == 3:
@@ -597,26 +593,11 @@ class PryzmaInterpreter:
                         else:
                             self.variables["err"] = 6
                 elif line.startswith("delvar(") and line.endswith(")"):
-                    variable = line[7:-1]
-                    if variable.startswith('"') and variable.endswith('"'):
-                        variable = variable[1:-1]
-                    else:
-                        variable = self.variables[variable]
-                    self.variables.pop(variable)
+                    self.variables.pop(self.evaluate_expression(line[7:-1]))
                 elif line.startswith("delfunc(") and line.endswith(")"):
-                    function = line[8:-1]
-                    if function.startswith('"') and function.endswith('"'):
-                        function = function[1:-1]
-                    else:
-                        function = self.variables[function]
-                    self.functions.pop(function)
+                    self.functions.pop(self.evaluate_expression(line[8:-1]))
                 elif line.startswith("delkeyword(") and line.endswith(")"):
-                    key_word = line[11:-1] 
-                    if key_word.startswith('"') and key_word.endswith('"'):
-                        key_word = key_word[1:-1]
-                    else:
-                        key_word = self.variables[key_word]
-                    self.deleted_key_words.append(key_word)
+                    self.deleted_key_words.append(self.evaluate_expression(line[11:-1]))
                 elif "++" in line:
                     variable = line.replace("++", "").strip()
                     self.increment_variable(variable)
@@ -800,16 +781,11 @@ class PryzmaInterpreter:
                         else:
                             self.variables["err"] = 16
                 elif line.startswith("call"):
-                    call_statement = line[len("call"):].strip()
+                    call_statement = line[4:].strip()
                     file_name, function_name, args = self.parse_call_statement(call_statement)
                     self.call_function_from_file(file_name, function_name, args)
                 elif line.startswith("load(") and line.endswith(")"):
-                    module_path = line[5:-1]
-                    if module_path.startswith('"') and module_path.endswith('"'):
-                        module_path = module_path[1:-1]
-                    else:
-                        module_path = self.variables[module_path]
-                    self.load_module(module_path)
+                    self.load_module(self.evaluate_expression(line[5:-1]))
                 elif line.startswith("wait(") and line.endswith(")"):
                     time_to_wait = float(line[5:-1])
                     time.sleep(time_to_wait)
