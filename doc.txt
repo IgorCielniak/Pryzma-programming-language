@@ -265,7 +265,7 @@ Pryzma supports simple flow control using the stop statement. It terminates the 
 
 stop
 
-Loops:
+For loops:
 
 for(i, 1:4){
     print i
@@ -465,23 +465,6 @@ output:
 
 hello
 
-Loops:
-
-for i, 1:5, print i
-
-it will print numbers from one to five
-
-a=3
-
-for i, a:5, print i
-
-it will print numbers from 3 to 5
-
-
-while a, b, @func
-
-as long as variable a will equal variable b it will call function func you can use string instead of a variable
-there is also whilen that works the same but checks if the variables aren't equal
 
 Exec function:
 
