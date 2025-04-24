@@ -1491,7 +1491,7 @@ class PryzmaInterpreter:
                 function_body = []
                 for line in lines:
                     if line.startswith("/"):
-                        if line[1:].startswith(name):
+                        if line[1:].startswith(name+"."):
                             line = "/" + line[1:]
                         else:
                             line = "/" + name + "."  + line[1:]
