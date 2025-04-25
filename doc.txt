@@ -725,10 +725,11 @@ if b is defined a will be True and if b is not defined a will be False
 
 preprocessor flags from code:
 
-preproc = np,fd
+preproc = np,fd,nan
 
 fd - forward declare functions
 np - don't preprocess
+nan - no automatic namespacing
 
 the preprocessor directives must be in the first line
 otherwise they will be ignored

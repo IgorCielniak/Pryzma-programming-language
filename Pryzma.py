@@ -27,6 +27,7 @@ class PryzmaInterpreter:
         self.preprocess_only = False
         self.no_preproc = False
         self.forward_declare = False
+        self.nan = False
         self.return_val = None
         self.break_stack = []
 
@@ -61,6 +62,8 @@ class PryzmaInterpreter:
                     self.forward_declare = True
                 if "np" in args:
                     self.no_preproc = True
+                if "nan" in args:
+                    self.nan = True
 
         if not self.no_preproc:
             rep_in_func = 0
@@ -1402,25 +1405,40 @@ class PryzmaInterpreter:
             name = os.path.basename(file_path).split(".")[0]
             f = requests.get(file_path)
             program = f.text
-            program = program.replace('\n', ";")
-            rep_in_func = 0
-            char_ = 0
-            prog = list(program)
-            for char in prog:
-                if char == "{":
-                    rep_in_func += 1
-                elif char == "}":
-                    rep_in_func -= 1
-                elif rep_in_func != 0  and char == ";":
-                    prog[char_] = "|"
-                char_ += 1
-            prog2 = ""
-            for char in prog:
-                prog2+=char
-            program = prog2
+            program = program.splitlines()
+            for line in range(0,len(program)-1):
+                program[line] = program[line].split("#")[0]
+            program = ";".join(program)
 
-            if not self.in_func:
-                self.current_line = 0
+            self.no_preproc = False
+
+            first_line = program.split(";")[0]
+
+            if first_line.startswith("preproc"):
+                preproc_line = first_line
+                if "=" in preproc_line:
+                    args = preproc_line.split("=")[1].split(",")
+                    for arg in range(0,len(args)):
+                        args[arg] = args[arg].strip()
+                    if "np" in args:
+                        self.no_preproc = True
+
+            if not self.no_preproc:
+                rep_in_func = 0
+                char_ = 0
+                prog = list(program)
+                for char in prog:
+                    if char == "{":
+                        rep_in_func += 1
+                    elif char == "}":
+                        rep_in_func -= 1
+                    elif rep_in_func != 0  and char == ";":
+                        prog[char_] = "|"
+                    char_ += 1
+                prog2 = ""
+                for char in prog:
+                    prog2+=char
+                program = prog2
 
             lines = re.split(r';(?=(?:[^"]*"[^"]*")*[^"]*$)', program)
             lines = [stmt.strip() for stmt in lines if stmt.strip()]
@@ -1430,11 +1448,18 @@ class PryzmaInterpreter:
             function_body = []
             for line in lines:
                 if line.startswith("/"):
-                    if line[1:].startswith(name):
-                        line = "/" + line[1:]
-                    else:
-                        line = "/" + name + "."  + line[1:]
+                    if not self.nan:
+                        if line[1:].startswith(name+"."):
+                            line = "/" + line[1:]
+                        else:
+                            line = "/" + name + "."  + line[1:]
                     self.interpret(line)
+                    if not self.nan:
+                        if line.startswith("/"+name+".on_import"):
+                            self.interpret("@"+name+".on_import")
+                    else:
+                        if line.startswith("/on_import"):
+                            self.interpret("@on_import")
         elif '/' in file_path or '\\' in file_path:
             self.load_functions_from_file(file_path)
         else:
@@ -1461,8 +1486,6 @@ class PryzmaInterpreter:
                         args = preproc_line.split("=")[1].split(",")
                         for arg in range(0,len(args)):
                             args[arg] = args[arg].strip()
-                        if "fd" in args:
-                            self.forward_declare = True
                         if "np" in args:
                             self.no_preproc = True
 
@@ -1491,13 +1514,18 @@ class PryzmaInterpreter:
                 function_body = []
                 for line in lines:
                     if line.startswith("/"):
-                        if line[1:].startswith(name+"."):
-                            line = "/" + line[1:]
-                        else:
-                            line = "/" + name + "."  + line[1:]
+                        if not self.nan:
+                            if line[1:].startswith(name+"."):
+                                line = "/" + line[1:]
+                            else:
+                                line = "/" + name + "."  + line[1:]
                         self.interpret(line)
-                        if line.startswith("/"+name+".on_import"):
-                            self.interpret("@"+name+".on_import")
+                        if not self.nan:
+                            if line.startswith("/"+name+".on_import"):
+                                self.interpret("@"+name+".on_import")
+                        else:
+                            if line.startswith("/on_import"):
+                                self.interpret("@on_import")
         except FileNotFoundError:
             if not self.in_try_block:
                 self.in_func_err()
