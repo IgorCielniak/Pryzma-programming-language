@@ -42,9 +42,9 @@ class Pryzmac:
                         c_code.append(line+"(args)")
             elif line.startswith("@"):
                 if not line.endswith(")"):
-                    c_code.append(line[1:]+"(args);")
                     args_def = "char args[] = {};"
                     c_code.append(args_def)
+                    c_code.append(line[1:]+"(args);")
                 else:
                     func_name, args = line[1:-1].strip(")").split("(")
                     args_def = "char args[] = {"+args+"};"
@@ -94,7 +94,7 @@ class Pryzmac:
         body = line.split("{")[1].split("}")[0].strip()
         c_body = self.convert(body)
         self.indent_level += 1
-        return f"if {condition} {{\n{c_body}\n" + " " * ((self.indent_level - 1) * 4)
+        return f"if ({condition} {{\n{c_body}\n" + " " * ((self.indent_level - 1) * 4)
 
     def convert_for(self, line):
         parts = line[len("for("):].split(")",1)[0].split(",")
