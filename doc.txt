@@ -820,6 +820,36 @@ match(x){
     }
 }
 
+Threading:
+
+Pryzma has build in support for threading, here is a simple example that should explain everythink:
+
+/counter {
+    i = 0
+    while(i < 5){
+        i++
+        print i, "\n"
+        wait(0.0001)
+    }
+    return i
+}
+
+print "Starting threads...\n"
+
+thread t {
+    result = @counter
+}
+thread t2 {
+    result = @counter
+}
+
+while(t.running==True){}
+
+print "Final result of t:", t.result, "\n"
+
+although you can use threads I recomend to instead use the async library when possible becouse
+from my tests it turned out that it is a lot more reliable
+
 Running Programs:
 
 To run a Pryzma program, save the code in a text file execute it by launching the
