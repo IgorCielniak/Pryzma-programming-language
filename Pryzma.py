@@ -9,9 +9,6 @@ import shutil
 import zipfile
 import platform
 import random
-import threading
-import time
-from collections import defaultdict
 
 
 class PryzmaInterpreter:
@@ -33,8 +30,6 @@ class PryzmaInterpreter:
         self.nan = False
         self.return_val = None
         self.break_stack = []
-        self.threads = {}
-        self.shared_vars = SharedVariables()
 
     def interpret_file(self, file_path, *args):
         self.file_path = file_path.strip('"')
@@ -427,8 +422,6 @@ class PryzmaInterpreter:
                             if self.break_stack[-1]:
                                 break
                         self.break_stack.pop()
-                elif line.startswith("thread ") and "{" in line:
-                    self.handle_thread(line)
                 elif line.startswith("/"):
                     function_definition = line[1:].split("{", 1)
                     if len(function_definition) == 2:
@@ -948,56 +941,6 @@ class PryzmaInterpreter:
                 else:
                     self.variables["err"] = 18
 
-    def is_thread_running(self, thread_name):
-        if thread_name not in self.threads:
-            raise NameError(f"No thread named '{thread_name}'")
-        return self.threads[thread_name]['running']
-
-    def handle_thread(self, line):
-        line = line[len("thread "):].strip()
-        name, code = line.split("{", 1)
-        name = name.strip()
-        code = code.rstrip("}").strip().replace("|", ";")
-
-        thread = threading.Thread(
-            target=self.run_thread,
-            args=(name, code),
-            daemon=True
-        )
-        self.threads[name] = {
-            'thread': thread,
-            'vars': {},
-            'running': True
-        }
-        thread.start()
-
-    def run_thread(self, name, code):
-        thread_interpreter = PryzmaInterpreter()
-        thread_interpreter.variables = self.variables.copy()
-        thread_interpreter.functions = self.functions.copy()
-
-        lines = [l.strip() for l in code.split(";") if l.strip()]
-        for line in lines:
-            if not self.threads[name]['running']:
-                break
-            if "=" in line:
-                var, expr = line.split("=", 1)
-                var = var.strip()
-                value = thread_interpreter.evaluate_expression(expr.strip())
-                self.shared_vars.set(name, var, value)
-            else:
-                thread_interpreter.interpret(line)
-        self.threads[name]['running'] = False
-
-    def get_thread_var(self, thread_name, var_name):
-        if thread_name not in self.threads:
-            raise NameError(f"No thread named '{thread_name}'")
-
-        value = self.shared_vars.get(thread_name, var_name)
-        if value is None:
-            raise NameError(f"Variable '{var_name}' not found in thread '{thread_name}'")
-        return value
-
     def in_func_err(self):
         if self.in_func:
             print(f"Error while calling function '{self.current_func_name}'")
@@ -1390,14 +1333,6 @@ class PryzmaInterpreter:
         elif expression.startswith("read_link(") and expression.endswith(")"):
             path = self.evaluate_expression(expression[10:-1])
             return os.readlink(path)
-        elif expression.endswith(".running"):
-            thread_name = expression[:-8]
-            if thread_name in self.threads:
-                return self.is_thread_running(thread_name)
-        elif '.' in expression:
-            parts = expression.split('.')
-            if len(parts) == 2 and parts[0] in self.threads:
-                return self.get_thread_var(parts[0], parts[1])
         elif expression in self.variables:
             return self.variables[expression]
         else:
@@ -2063,18 +1998,6 @@ commands:
 """ 
 )
 
-class SharedVariables:
-    def __init__(self):
-        self._data = defaultdict(dict)
-        self._lock = threading.Lock()
-
-    def get(self, thread_name, var_name):
-        with self._lock:
-            return self._data[thread_name].get(var_name)
-
-    def set(self, thread_name, var_name, value):
-        with self._lock:
-            self._data[thread_name][var_name] = value
 
 class X86Emulator:
     def __init__(self):
