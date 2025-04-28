@@ -923,7 +923,7 @@ class PryzmaInterpreter:
                         for instruction in default_case[1].split("&@"):
                             self.interpret(instruction)
                 elif line == "stop":
-                    sys.exit()
+                    break
                 else:
                     if not handled:
                         if not self.in_try_block:
