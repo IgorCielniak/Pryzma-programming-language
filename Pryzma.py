@@ -495,6 +495,21 @@ class PryzmaInterpreter:
                             error = self.variables["err"]
                     self.variables["err"] = error
                     self.in_try_block = False
+                elif "=" in line and (not ("+=" in line or "-=" in line)):
+                    variable, expression = line.split('=', 1)
+                    variable = variable.strip()
+                    expression = expression.strip()
+                    if "][" in variable:
+                        variable, indexes = variable.split("[",1)
+                        indexes = indexes[:-1].split("][")
+                        index1 = self.evaluate_expression(indexes[0])
+                        index2 = self.evaluate_expression(indexes[1])
+                        self.variables[variable][index1][index2] = self.evaluate_expression(expression)
+                    elif "[" in variable and "]" in variable:
+                        variable, index = variable[:-1].split("[",1)
+                        self.variables[variable][self.evaluate_expression(index)] = self.evaluate_expression(expression)
+                    else:
+                        self.variables[variable] = self.evaluate_expression(expression)
                 elif "+=" in line:
                     line = line.split("+=")
                     if len(line) != 2:
@@ -543,21 +558,6 @@ class PryzmaInterpreter:
                     else:
                         variable = line.strip()
                         self.variables[line] = ""
-                elif "=" in line:
-                    variable, expression = line.split('=', 1)
-                    variable = variable.strip()
-                    expression = expression.strip()
-                    if "][" in variable:
-                        variable, indexes = variable.split("[",1)
-                        indexes = indexes[:-1].split("][")
-                        index1 = self.evaluate_expression(indexes[0])
-                        index2 = self.evaluate_expression(indexes[1])
-                        self.variables[variable][index1][index2] = self.evaluate_expression(expression)
-                    elif "[" in variable and "]" in variable:
-                        variable, index = variable[:-1].split("[",1)
-                        self.variables[variable][self.evaluate_expression(index)] = self.evaluate_expression(expression)
-                    else:
-                        self.variables[variable] = self.evaluate_expression(expression)
                 elif line.startswith("copy"):
                     list1, list2 = line[4:].split(",")
                     list1 = list1.strip()
@@ -1024,6 +1024,23 @@ class PryzmaInterpreter:
             else:
                 self.variables["err"] = 25
 
+    def add_or_str(self, expr):
+        in_quotes = False
+        escape = False
+        has_unquoted_plus = False
+
+        for char in expr:
+            if char == '"' and not escape:
+                in_quotes = not in_quotes
+            elif char == '\\':
+                escape = not escape
+            elif char == '+' and not in_quotes:
+                has_unquoted_plus = True
+            else:
+                escape = False
+
+        return has_unquoted_plus
+
     def evaluate_expression(self, expression):
         if re.match(r"^\d+$", expression):
             return int(expression)
@@ -1052,6 +1069,24 @@ class PryzmaInterpreter:
             if new == "\\n":
                new = "\n"
             return value.replace(old,new)
+        elif "+" in expression and self.add_or_str(expression):
+            parts = expression.split("+")
+            evaluated_parts = [self.evaluate_expression(part.strip()) for part in parts]
+            if all(isinstance(part, str) for part in evaluated_parts):
+                return "".join(evaluated_parts)
+            elif all(isinstance(part, (int)) for part in evaluated_parts):
+                return sum(int(part) for part in evaluated_parts)
+            elif all(isinstance(part, (float)) for part in evaluated_parts):
+                return sum(float(part) for part in evaluated_parts)
+            elif any(isinstance(part, str) for part in evaluated_parts) and any(isinstance(part, (int, float)) for part in evaluated_parts): 
+                for parts in evaluated_parts:
+                    if type(parts) == int:
+                        evaluated_parts = [str(item) for item in evaluated_parts]
+                return "".join(evaluated_parts)
+            elif all(isinstance(part, list) for part in evaluated_parts):
+                return sum(evaluated_parts, [])
+            elif all(isinstance(part, tuple) for part in evaluated_parts):
+                return sum(evaluated_parts ,())
         elif re.match(r'^".*"$', expression):
             return expression[1:-1]
         elif expression.startswith("resplit(") and expression.endswith(")"):
@@ -1126,24 +1161,6 @@ class PryzmaInterpreter:
                 return string_to_split.split(char_to_split,self.evaluate_expression(args[2]))
             else:
                 return string_to_split.split(char_to_split)
-        elif "+" in expression:
-            parts = expression.split("+")
-            evaluated_parts = [self.evaluate_expression(part.strip()) for part in parts]
-            if all(isinstance(part, str) for part in evaluated_parts):
-                return "".join(evaluated_parts)
-            elif all(isinstance(part, (int)) for part in evaluated_parts):
-                return sum(int(part) for part in evaluated_parts)
-            elif all(isinstance(part, (float)) for part in evaluated_parts):
-                return sum(float(part) for part in evaluated_parts)
-            elif any(isinstance(part, str) for part in evaluated_parts) and any(isinstance(part, (int, float)) for part in evaluated_parts): 
-                for parts in evaluated_parts:
-                    if type(parts) == int:
-                        evaluated_parts = [str(item) for item in evaluated_parts]
-                return "".join(evaluated_parts)
-            elif all(isinstance(part, list) for part in evaluated_parts):
-                return sum(evaluated_parts, [])
-            elif all(isinstance(part, tuple) for part in evaluated_parts):
-                return sum(evaluated_parts ,())
         elif "=" in expression:
             var, val = expression.split("=")
             var = var.strip()
