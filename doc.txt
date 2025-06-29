@@ -261,7 +261,7 @@ it will print 'ex' because it will remove one character form right and one from 
 
 Flow Control:
 
-Pryzma supports simple flow control using the stop statement. It stops the program from further execution.
+Pryzma supports simple flow control using the stop statement. It terminates the program.
 
 stop
 
