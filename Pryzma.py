@@ -2266,6 +2266,8 @@ Available commands:
         print("ppm shell. Type 'exit' to quit.")
         while True:
             user_input = input("> ").split()
+            if len(user_input) < 1:
+                continue
             if user_input[0] == "exit":
                 break
             else:
