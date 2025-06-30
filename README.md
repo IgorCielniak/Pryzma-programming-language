@@ -7,4 +7,4 @@ and run:
 ```
 pryzma
 ```
-and experiment with it yourself, you always have the 'documentation' that you can look thinks up in
+and experiment with it yourself, you always have the "documentation" that you can look thinks up in
