@@ -515,6 +515,14 @@ class PryzmaInterpreter:
                     else:
                         variable = line.strip()
                         self.variables[line] = ""
+                elif line.startswith("assert"):
+                    parts = line[6:].strip().split(",", 1)
+                    condition = parts[0].strip()
+                    message = parts[1].strip()
+
+                    result = eval(condition, {}, self.variables)
+                    if not result:
+                        raise AssertionError(f"AssertionError: {self.evaluate_expression(message)}")
                 elif "=" in line and (not ("+=" in line or "-=" in line)):
                     variable, expression = line.split('=', 1)
                     variable = variable.strip()
