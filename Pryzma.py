@@ -495,6 +495,26 @@ class PryzmaInterpreter:
                             error = self.variables["err"]
                     self.variables["err"] = error
                     self.in_try_block = False
+                elif line.startswith("int"):
+                    line = line[3:].strip()
+                    if "=" in line:
+                        variable, expression = line.split("=", 1)
+                        variable = variable.strip()
+                        expression = expression.strip()
+                        self.variables[variable] = int(self.evaluate_expression(expression))
+                    else:
+                        variable = line.strip()
+                        self.variables[line] = 0
+                elif line.startswith("str"):
+                    line = line[3:].strip()
+                    if "=" in line:
+                        variable, expression = line.split("=", 1)
+                        variable = variable.strip()
+                        expression = expression.strip()
+                        self.variables[variable] = str(self.evaluate_expression(expression))
+                    else:
+                        variable = line.strip()
+                        self.variables[line] = ""
                 elif "=" in line and (not ("+=" in line or "-=" in line)):
                     variable, expression = line.split('=', 1)
                     variable = variable.strip()
@@ -538,26 +558,6 @@ class PryzmaInterpreter:
                     var2 = line[1].strip()
                     var2 = self.evaluate_expression(var2)
                     self.variables[var] -= var2
-                elif line.startswith("int"):
-                    line = line[3:].strip()
-                    if "=" in line:
-                        variable, expression = line.split("=", 1)
-                        variable = variable.strip()
-                        expression = expression.strip()
-                        self.variables[variable] = int(self.evaluate_expression(expression))
-                    else:
-                        variable = line.strip()
-                        self.variables[line] = 0
-                elif line.startswith("str"):
-                    line = line[3:].strip()
-                    if "=" in line:
-                        variable, expression = line.split("=", 1)
-                        variable = variable.strip()
-                        expression = expression.strip()
-                        self.variables[variable] = str(self.evaluate_expression(expression))
-                    else:
-                        variable = line.strip()
-                        self.variables[line] = ""
                 elif line.startswith("copy"):
                     list1, list2 = line[4:].split(",")
                     list1 = list1.strip()
