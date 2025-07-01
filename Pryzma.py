@@ -30,6 +30,7 @@ class PryzmaInterpreter:
         self.nan = False
         self.return_val = None
         self.break_stack = []
+        self.main_file = 1
 
     def interpret_file(self, file_path, *args):
         self.file_path = file_path.strip('"')
@@ -48,7 +49,10 @@ class PryzmaInterpreter:
             program[line] = program[line].split("#")[0]
         program = ";".join(program)
 
-        self.no_preproc = False
+        if self.main_file < 1:
+            self.no_preproc = False
+
+        self.main_file -= 1
 
         first_line = program.split(";")[0]
 
