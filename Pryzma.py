@@ -1743,10 +1743,10 @@ limitations under the License.
                 log_message(f"Breakpoints listed: {sorted(breakpoints)}")
             elif command == 'v':
                 print("Variables:", self.variables)
-                log_message(f"Variables: {interpreter.variables}")
+                log_message(f"Variables: {self.variables}")
             elif command == 'f':
                 print("Functions:", self.functions)
-                log_message(f"Functions: {interpreter.functions}")
+                log_message(f"Functions: {self.functions}")
             elif command == 'log':
                 log_file = input("Enter log file name (press Enter for 'log.txt'): ").strip() or 'log.txt'
                 print(f"Logging to {log_file}")
@@ -1826,11 +1826,11 @@ limitations under the License.
                     print("Breakpoints:", sorted(breakpoints))
                     log_message(f"Breakpoints listed: {sorted(breakpoints)}")
                 elif command == 'v':
-                    print("Variables:", interpreter.variables)
-                    log_message(f"Variables: {interpreter.variables}")
+                    print("Variables:", self.variables)
+                    log_message(f"Variables: {self.variables}")
                 elif command == 'f':
-                    print("Functions:", interpreter.functions)
-                    log_message(f"Functions: {interpreter.functions}")
+                    print("Functions:", self.functions)
+                    log_message(f"Functions: {self.functions}")
                 elif command == 'log':
                     log_file = input("Enter log file name (press Enter for 'log.txt'): ").strip() or 'log.txt'
                     print(f"Logging to {log_file}")
