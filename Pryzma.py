@@ -1648,12 +1648,12 @@ limitations under the License.
         else:
             print(f"Function '{function_name}' is not defined in '{file_path}'.")
 
-    def debug_interpreter(self, interpreter, file_path, running_from_file, arguments):
+    def debug_interpreter(self, file_path, running_from_file, arguments):
         current_line = 0
         breakpoints = set()
         log_file = None
         self.variables["argv"] = arguments
-        self.variables["file"] = os.path.abspath(file_path)
+        self.variables["__file__"] = os.path.abspath(file_path)
 
         if file_path.startswith('"') and file_path.endswith('"'):
             file_path = file_path[1:-1]
@@ -1742,10 +1742,10 @@ limitations under the License.
                 print("Breakpoints:", sorted(breakpoints))
                 log_message(f"Breakpoints listed: {sorted(breakpoints)}")
             elif command == 'v':
-                print("Variables:", interpreter.variables)
+                print("Variables:", self.variables)
                 log_message(f"Variables: {interpreter.variables}")
             elif command == 'f':
-                print("Functions:", interpreter.functions)
+                print("Functions:", self.functions)
                 log_message(f"Functions: {interpreter.functions}")
             elif command == 'log':
                 log_file = input("Enter log file name (press Enter for 'log.txt'): ").strip() or 'log.txt'
@@ -1777,7 +1777,7 @@ limitations under the License.
                 log_message(f"Executing line {current_line + 1}: {line}")
 
                 try:
-                    interpreter.interpret(line)
+                    self.interpret(line)
                 except Exception as e:
                     error_message = f"Error executing line {current_line + 1}: {e}"
                     print(error_message)
@@ -1799,7 +1799,7 @@ limitations under the License.
                             log_message(f"Executing line {current_line + 1}: {line}")
 
                             try:
-                                interpreter.interpret(line)
+                                self.interpret(line)
                             except Exception as e:
                                 error_message = f"Error executing line {current_line + 1}: {e}"
                                 print(error_message)
@@ -1851,8 +1851,8 @@ limitations under the License.
         if running_from_file == True:
             cvf = input("Clear variables and functions dictionaries? (y/n): ")
             if cvf.lower() == "y":
-                interpreter.variables.clear()
-                interpreter.functions.clear()
+                self.variables.clear()
+                self.functions.clear()
 
 
     def parse_call_statement(self, statement):
@@ -2405,7 +2405,7 @@ flags:
                 if arg == "-d":
                     arguments.remove(arg)
                     debug = True
-                    interpreter.debug_interpreter(interpreter, file_path, running_from_file, arguments)
+                    interpreter.debug_interpreter(file_path, running_from_file, arguments)
                 if arg == "-p":
                     interpreter.preprocess_only = True
                 if arg == "-np":
