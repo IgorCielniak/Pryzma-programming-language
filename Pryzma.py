@@ -95,7 +95,12 @@ class PryzmaInterpreter:
         if self.preprocess_only == True:
             for line in lines:
                 print(line)
-            sys.exit()
+            try:
+                return lines
+            except:
+                pass
+            finally:
+                sys.exit()
 
         if self.forward_declare == True:
             self.forward_declare = False
