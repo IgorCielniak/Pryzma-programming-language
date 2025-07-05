@@ -1,5 +1,5 @@
 #!/usr/bin/python
-
+import sys
 import os
 import subprocess
 
@@ -16,10 +16,11 @@ def print_colored(text, color):
 
 def run_tests():
     test_dir = "tests"
+    any_failed = False
     
     if not os.path.isdir(test_dir):
         print("No 'tests' directory found.")
-        return
+        return 1
 
     for file in os.listdir(test_dir):
         if file.endswith(".test"):
@@ -28,6 +29,7 @@ def run_tests():
 
             if not os.path.isfile(expected_path):
                 print(f"Missing expected output file for {file}")
+                any_failed = True
                 continue
 
             with open(test_path, "r") as test_file:
@@ -48,10 +50,14 @@ def run_tests():
                     print(f"{file} failed")
                     print(f"Expected:\n{expected_output}")
                     print(f"Got:\n{actual_output}")
+                    any_failed = True
 
             except Exception as e:
                 print_colored(f"Error running {file}: {e}", "red")
+                any_failed = True
+
+    return 1 if any_failed else 0
 
 if __name__ == "__main__":
-    run_tests()
+    sys.exit(run_tests())
 
