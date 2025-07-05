@@ -9,6 +9,7 @@ import shutil
 import zipfile
 import platform
 import random
+import ctypes
 
 
 class PryzmaInterpreter:
@@ -804,6 +805,10 @@ class PryzmaInterpreter:
                     call_statement = line[4:].strip()
                     file_name, function_name, args = self.parse_call_statement(call_statement)
                     self.call_function_from_file(file_name, function_name, args)
+                elif line.startswith("ccall"):
+                    call_statement = line[5:].strip()
+                    file_name, function_name, args = self.parse_call_statement(call_statement)
+                    self.ccall_function_from_file(file_name, function_name, args)
                 elif line.startswith("load(") and line.endswith(")"):
                     self.load_module(self.evaluate_expression(line[5:-1]))
                 elif line.startswith("wait(") and line.endswith(")"):
@@ -1367,6 +1372,14 @@ class PryzmaInterpreter:
         elif expression.startswith("read_link(") and expression.endswith(")"):
             path = self.evaluate_expression(expression[10:-1])
             return os.readlink(path)
+        elif expression.startswith("call"):
+            call_statement = expression[4:].strip()
+            file_name, function_name, args = self.parse_call_statement(call_statement)
+            return self.call_function_from_file(file_name, function_name, args)
+        elif expression.startswith("ccall"):
+            call_statement = expression[5:].strip()
+            file_name, function_name, args = self.parse_call_statement(call_statement)
+            return self.ccall_function_from_file(file_name, function_name, args)
         elif expression in self.variables:
             return self.variables[expression]
         else:
@@ -1868,24 +1881,13 @@ limitations under the License.
                 else:
                     self.variables["err"] = 46
             
-            file_name = parts[0]
-            function_name = parts[1]
+            file_name = self.evaluate_expression(parts[0])
+            function_name = self.evaluate_expression(parts[1])
             
             args = parts[2:]
             
-            if file_name.startswith('"') and file_name.endswith('"'):
-                file_name = file_name[1:-1]
-            else:
-                file_name = self.variables[file_name]
-            if function_name.startswith('"') and function_name.endswith('"'):
-                function_name = function_name[1:-1]
-            else:
-                function_name = self.variables[function_name]
-            for arg in args:
-                if arg.startswith('"') and arg.endswith('"') and len(arg) > 2:
-                    arg = arg[1:-1]
-                else:
-                    arg = self.variables[arg]
+            for i, arg in enumerate(args):
+                args[i] = self.evaluate_expression(arg)
             
             return file_name, function_name, args
         else:
@@ -1918,22 +1920,26 @@ limitations under the License.
         if hasattr(module, function_name):
             func = getattr(module, function_name)
             if callable(func):
-                converted_args = []
-                for arg in args:
-                    if arg.startswith('"') and arg.endswith('"'):
-                        converted_args.append(arg[1:-1])
-                    elif arg.isdigit():
-                        converted_args.append(int(arg))
-                    elif arg in self.variables:
-                        converted_args.append(self.variables[arg])
-                    else:
-                        converted_args.append(arg)
-                func(self, *converted_args)
+                return func(self, *args)
             else:
                 print(f"'{function_name}' is not callable in '{file_name}'.")
         else:
             print(f"Function '{function_name}' is not defined in '{file_name}'.")
 
+    def ccall_function_from_file(self, file_name, function_name, args):
+        if not os.path.isfile(file_name):
+            print(f"File '{file_name}' does not exist.")
+            return
+
+        c_functions = ctypes.CDLL(file_name)
+
+        try:
+            c_func = getattr(c_functions, function_name)
+        except AttributeError:
+            print(f"Function '{function_name}' not found in '{file_name}'.")
+            return
+
+        return c_func(*args)
 
     def print_help(self):
         print("""

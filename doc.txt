@@ -548,7 +548,7 @@ as well as a '__file__' variable that holds the full path to the current running
 the path to the interpreter
 you can pass as many arguments as you wish
 
-Calling python functions from Pryzma:
+Calling python and c functions from Pryzma (ffi):
 
 call(file_path,func_name, args)
 
@@ -564,6 +564,10 @@ def func2(self, arg):
 it will print "hello from python"
 self is passed as well so you can acces the variables and basicly all of the interpreters thinks so you can define variables etc.
 it needs to accept self even if you don't need it
+
+there also is ccall() that allows you to call c functions the same way, you just pass the .so file path so for example:
+
+sum = ccall("./so.so", "add", 2, 2)
 
 Time:
 
