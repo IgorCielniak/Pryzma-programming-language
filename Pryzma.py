@@ -19,7 +19,7 @@ class PryzmaInterpreter:
         self.functions = {}
         self.tk_vars = {}
         self.custom_handlers = {}
-        self.deleted_key_words = []
+        self.deleted_keywords = []
         self.variables["interpreter_path"] = __file__
         self.variables["err"] = 0
         self.in_try_block = False
@@ -122,8 +122,8 @@ class PryzmaInterpreter:
 
             deleted_keyword = False
 
-            for key_word in self.deleted_key_words:
-                if line.startswith(key_word):
+            for key_word in self.deleted_keywords:
+                if key_word in line:
                     keyword = key_word
                     deleted_keyword = True
 
@@ -618,7 +618,7 @@ class PryzmaInterpreter:
                 elif line.startswith("delfunc(") and line.endswith(")"):
                     self.functions.pop(self.evaluate_expression(line[8:-1]))
                 elif line.startswith("delkeyword(") and line.endswith(")"):
-                    self.deleted_key_words.append(self.evaluate_expression(line[11:-1]))
+                    self.deleted_keywords.append(self.evaluate_expression(line[11:-1]))
                 elif "++" in line:
                     variable = line.replace("++", "").strip()
                     self.increment_variable(variable)
@@ -2406,6 +2406,7 @@ flags:
     -np - no preprocessing
     -l '<pryzma code>' - execute a single line
     -fd - forward declare all functions
+    -s  - safe mode, disable a lot of potentialy dangerous keywords
                     """)
                     sys.exit()
                 if arg == "-d":
@@ -2420,6 +2421,8 @@ flags:
                     interpret_line = True
                 if arg == "-fd":
                     interpreter.forward_declare = True
+                if arg == "-s":
+                    interpreter.deleted_keywords.extend(["call", "exec", "mkdir", "makeidrs", "rmdir", "removedirs", "copy", "copyfile", "move", "rename", "remove", "symlink", "unlink", "read", "write", "load", "pyeval", "py{", "asm"])
         if debug == False:
             interpreter.interpret_file(file_path, *arguments)
         sys.exit()
