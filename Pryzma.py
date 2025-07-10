@@ -164,13 +164,13 @@ class PryzmaInterpreter:
                         elif char == "}":
                             rep_in_for -= 1
                         elif rep_in_for == 0  and char == "|":
-                            for_body[char_] = "&$"
+                            for_body[char_] = "#@!$^%"
                         char_ += 1
 
                     for_body2 = ""
                     for char in for_body:
                         for_body2 += char
-                    actions = for_body2.split("&$")
+                    actions = for_body2.split("#@!$^%")
                     loop_var, list_name = args.split(",")
                     loop_var = loop_var.strip()
                     list_name = list_name.strip()
@@ -209,13 +209,13 @@ class PryzmaInterpreter:
                         elif char == "}":
                             rep_in_for -= 1
                         elif rep_in_for == 0  and char == "|":
-                            for_body[char_] = "&$"
+                            for_body[char_] = "*!@#$%&"
                         char_ += 1
 
                     for_body2 = ""
                     for char in for_body:
                         for_body2 += char
-                    actions = for_body2.split("&$")
+                    actions = for_body2.split("*!@#$%&")
                     loop_var, range_expr = range_expr.split(",")
                     loop_var = loop_var.strip()
                     range_expr = range_expr.strip()
@@ -244,12 +244,12 @@ class PryzmaInterpreter:
                         elif char == "}":
                             rep_in_if -= 1
                         elif rep_in_if == 0  and char == "|":
-                            if_body[char_] = "&$"
+                            if_body[char_] = "#!%&*"
                         char_ += 1
                     if_body2 = ""
                     for char in if_body:
                         if_body2 += char
-                    actions = if_body2.split("&$")
+                    actions = if_body2.split("#!%&*")
                     if "==" in condition:
                         value1 = self.evaluate_expression(condition.split("==")[0])
                         value2 = self.evaluate_expression(condition.split("==")[1])
@@ -309,12 +309,12 @@ class PryzmaInterpreter:
                             elif char == "}":
                                 rep_in_if -= 1
                             elif rep_in_if == 0  and char == "|":
-                                body[char_] = "&$"
+                                body[char_] = "$@#%^&"
                             char_ += 1
                         body2 = ""
                         for char in body:
                             body2 += char
-                        actions = body2.split("&$")
+                        actions = body2.split("$@#%^&")
                         for action in actions:
                             self.interpret(action)
                 elif line.startswith("while"):
@@ -329,13 +329,13 @@ class PryzmaInterpreter:
                         elif char == "}":
                             rep_in_if -= 1
                         elif rep_in_if == 0  and char == "|":
-                            if_body[char_] = "%$"
+                            if_body[char_] = "%$#@!"
                         char_ += 1
                     if_body2 = ""
                     for char in if_body:
                         if_body2 += char
                     self.break_ = False
-                    actions = if_body2.split("%$")
+                    actions = if_body2.split("%$#@!")
                     if "==" in condition:
                         value1 = self.evaluate_expression(condition.split("==")[0])
                         value2 = self.evaluate_expression(condition.split("==")[1])
@@ -446,12 +446,12 @@ class PryzmaInterpreter:
                             elif char == "}":
                                 rep_in_func -= 1
                             elif rep_in_func == 0  and char == "|":
-                                function_body[char_] = "&$"
+                                function_body[char_] = "@#%^$"
                             char_ += 1
                         function_body2 = ""
                         for char in function_body:
                             function_body2 += char
-                        function_body = function_body2.split("&$")
+                        function_body = function_body2.split("@#%^$")
                         self.functions[function_name] = function_body
                     else:
                         if not self.in_try_block:
@@ -667,7 +667,7 @@ class PryzmaInterpreter:
                         if not self.in_try_block:
                             self.in_func_err()
                             self.variables["err"] = 10
-                            print("Invalid index fir swap()")
+                            print("Invalid index for swap()")
                         else:
                             self.variables["err"] = 10
                 elif line.startswith("tk"):
@@ -919,7 +919,7 @@ class PryzmaInterpreter:
                             processed_cases += char
                             depth -= 1
                         elif depth == 1 and char == "|":
-                            processed_cases += "&@"
+                            processed_cases += "&@$%"
                         else:
                             processed_cases += char
 
@@ -938,11 +938,11 @@ class PryzmaInterpreter:
                             continue
                         if var == value:
                             handeled = True
-                            for instruction in case[1].split("&@"):
+                            for instruction in case[1].split("&@$%"):
                                 self.interpret(instruction)
 
                     if handeled == False and default_case:
-                        for instruction in default_case[1].split("&@"):
+                        for instruction in default_case[1].split("&@$%"):
                             self.interpret(instruction)
                 elif line == "stop":
                     sys.exit()
