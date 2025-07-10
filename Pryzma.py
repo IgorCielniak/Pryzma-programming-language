@@ -17,6 +17,7 @@ class PryzmaInterpreter:
     def __init__(self):
         self.variables = {}
         self.functions = {}
+        self.structs = {}
         self.tk_vars = {}
         self.custom_handlers = {}
         self.deleted_keywords = []
@@ -152,6 +153,25 @@ class PryzmaInterpreter:
                 elif line.startswith("input"):
                     variable = line[len("input"):].strip()
                     self.custom_input(variable)
+                elif line.startswith("struct"):
+                    line = line[6:]
+                    name, fields = line[:-1].split("{", 1)
+                    name = name.strip()
+                    fields = fields.strip()
+                    fields = fields.split("|")
+                    for i, field in enumerate(fields):
+                        fields[i] = field.strip()
+                    fields = list(filter(None, fields))
+                    fields_dict = {}
+                    for field in fields:
+                        if not field:
+                            continue
+                        if "=" not in field:
+                            fields_dict[field] = None
+                        else:
+                            key, value = field.split("=", 1)
+                            fields_dict[key.strip()] = self.evaluate_expression(value.strip())
+                    self.structs[name] = fields_dict
                 elif line.startswith("foreach"):
                     line = line[7:].strip()
                     args, action = line.strip()[1:-1].split("){", 1)
@@ -537,17 +557,31 @@ class PryzmaInterpreter:
                     variable, expression = line.split('=', 1)
                     variable = variable.strip()
                     expression = expression.strip()
-                    if "][" in variable:
-                        variable, indexes = variable.split("[",1)
-                        indexes = indexes[:-1].split("][")
-                        index1 = self.evaluate_expression(indexes[0])
-                        index2 = self.evaluate_expression(indexes[1])
-                        self.variables[variable][index1][index2] = self.evaluate_expression(expression)
-                    elif "[" in variable and "]" in variable:
-                        variable, index = variable[:-1].split("[",1)
-                        self.variables[variable][self.evaluate_expression(index)] = self.evaluate_expression(expression)
+                    if "." in variable:
+                        variable, field = variable.split(".", 1)
+                        if "][" in variable:
+                            variable, indexes = variable.split("[",1)
+                            indexes = indexes[:-1].split("][")
+                            index1 = self.evaluate_expression(indexes[0])
+                            index2 = self.evaluate_expression(indexes[1])
+                            self.variables[variable][field][index1][index2] = self.evaluate_expression(expression)
+                        elif "[" in variable and "]" in variable:
+                            variable, index = variable[:-1].split("[",1)
+                            self.variables[variable][field][self.evaluate_expression(index)] = self.evaluate_expression(expression)
+                        else:
+                            self.variables[variable][field] = self.evaluate_expression(expression)
                     else:
-                        self.variables[variable] = self.evaluate_expression(expression)
+                        if "][" in variable:
+                            variable, indexes = variable.split("[",1)
+                            indexes = indexes[:-1].split("][")
+                            index1 = self.evaluate_expression(indexes[0])
+                            index2 = self.evaluate_expression(indexes[1])
+                            self.variables[variable][index1][index2] = self.evaluate_expression(expression)
+                        elif "[" in variable and "]" in variable:
+                            variable, index = variable[:-1].split("[",1)
+                            self.variables[variable][self.evaluate_expression(index)] = self.evaluate_expression(expression)
+                        else:
+                            self.variables[variable] = self.evaluate_expression(expression)
                 elif "+=" in line:
                     line = line.split("+=")
                     if len(line) != 2:
@@ -600,7 +634,7 @@ class PryzmaInterpreter:
                 elif line.startswith("exec"):
                     os.system(self.evaluate_expression(line[4:]))
                 elif line.startswith("write(") and line.endswith(")"):
-                    line = line[6:-1].split(",")
+                    line = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', line[6:-1])
                     if len(line) == 3:
                         file_path = self.evaluate_expression(line[0].strip())
                         mode = self.evaluate_expression(line[1].strip())
@@ -682,7 +716,7 @@ class PryzmaInterpreter:
                             self.tk_vars[command] = tk.Tk()
                         elif command.startswith("title(") and command.endswith(")"):
                             command = command[6:-1]
-                            command = command.split(",")
+                            command = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', command)
                             window = command[0].lstrip()
                             title = command[1].lstrip()
                             if title.startswith('"') and title.endswith('"'):
@@ -695,7 +729,7 @@ class PryzmaInterpreter:
                             self.tk_vars[command].mainloop()
                         elif command.startswith("create_button(") and command.endswith(")"):
                             command = command[14:-1]
-                            command = command.split(",")
+                            command = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', command)
                             window = command[1].lstrip()
                             button_name = command[0].lstrip()
                             button_text = command[2].lstrip()
@@ -721,7 +755,7 @@ class PryzmaInterpreter:
                             self.tk_vars[button_name].pack()
                         elif command.startswith("create_label(") and command.endswith(")"):
                             command = command[13:-1]
-                            command = command.split(",")
+                            command = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', command)
                             window = command[1].lstrip()
                             label_name = command[0].lstrip()
                             label_text = command[2].lstrip()
@@ -744,7 +778,7 @@ class PryzmaInterpreter:
                             self.tk_vars[label_name].pack()
                         elif command.startswith("create_entry(") and command.endswith(")"):
                             command = command[13:-1]
-                            command = command.split(",")
+                            command = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', command)
                             window = command[1].lstrip()
                             entry_name = command[0].lstrip()
                             entry_text = command[2].lstrip()
@@ -767,7 +801,7 @@ class PryzmaInterpreter:
                             self.tk_vars[entry_name].pack()
                         elif command.startswith("get_entry_text(") and command.endswith(")"):
                             command = command[15:-1]
-                            command = command.split(",")
+                            command = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', command)
                             entry_name = command[0].lstrip()
                             variable_name = command[1].lstrip()
                             if entry_name in self.tk_vars:
@@ -781,7 +815,7 @@ class PryzmaInterpreter:
                                     self.variables["err"] = 14
                         elif command.startswith("set_entry_text(") and command.endswith(")"):
                             command = command[15:-1]
-                            command = command.split(",")
+                            command = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', command)
                             entry_name = command[0].lstrip()
                             variable_name = command[1].lstrip()
                             if entry_name in self.tk_vars:
@@ -1091,6 +1125,23 @@ class PryzmaInterpreter:
             if new == "\\n":
                new = "\n"
             return value.replace(old,new)
+        elif any(expression.startswith(name) for name in self.structs.keys()) and "{" in expression and "}" in expression:
+            name, args = expression[:-1].split("{", 1)
+            args = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', args)
+            for i, arg in enumerate(args):
+                args[i] = self.evaluate_expression(arg) if arg != "" else None
+            name = name.strip()
+
+            struct_def = self.structs[name]
+            result = {}
+
+            for i, (key, default_value) in enumerate(struct_def.items()):
+                if i < len(args) and args[i] is not None:
+                    result[key] = args[i]
+                else:
+                    result[key] = default_value
+
+            return result
         elif "+" in expression and self.add_or_str(expression):
             parts = expression.split("+")
             evaluated_parts = [self.evaluate_expression(part.strip()) for part in parts]
@@ -1229,7 +1280,7 @@ class PryzmaInterpreter:
                     self.variables["err"] = 33
                 return ""
         elif expression.startswith("index(") and expression.endswith(")"):
-            args = expression[6:-1].split(",")
+            args = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', expression[6:-1])
             if len(args) != 2:
                 if not self.in_try_block:
                     self.in_func_err()
@@ -1380,6 +1431,9 @@ class PryzmaInterpreter:
             call_statement = expression[5:].strip()
             file_name, function_name, args = self.parse_call_statement(call_statement)
             return self.ccall_function_from_file(file_name, function_name, args)
+        elif "." in expression:
+            name, field = expression.split(".", 1)
+            return self.variables[name][field]
         elif expression in self.variables:
             return self.variables[expression]
         else:
@@ -1871,7 +1925,7 @@ limitations under the License.
     def parse_call_statement(self, statement):
         if statement.startswith("(") and statement.endswith(")"):
             statement = statement[1:-1]
-            parts = [part.strip() for part in statement.split(",")]
+            parts = [part.strip() for part in re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', statement)]
             
             if len(parts) < 2:
                 if not self.in_try_block:

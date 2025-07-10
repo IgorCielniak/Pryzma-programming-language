@@ -835,6 +835,34 @@ x = @func()
 
 assert x==0, "func return value wasn't 0"
 
+structs:
+
+simple example should say everythink:
+
+struct Person {
+    name
+    age = 30
+}
+
+p = Person {"Some, name", 30}
+
+print p.name, "\n"
+print p.age, "\n"
+
+p2 = Person {} #fields without a default value will be initialized to None
+
+p2.name = "Alice"
+
+print p2
+
+output:
+
+Some, name
+30
+{'name': 'Alice', 'age': 30}
+
+everythink should be self explanatory
+
 Running Programs:
 
 To run a Pryzma program, save the code in a text file execute it by launching the

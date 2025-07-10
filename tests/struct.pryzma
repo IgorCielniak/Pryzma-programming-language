@@ -1,0 +1,15 @@
+struct Person {
+    name
+    age = 30
+}
+
+p = Person {"Some, name", 30}
+
+print p.name, "\n"
+print p.age, "\n"
+
+p2 = Person {}
+
+p2.name = "Alice"
+
+print p2
