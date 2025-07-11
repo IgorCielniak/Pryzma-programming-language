@@ -636,7 +636,7 @@ class PryzmaInterpreter:
                     var = var.strip()
                     self.variables[list_name].remove(self.evaluate_expression(var))
                 elif line.startswith("exec"):
-                    os.system(self.evaluate_expression(line[4:]))
+                    os.system(self.evaluate_expression(line[4:].strip()))
                 elif line.startswith("write(") and line.endswith(")"):
                     line = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', line[6:-1])
                     if len(line) == 3:
