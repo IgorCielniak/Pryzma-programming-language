@@ -176,18 +176,6 @@ index() returns index of value in some list or error if isn't in the list
 
 Split:
 
-a = "text"
-
-print split(a)
-
-it will print:
-
-["t", "e", "x", "t"]
-
-
-splitlines() works nearly the same but it split by lines not by words, there is also splitby(),
-that split by some character for example if i have string "textMtext" and i want to split it by the M i can do it like that:
-
 a = "textMtext"
 b = splitby("M", a)
 print b
@@ -195,17 +183,6 @@ print b
 output will be a list that will look like that:
 
 ["text", "text"]
-
-if you want to split by "," because its not working you will need to do some think like that:
-
-a = "text,text"
-f = ","
-b = splitby(f, a)
-print(b)
-
-Output will be:
-
-['text', 'text']
 
 as the third argument you can pass how many times you want to split like in python
 
