@@ -162,7 +162,22 @@ class PryzmaInterpreter:
                     name, fields = line[:-1].split("{", 1)
                     name = name.strip()
                     fields = fields.strip()
-                    fields = fields.split("|")
+                    char_ = 0
+                    rep_in_struct = 0
+                    struct_body = list(fields)
+                    for char in struct_body:
+                        if char == "{":
+                            rep_in_struct += 1
+                        elif char == "}":
+                            rep_in_struct -= 1
+                        elif rep_in_struct == 0 and char == "|":
+                            struct_body[char_] = "#$%^@"
+                        char_ += 1
+
+                    struct_body2 = ""
+                    for char in struct_body:
+                        struct_body2 += char
+                    fields = struct_body2.split("#$%^@")
                     for i, field in enumerate(fields):
                         fields[i] = field.strip()
                     fields = list(filter(None, fields))
@@ -1131,9 +1146,26 @@ class PryzmaInterpreter:
             return value.replace(old,new)
         elif any(expression.startswith(name) for name in self.structs.keys()) and "{" in expression and "}" in expression:
             name, args = expression[:-1].split("{", 1)
-            args = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', args)
+            rep_in_args = 0
+            char_ = 0
+            args = list(args)
+            for char in args:
+                if char == "{":
+                    rep_in_args += 1
+                elif char == "}":
+                    rep_in_args -= 1
+                elif rep_in_args == 0  and char == "|":
+                    args[char_] = "$#@"
+                char_ += 1
+            args_body = ""
+            for char in args:
+                args_body+=char
+            args = args_body
+
+            args = list(filter(None, re.split(r'[,\$#@]\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', args)))
             for i, arg in enumerate(args):
                 args[i] = self.evaluate_expression(arg.strip()) if arg != "" else None
+
             name = name.strip()
 
             struct_def = self.structs[name]
@@ -1155,7 +1187,7 @@ class PryzmaInterpreter:
                 return sum(int(part) for part in evaluated_parts)
             elif all(isinstance(part, (float)) for part in evaluated_parts):
                 return sum(float(part) for part in evaluated_parts)
-            elif any(isinstance(part, str) for part in evaluated_parts) and any(isinstance(part, (int, float)) for part in evaluated_parts): 
+            elif any(isinstance(part, str) for part in evaluated_parts) and any(isinstance(part, (int, float)) for part in evaluated_parts):
                 for parts in evaluated_parts:
                     if type(parts) == int:
                         evaluated_parts = [str(item) for item in evaluated_parts]
@@ -1437,7 +1469,7 @@ class PryzmaInterpreter:
             return self.ccall_function_from_file(file_name, function_name, args)
         elif "." in expression:
             name, field = expression.split(".", 1)
-            return self.variables[name][field]
+            return self.acces_field(name, field)
         elif expression in self.variables:
             return self.variables[expression]
         else:
@@ -1451,6 +1483,13 @@ class PryzmaInterpreter:
                 else:
                     self.variables["err"] = 40
         return None
+
+    def acces_field(self, name, field):
+        obj = self.variables[name.strip()]
+        parts = field.split('.')
+        for part in parts:
+            obj = obj[part.strip()]
+        return obj
 
     def print_value(self, value):
         parts = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', value)

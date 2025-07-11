@@ -863,6 +863,29 @@ Some, name
 
 everythink should be self explanatory
 
+you can also do nested structs like this:
+
+struct Address {
+    street
+    city
+}
+
+struct Person {
+    name
+    address
+}
+
+p = Person {
+    "Alice"
+    Address {
+        "123 Main St"
+        "Paris"
+    }
+}
+
+print p.address.city
+
+i think this is also quite self explanatory
 Running Programs:
 
 To run a Pryzma program, save the code in a text file execute it by launching the

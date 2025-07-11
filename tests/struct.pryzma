@@ -12,4 +12,26 @@ p2 = Person {}
 
 p2.name = "Alice"
 
-print p2
+print p2, "\n"
+
+
+struct Address {
+    street
+    city
+}
+
+struct Person {
+    name
+    address
+}
+
+p = Person {
+    "Alice"
+    Address {
+        "123 Main St"
+        "Paris"
+    }
+}
+
+print p.address.city
+
