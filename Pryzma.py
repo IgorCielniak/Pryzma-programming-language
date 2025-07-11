@@ -572,35 +572,11 @@ class PryzmaInterpreter:
                     result = eval(condition, {}, self.variables)
                     if not result:
                         raise AssertionError(f"AssertionError: {self.evaluate_expression(message)}")
-                elif "=" in line and (not ("+=" in line or "-=" in line)):
+                elif "=" in line and not line.strip().startswith(("if", "while")) and not any(op in line for op in ["+=", "-=", "==", "!=", "<=", ">="]):
                     variable, expression = line.split('=', 1)
                     variable = variable.strip()
                     expression = expression.strip()
-                    if "." in variable:
-                        variable, field = variable.split(".", 1)
-                        if "][" in variable:
-                            variable, indexes = variable.split("[",1)
-                            indexes = indexes[:-1].split("][")
-                            index1 = self.evaluate_expression(indexes[0])
-                            index2 = self.evaluate_expression(indexes[1])
-                            self.variables[variable][field][index1][index2] = self.evaluate_expression(expression)
-                        elif "[" in variable and "]" in variable:
-                            variable, index = variable[:-1].split("[",1)
-                            self.variables[variable][field][self.evaluate_expression(index)] = self.evaluate_expression(expression)
-                        else:
-                            self.variables[variable][field] = self.evaluate_expression(expression)
-                    else:
-                        if "][" in variable:
-                            variable, indexes = variable.split("[",1)
-                            indexes = indexes[:-1].split("][")
-                            index1 = self.evaluate_expression(indexes[0])
-                            index2 = self.evaluate_expression(indexes[1])
-                            self.variables[variable][index1][index2] = self.evaluate_expression(expression)
-                        elif "[" in variable and "]" in variable:
-                            variable, index = variable[:-1].split("[",1)
-                            self.variables[variable][self.evaluate_expression(index)] = self.evaluate_expression(expression)
-                        else:
-                            self.variables[variable] = self.evaluate_expression(expression)
+                    self.assign_value(variable, expression)
                 elif "+=" in line:
                     line = line.split("+=")
                     if len(line) != 2:
@@ -1490,6 +1466,43 @@ class PryzmaInterpreter:
         for part in parts:
             obj = obj[part.strip()]
         return obj
+
+    def assign_value(self, var_name, expression):
+        value = self.evaluate_expression(expression)
+        if "." in var_name:
+            var_name, field = var_name.split(".", 1)
+            if '[' in field:
+                field_name = field.split('[')[0]
+
+                indexes = re.findall(r'\[(.*?)\]', field)
+
+                target = self.variables[var_name][field_name]
+
+                for index_expr in indexes[:-1]:
+                    index = self.evaluate_expression(index_expr)
+                    target = target[index]
+
+                last_index = self.evaluate_expression(indexes[-1])
+                target[last_index] = value
+            else:
+                self.variables[var_name][field] = value
+        else:
+            if '[' in var_name:
+                base_var = var_name.split('[')[0]
+
+                indexes = re.findall(r'\[(.*?)\]', var_name)
+
+                target = self.variables[base_var]
+
+                for index_expr in indexes[:-1]:
+                    index = self.evaluate_expression(index_expr)
+                    target = target[index]
+
+                last_index = self.evaluate_expression(indexes[-1])
+                target[last_index] = value
+            else:
+                self.variables[var_name] = value
+
 
     def print_value(self, value):
         parts = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', value)
