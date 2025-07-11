@@ -858,7 +858,7 @@ class PryzmaInterpreter:
                     key = self.evaluate_expression(key)
                     self.variables[dict_name].pop(key)
                 elif line.startswith("return"):
-                    self.ret_val = self.evaluate_expression(line[6:])
+                    self.ret_val = self.evaluate_expression(line[6:].strip())
                 elif line == "break":
                     self.break_stack[-1] = True
                 elif line.startswith("asm{") and line.endswith("}"):
@@ -1129,7 +1129,7 @@ class PryzmaInterpreter:
             name, args = expression[:-1].split("{", 1)
             args = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', args)
             for i, arg in enumerate(args):
-                args[i] = self.evaluate_expression(arg) if arg != "" else None
+                args[i] = self.evaluate_expression(arg.strip()) if arg != "" else None
             name = name.strip()
 
             struct_def = self.structs[name]
@@ -1814,6 +1814,9 @@ limitations under the License.
             elif command == 'f':
                 print("Functions:", self.functions)
                 log_message(f"Functions: {self.functions}")
+            elif command == 'st':
+                print("Structs:", self.structs)
+                log_message(f"Structs: {self.structs}")
             elif command == 'log':
                 log_file = input("Enter log file name (press Enter for 'log.txt'): ").strip() or 'log.txt'
                 print(f"Logging to {log_file}")
@@ -1898,6 +1901,9 @@ limitations under the License.
                 elif command == 'f':
                     print("Functions:", self.functions)
                     log_message(f"Functions: {self.functions}")
+                elif command == 'st':
+                    print("Structs:", self.structs)
+                    log_message(f"Structs: {self.structs}")
                 elif command == 'log':
                     log_file = input("Enter log file name (press Enter for 'log.txt'): ").strip() or 'log.txt'
                     print(f"Logging to {log_file}")
@@ -2422,6 +2428,7 @@ def shell(code):
         interpreter.interpret(code)
         print("variables:", interpreter.variables, "\n")
         print("functions:", interpreter.functions, "\n")
+        print("structs:", interpreter.structs, "\n")
 
 
 
