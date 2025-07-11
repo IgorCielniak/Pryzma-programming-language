@@ -45,16 +45,11 @@ class PryzmaInterpreter:
         except FileNotFoundError:
             print(f"File '{self.file_path}' not found.")
 
-    def interpret(self, program):
+    def preprocess(self, program):
         program = program.splitlines()
         for line in range(0,len(program)-1):
             program[line] = program[line].split("#")[0]
         program = ";".join(program)
-
-        if self.main_file < 1:
-            self.no_preproc = False
-
-        self.main_file -= 1
 
         first_line = program.split(";")[0]
 
@@ -88,11 +83,20 @@ class PryzmaInterpreter:
                 prog2+=char
             program = prog2
 
+        lines = re.split(r';(?=(?:[^"]*"[^"]*")*[^"]*$)', program)
+        return [stmt.strip() for stmt in lines if stmt.strip()]
+
+
+    def interpret(self, program):
+        if self.main_file < 1:
+            self.no_preproc = False
+
+        self.main_file -= 1
+
         if not self.in_func:
             self.current_line = 0
 
-        lines = re.split(r';(?=(?:[^"]*"[^"]*")*[^"]*$)', program)
-        lines = [stmt.strip() for stmt in lines if stmt.strip()]
+        lines = self.preprocess(program)
 
         if self.preprocess_only == True:
             for line in lines:
@@ -1506,43 +1510,7 @@ class PryzmaInterpreter:
             name = os.path.basename(file_path).split(".")[0]
             f = requests.get(file_path)
             program = f.text
-            program = program.splitlines()
-            for line in range(0,len(program)-1):
-                program[line] = program[line].split("#")[0]
-            program = ";".join(program)
-
-            self.no_preproc = False
-
-            first_line = program.split(";")[0]
-
-            if first_line.startswith("preproc"):
-                preproc_line = first_line
-                if "=" in preproc_line:
-                    args = preproc_line.split("=")[1].split(",")
-                    for arg in range(0,len(args)):
-                        args[arg] = args[arg].strip()
-                    if "np" in args:
-                        self.no_preproc = True
-
-            if not self.no_preproc:
-                rep_in_func = 0
-                char_ = 0
-                prog = list(program)
-                for char in prog:
-                    if char == "{":
-                        rep_in_func += 1
-                    elif char == "}":
-                        rep_in_func -= 1
-                    elif rep_in_func != 0  and char == ";":
-                        prog[char_] = "|"
-                    char_ += 1
-                prog2 = ""
-                for char in prog:
-                    prog2+=char
-                program = prog2
-
-            lines = re.split(r';(?=(?:[^"]*"[^"]*")*[^"]*$)', program)
-            lines = [stmt.strip() for stmt in lines if stmt.strip()]
+            lines = self.preprocess(program)
 
             function_def = False
             function_name = ""
@@ -1572,43 +1540,7 @@ class PryzmaInterpreter:
         try:
             with open(file_path, 'r') as file:
                 program = file.read()
-                program = program.splitlines()
-                for line in range(0,len(program)-1):
-                    program[line] = program[line].split("#")[0]
-                program = ";".join(program)
-
-                self.no_preproc = False
-
-                first_line = program.split(";")[0]
-
-                if first_line.startswith("preproc"):
-                    preproc_line = first_line
-                    if "=" in preproc_line:
-                        args = preproc_line.split("=")[1].split(",")
-                        for arg in range(0,len(args)):
-                            args[arg] = args[arg].strip()
-                        if "np" in args:
-                            self.no_preproc = True
-
-                if not self.no_preproc:
-                    rep_in_func = 0
-                    char_ = 0
-                    prog = list(program)
-                    for char in prog:
-                        if char == "{":
-                            rep_in_func += 1
-                        elif char == "}":
-                            rep_in_func -= 1
-                        elif rep_in_func != 0  and char == ";":
-                            prog[char_] = "|"
-                        char_ += 1
-                    prog2 = ""
-                    for char in prog:
-                        prog2+=char
-                    program = prog2
-
-                lines = re.split(r';(?=(?:[^"]*"[^"]*")*[^"]*$)', program)
-                lines = [stmt.strip() for stmt in lines if stmt.strip()]
+                lines = self.preprocess(program)
 
                 function_def = False
                 function_name = ""
@@ -1731,28 +1663,7 @@ limitations under the License.
             print(f"File '{file_path}' not found.")
             return
 
-        program = program.replace('\n', ";")
-        rep_in_func = False
-        char_ = 0
-        prog = list(program)
-        for char in prog:
-            if char == "{":
-                rep_in_func += 1
-            elif char == "}":
-                rep_in_func -= 1
-            elif rep_in_func != 0  and char == ";":
-                prog[char_] = "|"
-            char_ += 1
-        prog2 = ""
-        for char in prog:
-            prog2+=char
-        program = prog2
-
-        if not self.in_func:
-            self.current_line = 0
-
-        lines = re.split(r';(?=(?:[^"]*"[^"]*")*[^"]*$)', program)
-        lines = [stmt.strip() for stmt in lines if stmt.strip()]
+        lines = self.preprocess(program)
 
         commands_info = {
             's': 'Step to the next line',
