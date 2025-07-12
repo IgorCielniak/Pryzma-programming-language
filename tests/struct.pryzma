@@ -47,10 +47,19 @@ struct Person {
         name="Alice",
         surname="Brown"
     },
-    age=30
+    age = {"age": 30, "adult": True}
 }
 
 
 p = Person {}
 
-print p.name.surname
+print p.name.surname, "\n"
+
+p.name.surname = "White"
+
+print p.name.surname, "\n"
+
+
+print p.age["age"], "\n"
+print p.age["adult"]
+

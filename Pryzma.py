@@ -979,10 +979,10 @@ class PryzmaInterpreter:
             if c == '"':
                 in_quotes = not in_quotes
                 current.append(c)
-            elif c == '{' and not in_quotes:
+            elif (c == '{' or c == '[') and not in_quotes:
                 brace_depth += 1
                 current.append(c)
-            elif c == '}' and not in_quotes:
+            elif (c == '}' or c == ']') and not in_quotes:
                 brace_depth -= 1
                 current.append(c)
             elif (c == ',' or c == '|') and not in_quotes and brace_depth == 0:
@@ -1126,13 +1126,18 @@ class PryzmaInterpreter:
             name, args = expression[:-1].split("{", 1)
             rep_in_args = 0
             char_ = 0
+            in_str = False
             args = list(args)
             for char in args:
-                if char == "{":
+                if char == "{" or char == "[":
                     rep_in_args += 1
-                elif char == "}":
+                elif char == "}" or char == "]":
                     rep_in_args -= 1
-                elif rep_in_args == 0  and char == "|":
+                elif not in_str and char == '"':
+                    in_str = True
+                elif in_str and char == '"':
+                    in_str = False
+                elif (rep_in_args == 0 and char == "|" and not in_str) or (rep_in_args == 0 and char == "," and not in_str):
                     args[char_] = "$#@"
                 char_ += 1
             args_body = ""
@@ -1140,7 +1145,7 @@ class PryzmaInterpreter:
                 args_body+=char
             args = args_body
 
-            args = list(filter(None, re.split(r'[,\$#@]\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', args)))
+            args = list(filter(None, re.split(r'[\$\#\@]\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', args)))
             for i, arg in enumerate(args):
                 args[i] = self.evaluate_expression(arg.strip()) if arg != "" else None
 
@@ -1447,9 +1452,15 @@ class PryzmaInterpreter:
 
     def acces_field(self, name, field):
         obj = self.variables[name.strip()]
-        parts = field.split('.')
+        parts = re.findall(r'\w+|\[.*?\]', field)
+
         for part in parts:
-            obj = obj[part.strip()]
+            if part.startswith('['):
+                index_expr = part[1:-1].strip()
+                index = self.evaluate_expression(index_expr)
+                obj = obj[index]
+            else:
+                obj = obj[part.strip()]
         return obj
 
     def assign_value(self, var_name, expression):
@@ -1457,22 +1468,32 @@ class PryzmaInterpreter:
         if isinstance(value, dict):
             value = value.copy()
         if "." in var_name:
-            var_name, field = var_name.split(".", 1)
-            if '[' in field:
-                field_name = field.split('[')[0]
+            tokens = re.findall(r"[a-zA-Z_]\w*|\[\s*[^]]+?\s*\]", var_name)
 
-                indexes = re.findall(r'\[(.*?)\]', field)
+            if not tokens:
+                raise ValueError("Invalid struct field")
 
-                target = self.variables[var_name][field_name]
+            var_name = tokens[0]
+            if var_name not in self.variables:
+                raise KeyError(f"Variable '{var_name}' not found")
 
-                for index_expr in indexes[:-1]:
+            target = self.variables[var_name]
+
+            for token in tokens[1:-1]:
+                if token.startswith('['):
+                    index_expr = token[1:-1].strip()
                     index = self.evaluate_expression(index_expr)
                     target = target[index]
+                else:
+                    target = target[token]
 
-                last_index = self.evaluate_expression(indexes[-1])
-                target[last_index] = value
+            last_token = tokens[-1]
+            if last_token.startswith('['):
+                index_expr = last_token[1:-1].strip()
+                index = self.evaluate_expression(index_expr)
+                target[index] = value
             else:
-                self.variables[var_name][field] = value
+                target[last_token] = value
         else:
             if '[' in var_name:
                 base_var = var_name.split('[')[0]
