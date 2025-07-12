@@ -33,5 +33,24 @@ p = Person {
     }
 }
 
-print p.address.city
+print p.address.city, "\n"
 
+
+struct Name {
+    name="Alice",
+    surname="Brown"
+}
+
+
+struct Person {
+    name = Name {
+        name="Alice",
+        surname="Brown"
+    },
+    age=30
+}
+
+
+p = Person {}
+
+print p.name.surname

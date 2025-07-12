@@ -163,23 +163,7 @@ class PryzmaInterpreter:
                     line = line[6:]
                     name, fields = line[:-1].split("{", 1)
                     name = name.strip()
-                    fields = fields.strip()
-                    char_ = 0
-                    rep_in_struct = 0
-                    struct_body = list(fields)
-                    for char in struct_body:
-                        if char == "{":
-                            rep_in_struct += 1
-                        elif char == "}":
-                            rep_in_struct -= 1
-                        elif rep_in_struct == 0 and char == "|":
-                            struct_body[char_] = "#$%^@"
-                        char_ += 1
-
-                    struct_body2 = ""
-                    for char in struct_body:
-                        struct_body2 += char
-                    fields = struct_body2.split("#$%^@")
+                    fields = self.struct_split(fields.strip())
                     for i, field in enumerate(fields):
                         fields[i] = field.strip()
                     fields = list(filter(None, fields))
@@ -977,6 +961,37 @@ class PryzmaInterpreter:
     def in_func_err(self):
         if self.in_func:
             print(f"Error while calling function '{self.current_func_name}'")
+
+    def struct_split(self, s):
+        result = []
+        current = []
+        in_quotes = False
+        brace_depth = 0
+        i = 0
+        while i < len(s):
+            c = s[i]
+
+            if c == '"':
+                in_quotes = not in_quotes
+                current.append(c)
+            elif c == '{' and not in_quotes:
+                brace_depth += 1
+                current.append(c)
+            elif c == '}' and not in_quotes:
+                brace_depth -= 1
+                current.append(c)
+            elif (c == ',' or c == '|') and not in_quotes and brace_depth == 0:
+                result.append(''.join(current).strip())
+                current = []
+            else:
+                current.append(c)
+
+            i += 1
+
+        if current:
+            result.append(''.join(current).strip())
+        return result
+
 
     def load_module(self, module_path):
         try:
@@ -2263,6 +2278,7 @@ def shell(code):
     elif code == "cls":
         interpreter.variables.clear()
         interpreter.functions.clear()
+        interpreter.structs.clear()
     elif code == "clear":
         if os.name == "posix":
             os.system('clear')
