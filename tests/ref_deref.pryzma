@@ -1,0 +1,24 @@
+struct Person {
+    name = "Alice"
+    age = 0
+}
+
+/greet{
+    result = *args[0]
+    print "hello " + result.name, "\n"
+    result.age = 10
+}
+
+p = Person {}
+
+@greet(&p)
+
+print p.age,"\n"
+
+r = p
+
+r.name = "ff"
+
+print p.name,"\n"
+
+print r

@@ -10,12 +10,17 @@ import zipfile
 import platform
 import random
 import ctypes
+from collections import UserDict
 
+class eval_dict(UserDict):
+    def __getitem__(self, key):
+        value = super().__getitem__(key)
+        return value() if callable(value) else value
 
 class PryzmaInterpreter:
     
     def __init__(self):
-        self.variables = {}
+        self.variables = eval_dict({})
         self.functions = {}
         self.structs = {}
         self.tk_vars = {}
@@ -1418,6 +1423,14 @@ class PryzmaInterpreter:
         elif "." in expression:
             name, field = expression.split(".", 1)
             return self.acces_field(name, field)
+        elif expression.startswith("&"):
+            return lambda: self.evaluate_expression(expression[1:])
+        elif expression.startswith("*"):
+            variables_original = self.variables
+            self.variables = dict(variables_original)
+            val = self.evaluate_expression(expression[1:].strip())
+            self.variables = variables_original
+            return val
         elif expression in self.variables:
             return self.variables[expression]
         else:
@@ -1441,6 +1454,8 @@ class PryzmaInterpreter:
 
     def assign_value(self, var_name, expression):
         value = self.evaluate_expression(expression)
+        if isinstance(value, dict):
+            value = value.copy()
         if "." in var_name:
             var_name, field = var_name.split(".", 1)
             if '[' in field:
