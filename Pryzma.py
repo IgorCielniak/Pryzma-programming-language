@@ -1150,6 +1150,16 @@ class PryzmaInterpreter:
                 else:
                     result[key] = default_value
 
+            #function stolen from https://stackoverflow.com/questions/2444680/how-do-i-add-my-own-custom-attributes-to-existing-built-in-python-types-like-a
+            def attr(e,n,v): #will work for any object you feed it, but only that object
+                class tmp(type(e)):
+                    def attr(self,n,v):
+                        setattr(self,n,v)
+                        return self
+                return tmp(e).attr(n,v)
+
+            result = attr(result, "__type__", name)
+
             return result
         elif "+" in expression and self.add_or_str(expression):
             parts = expression.split("+")
@@ -1258,7 +1268,12 @@ class PryzmaInterpreter:
             else:
                 return self.evaluate_expression(val)
         elif expression.startswith("type(") and expression.endswith(")"):
-            return str(type(self.variables[expression[5:-1]]).__name__)
+            arg = self.evaluate_expression(expression[5:-1])
+            try:
+                type_ = arg.__type__
+                return str(type_)
+            except Exception:
+                return str(type(arg).__name__)
         elif expression.startswith("len(") and expression.endswith(")"):
             return len(self.evaluate_expression(expression[4:-1].strip()))
         elif expression.startswith("splitlines(") and expression.endswith(")"):
