@@ -515,6 +515,12 @@ and it will output 10
 
 instead of a string you can also pass a variable
 
+eval can also be an rvalue like this:
+
+result = eval("@func")
+
+result would be the return value of func
+
 Cli arguments:
 by running:
 
