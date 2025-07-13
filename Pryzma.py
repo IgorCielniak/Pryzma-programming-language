@@ -1260,7 +1260,7 @@ class PryzmaInterpreter:
             char_to_split = self.evaluate_expression(args[0].strip())
             string_to_split = self.evaluate_expression(args[1].strip())
             if len(args) == 3:
-                return string_to_split.split(char_to_split, self.evaluate_expression(args[2]).strip())
+                return string_to_split.split(char_to_split, self.evaluate_expression(args[2].strip()))
             else:
                 return string_to_split.split(char_to_split)
         elif "=" in expression:
