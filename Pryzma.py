@@ -2045,10 +2045,10 @@ commands:
 13 - Invalid create_entry command
 14 - Invalid get_entry_text command
 15 - Invalid set_entry_text command
-16 - Tkintet isn't enabled
+16 - Tkinter isn't enabled
 17 - Invalid statement
 18 - Unknown error
-19 - Module does not have a 'start' function."
+19 - Module does not have a 'start' function.
 20 - Error loading module
 21 - Cannot decrement non-integer variable
 22 - Variable not found for decrement function
