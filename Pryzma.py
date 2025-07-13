@@ -1761,6 +1761,8 @@ limitations under the License.
             'l': 'List all current breakpoints',
             'v': 'View all variables',
             'f': 'View all functions',
+            'st': 'Print all structs',
+            '! <pryzma code>': 'Run some pryzma code',
             'log': 'Set the log file name (default is log.txt)',
             'exit': 'Exit the debugger',
             'help': 'Show this help message'
@@ -1816,6 +1818,10 @@ limitations under the License.
             elif command == 'st':
                 print("Structs:", self.structs)
                 log_message(f"Structs: {self.structs}")
+            elif command.startswith("!"):
+                self.interpret(command[1:])
+                print("\n")
+                log_message(f"Run code: {command[1:]}")
             elif command == 'log':
                 log_file = input("Enter log file name (press Enter for 'log.txt'): ").strip() or 'log.txt'
                 print(f"Logging to {log_file}")
@@ -1903,6 +1909,10 @@ limitations under the License.
                 elif command == 'st':
                     print("Structs:", self.structs)
                     log_message(f"Structs: {self.structs}")
+                elif command.startswith("!"):
+                    self.interpret(command[1:])
+                    print("\n")
+                    log_message(f"Run code: {command[1:]}")
                 elif command == 'log':
                     log_file = input("Enter log file name (press Enter for 'log.txt'): ").strip() or 'log.txt'
                     print(f"Logging to {log_file}")
