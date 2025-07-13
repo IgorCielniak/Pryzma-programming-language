@@ -868,7 +868,71 @@ p = Person {
 
 print p.address.city
 
-i think this is also quite self explanatory
+I think this is also quite self explanatory
+
+references etc. :
+
+Pryzma supports references, which allow you to create variables that point to the memory address of other variables. This is useful for modifying variables within functions or for creating complex data structures.
+
+Creating a reference (&):
+
+You can create a reference to a variable using the `&` operator. For example:
+
+x = 8
+p = &x
+
+In this example, `p` is a reference to `x`.
+
+Dereferencing (*):
+
+You can get the value of a variable that a reference points to using the `*` operator. For example:
+
+x = 8
+p = &x
+print *p #prints 8
+
+Assigning a new value to a referenced variable:
+
+You can change the value of the original variable by assigning a new value to the dereferenced variable. For example:
+
+x = 8
+p = &x
+*p = 10
+print x #prints 10
+
+Assigning a new reference:
+
+You can also assign a new reference to a variable. For example:
+
+x = 8
+y = 12
+p = &x
+p = &y
+*p = 14
+print y #prints 14
+
+Automatic dereferencing:
+
+When you access a field of a reference to a struct, the interpreter will automatically dereference the variable for you. For example:
+
+struct Person {
+    name
+    age
+}
+
+p = Person{"Alice", 30}
+p_ref = &p
+p_ref.name = "Bob"
+print p.name #prints "Bob"
+
+simple example:
+
+x = 8
+p = &x
+*p = 10
+
+print x #would print 10
+
 Running Programs:
 
 To run a Pryzma program, save the code in a text file execute it by launching the

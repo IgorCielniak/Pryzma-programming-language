@@ -4,9 +4,9 @@ struct Person {
 }
 
 /greet{
-    result = *args[0]
+    result = args[0]
     print "hello " + result.name, "\n"
-    result.age = 10
+    *result.age = 10
 }
 
 p = Person {}
@@ -21,4 +21,22 @@ r.name = "ff"
 
 print p.name,"\n"
 
-print r
+print r,"\n"
+
+
+x = 8
+p = &x
+*p = 10
+
+print x
+
+x = 8
+y = 12
+p = &x
+p = &y
+*p = 14
+print y
+
+p = "gg"
+
+print p, y

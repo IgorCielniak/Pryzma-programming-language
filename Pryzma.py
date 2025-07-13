@@ -12,6 +12,10 @@ import random
 import ctypes
 from collections import UserDict
 
+class Reference:
+    def __init__(self, var_name):
+        self.var_name = var_name
+
 class eval_dict(UserDict):
     def __getitem__(self, key):
         value = super().__getitem__(key)
@@ -1444,13 +1448,13 @@ class PryzmaInterpreter:
             name, field = expression.split(".", 1)
             return self.acces_field(name, field)
         elif expression.startswith("&"):
-            return lambda: self.evaluate_expression(expression[1:])
+            return Reference(expression[1:])
         elif expression.startswith("*"):
-            variables_original = self.variables
-            self.variables = dict(variables_original)
-            val = self.evaluate_expression(expression[1:].strip())
-            self.variables = variables_original
-            return val
+            ref = self.evaluate_expression(expression[1:])
+            if isinstance(ref, Reference):
+                return self.variables[ref.var_name]
+            else:
+                return ref
         elif expression in self.variables:
             return self.variables[expression]
         else:
@@ -1467,6 +1471,8 @@ class PryzmaInterpreter:
 
     def acces_field(self, name, field):
         obj = self.variables[name.strip()]
+        if isinstance(obj, Reference):
+            obj = self.variables[obj.var_name]
         parts = re.findall(r'\w+|\[.*?\]', field)
 
         for part in parts:
@@ -1482,8 +1488,14 @@ class PryzmaInterpreter:
         value = self.evaluate_expression(expression)
         if isinstance(value, dict):
             value = value.copy()
+
+        if var_name.startswith("*"):
+            ref = self.evaluate_expression(var_name[1:].strip())
+            if isinstance(ref, Reference):
+                var_name = ref.var_name
+
         if "." in var_name:
-            tokens = re.findall(r"[a-zA-Z_]\w*|\[\s*[^]]+?\s*\]", var_name)
+            tokens = re.findall(r"[a-zA-Z_]\w*|\[\s*[^\]]+\s*\]", var_name)
 
             if not tokens:
                 raise ValueError("Invalid struct field")
@@ -1493,6 +1505,8 @@ class PryzmaInterpreter:
                 raise KeyError(f"Variable '{var_name}' not found")
 
             target = self.variables[var_name]
+            if isinstance(target, Reference):
+                target = self.variables[target.var_name]
 
             for token in tokens[1:-1]:
                 if token.startswith('['):
@@ -1516,6 +1530,8 @@ class PryzmaInterpreter:
                 indexes = re.findall(r'\[(.*?)\]', var_name)
 
                 target = self.variables[base_var]
+                if isinstance(target, Reference):
+                    target = self.variables[target.var_name]
 
                 for index_expr in indexes[:-1]:
                     index = self.evaluate_expression(index_expr)
