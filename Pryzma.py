@@ -180,7 +180,7 @@ class PryzmaInterpreter:
                             fields_dict[field] = None
                         else:
                             key, value = field.split("=", 1)
-                            fields_dict[key.strip()] = self.evaluate_expression(value.strip()) if not value.strip().startswith("@") else value.strip()
+                            fields_dict[key.strip()] = self.evaluate_expression(value.strip()) if not repr(value.strip()).startswith("@") else value.strip()
                     self.structs[name] = fields_dict
                 elif line.startswith("foreach"):
                     line = line[7:].strip()
@@ -1170,9 +1170,9 @@ class PryzmaInterpreter:
 
             for i, (key, default_value) in enumerate(struct_def.items()):
                 if i < len(args) and args[i] is not None:
-                    result[key] = self.evaluate_expression(args[i]) if args[i].startswith("@") else args[i]
+                    result[key] = self.evaluate_expression(args[i]) if repr(args[i]).startswith("@") else args[i]
                 else:
-                    result[key] = self.evaluate_expression(default_value) if default_value.startswith("@") else default_value
+                    result[key] = self.evaluate_expression(default_value) if repr(default_value).startswith("@") else default_value
 
             #function stolen from https://stackoverflow.com/questions/2444680/how-do-i-add-my-own-custom-attributes-to-existing-built-in-python-types-like-a
             def attr(e,n,v): #will work for any object you feed it, but only that object
