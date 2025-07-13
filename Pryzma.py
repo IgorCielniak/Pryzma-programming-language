@@ -563,10 +563,11 @@ class PryzmaInterpreter:
                     if not result:
                         raise AssertionError(f"AssertionError: {self.evaluate_expression(message)}")
                 elif "=" in line and not line.strip().startswith(("if", "while")) and not any(op in line for op in ["+=", "-=", "==", "!=", "<=", ">="]):
-                    variable, expression = line.split('=', 1)
-                    variable = variable.strip()
+                    variables, expression = line.split('=', 1)
+                    variables = variables.strip().split(",")
                     expression = expression.strip()
-                    self.assign_value(variable, expression)
+                    for variable in variables:
+                        self.assign_value(variable.strip(), expression)
                 elif "+=" in line:
                     line = line.split("+=")
                     if len(line) != 2:
