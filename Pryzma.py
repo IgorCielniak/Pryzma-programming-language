@@ -33,7 +33,8 @@ class PryzmaInterpreter:
         self.variables["interpreter_path"] = __file__
         self.variables["err"] = 0
         self.in_try_block = False
-        self.in_func = False
+        self.in_func = [None]
+        self.function_tracker = [False]
         self.current_func_name = None
         self.preprocess_only = False
         self.no_preproc = False
@@ -102,7 +103,7 @@ class PryzmaInterpreter:
 
         self.main_file -= 1
 
-        if not self.in_func:
+        if not self.in_func[-1]:
             self.current_line = 0
 
         lines = self.preprocess(program)
@@ -494,7 +495,7 @@ class PryzmaInterpreter:
                         else:
                             self.variables["err"] = 2
                 elif line.startswith("@"):
-                    self.in_func = True
+                    self.in_func.append(True)
                     function_name = line[1:].strip()
                     if "(" in function_name:
                         function_name, arg = function_name.split("(")
@@ -505,7 +506,7 @@ class PryzmaInterpreter:
                             for args in range(len(arg)):
                                 arg[args] = self.evaluate_expression(arg[args].strip())
                             self.variables["args"] = arg
-                    self.current_func_name = function_name
+                    self.function_tracker.append(function_name)
                     if function_name in self.functions:
                         command = 0
                         while command < len(self.functions[function_name]):
@@ -518,8 +519,8 @@ class PryzmaInterpreter:
                             print(f"Error near line {self.current_line}: Function '{function_name}' is not defined.")
                         else:
                             self.variables["err"] = 3
-                    self.in_func = False
-                    self.current_func_name = None
+                    self.in_func.pop()
+                    self.function_tracker.pop()
                 elif line.startswith("eval(") and line.endswith(")"):
                     code = line[5:-1]
                     if "|" in code:
@@ -969,8 +970,8 @@ class PryzmaInterpreter:
                     self.variables["err"] = 18
 
     def in_func_err(self):
-        if self.in_func:
-            print(f"Error while calling function '{self.current_func_name}'")
+        if self.in_func[-1]:
+            print(f"Error while calling function '{self.function_tracker[-1]}'")
 
     def struct_split(self, s):
         result = []
@@ -1387,8 +1388,12 @@ class PryzmaInterpreter:
             key = self.evaluate_expression(key)
             return self.variables[dict_name][key]
         elif expression.startswith("@"):
+            self.in_func.append(True)
+            self.function_tracker.append(expression[1:].split("(")[0])
             self.ret_val = None
             self.interpret(expression)
+            self.in_func.pop()
+            self.function_tracker.pop()
             return self.ret_val
         elif expression.startswith("char(") and expression.endswith(")"):
             return chr(self.evaluate_expression(expression[5:-1]))
@@ -1724,17 +1729,6 @@ limitations under the License.
             else:
                 self.variables["err"] = 43
 
-
-    def execute_function_from_file(self):
-        file_path = input("Enter the file path of the function: ")
-        function_name = input("Enter the function name: ")
-        self.import_functions(file_path)
-        if function_name in self.functions:
-            for line in self.functions[function_name]:
-                self.interpret(line)
-        else:
-            print(f"Function '{function_name}' is not defined in '{file_path}'.")
-
     def debug_interpreter(self, file_path, running_from_file, arguments):
         current_line = 0
         breakpoints = set()
@@ -1761,7 +1755,7 @@ limitations under the License.
             'l': 'List all current breakpoints',
             'v': 'View all variables',
             'f': 'View all functions',
-            'st': 'Print all structs',
+            'st': 'View all structs',
             '! <pryzma code>': 'Run some pryzma code',
             'log': 'Set the log file name (default is log.txt)',
             'exit': 'Exit the debugger',
@@ -2014,10 +2008,9 @@ limitations under the License.
         print("""
 commands:
     file - run a program from a file
-    cls - clear the functions and variables dictionaries
+    cls - clear the functions, variables and structs dictionaries
     clear - clear the console
     debug - start debugging mode
-    func - execute a function from a file
     history - show the commands history
     history <number> - execute the command from the history by number
     history clear - clear the commands history
@@ -2379,10 +2372,11 @@ def shell(code):
     elif code == "file":
         running_from_file = True
         interpreter.interpret_file2()
-        cvf = input("Clear variables and functions dictionaries? (y/n): ")
+        cvf = input("Clear variables, functions and structs dictionaries? (y/n): ")
         if cvf.lower() == "y":
             interpreter.variables.clear()
             interpreter.functions.clear()
+            interpreter.structs.clear()
         running_from_file = False
     elif code == "license":
         interpreter.show_license()
@@ -2392,8 +2386,6 @@ def shell(code):
         if file_path != "exit":
             interpreter.debug_interpreter(interpreter, file_path, running_from_file, [])
         running_from_file = False
-    elif code == "func":
-        interpreter.execute_function_from_file()
     elif code.startswith("history"):
         code_parts = code.split()
         if len(code_parts) == 1:
