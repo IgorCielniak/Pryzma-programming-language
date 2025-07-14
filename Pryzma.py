@@ -485,7 +485,7 @@ class PryzmaInterpreter:
                         function_body2 = ""
                         for char in function_body:
                             function_body2 += char
-                        function_body = function_body2.split("@#%^$")
+                        function_body = list(filter(None, function_body2.split("@#%^$")))
                         self.functions[function_name] = function_body
                     else:
                         if not self.in_try_block:
@@ -1729,10 +1729,102 @@ limitations under the License.
             else:
                 self.variables["err"] = 43
 
+    def debug_interpret_func(self, line, current_line, breakpoints, log_message, print_help):
+        self.in_func.append(True)
+        function_name = line[1:].strip()
+        if "(" in function_name:
+            function_name, arg = function_name.split("(")
+            self.current_func_name = function_name
+            arg = arg.strip(")")
+            if arg:
+                arg = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', arg)
+                for args in range(len(arg)):
+                    arg[args] = self.evaluate_expression(arg[args].strip())
+                self.variables["args"] = arg
+        self.function_tracker.append(function_name)
+        if function_name in self.functions:
+            command = 0
+            continue_ = False
+            while command < len(self.functions[function_name]):
+                if continue_ == False:
+                    command_ = input("Debugger> ").strip()
+                    if command_ == 's':
+                        log_message("User chose to step.")
+                        log_message(f"Executing line {self.functions[function_name][command]}")
+                        print(f"Debug: Executing line: {self.functions[function_name][command]}")
+                        self.interpret(self.functions[function_name][command])
+                        command += 1
+                    elif command_ == 'c':
+                        log_message("User chose to continue.")
+                        continue_ = True
+                    elif command_.startswith('b '):
+                        try:
+                            line_num = int(command_.split()[1])
+                            breakpoints.add(line_num-1)
+                            print(f"Breakpoint added at line {line_num}.")
+                            log_message(f"Breakpoint added at line {line_num}.")
+                        except ValueError:
+                            print("Invalid line number. Usage: b <line_number>")
+                    elif command_.startswith('r '):
+                        try:
+                            line_num = int(command_.split()[1])
+                            breakpoints.discard(line_num)
+                            print(f"Breakpoint removed at line {line_num}.")
+                            log_message(f"Breakpoint removed at line {line_num}.")
+                        except ValueError:
+                            print("Invalid line number. Usage: r <line_number>")
+                    elif command_ == 'l':
+                        print("Breakpoints:", sorted(breakpoints))
+                        log_message(f"Breakpoints listed: {sorted(breakpoints)}")
+                    elif command_ == 'v':
+                        print("Variables:", self.variables)
+                        log_message(f"Variables: {self.variables}")
+                    elif command_ == 'f':
+                        print("Functions:", self.functions)
+                        log_message(f"Functions: {self.functions}")
+                    elif command_ == 'st':
+                        print("Structs:", self.structs)
+                        log_message(f"Structs: {self.structs}")
+                    elif command_.startswith("!"):
+                        self.interpret(command_[1:])
+                        print("\n")
+                        log_message(f"Run code: {command_[1:]}")
+                    elif command_ == 'log':
+                        self.log_file = input("Enter log file name (press Enter for 'log.txt'): ").strip() or 'log.txt'
+                        print(f"Logging to {self.log_file}")
+                        log_message(f"Log file set to: {self.log_file}")
+                    elif command_ == 'exit':
+                        print("Exiting debugger.")
+                        log_message("Debugger exited.")
+                        return
+                    elif command_ == 'help':
+                        print_help()
+                    elif command_ == 'clear':
+                        if os.name == "posix":
+                            os.system('clear')
+                        else:
+                            os.system('cls')
+                    else:
+                        print("Unknown command. Type 'help' for a list of commands.")
+                else:
+                    log_message(f"Executing line {self.functions[function_name][command]}")
+                    self.interpret(self.functions[function_name][command])
+                    command += 1
+        else:
+            if not self.in_try_block:
+                self.in_func_err()
+                self.variables["err"] = 3
+                print(f"Error near line {current_line}: Function '{function_name}' is not defined.")
+            else:
+                self.variables["err"] = 3
+        self.in_func.pop()
+        self.function_tracker.pop()
+
+
     def debug_interpreter(self, file_path, running_from_file, arguments):
         current_line = 0
         breakpoints = set()
-        log_file = None
+        self.log_file = None
         self.variables["argv"] = arguments
         self.variables["__file__"] = os.path.abspath(file_path)
 
@@ -1768,8 +1860,8 @@ limitations under the License.
                 print(f"{cmd}: {desc}")
 
         def log_message(message):
-            if log_file:
-                with open(log_file, 'a') as f:
+            if self.log_file:
+                with open(self.log_file, 'a') as f:
                     f.write(message + '\n')
 
         print("Debugger started. Type 'help' for a list of commands.")
@@ -1817,9 +1909,9 @@ limitations under the License.
                 print("\n")
                 log_message(f"Run code: {command[1:]}")
             elif command == 'log':
-                log_file = input("Enter log file name (press Enter for 'log.txt'): ").strip() or 'log.txt'
-                print(f"Logging to {log_file}")
-                log_message(f"Log file set to: {log_file}")
+                self.log_file = input("Enter log file name (press Enter for 'log.txt'): ").strip() or 'log.txt'
+                print(f"Logging to {self.log_file}")
+                log_message(f"Log file set to: {self.log_file}")
             elif command == 'exit':
                 print("Exiting debugger.")
                 log_message("Debugger exited.")
@@ -1846,7 +1938,10 @@ limitations under the License.
                 log_message(f"Executing line {current_line + 1}: {line}")
 
                 try:
-                    self.interpret(line)
+                    if line.startswith("@"):
+                        self.debug_interpret_func(line, current_line, breakpoints, log_message, print_help)
+                    else:
+                        self.interpret(line)
                 except Exception as e:
                     error_message = f"Error executing line {current_line + 1}: {e}"
                     print(error_message)
@@ -1868,7 +1963,10 @@ limitations under the License.
                             log_message(f"Executing line {current_line + 1}: {line}")
 
                             try:
-                                self.interpret(line)
+                                if line.startswith("@"):
+                                    self.debug_interpret_func(line, current_line, breakpoints, log_message, print_help)
+                                else:
+                                    self.interpret(line)
                             except Exception as e:
                                 error_message = f"Error executing line {current_line + 1}: {e}"
                                 print(error_message)
@@ -1908,9 +2006,9 @@ limitations under the License.
                     print("\n")
                     log_message(f"Run code: {command[1:]}")
                 elif command == 'log':
-                    log_file = input("Enter log file name (press Enter for 'log.txt'): ").strip() or 'log.txt'
-                    print(f"Logging to {log_file}")
-                    log_message(f"Log file set to: {log_file}")
+                    self.log_file = input("Enter log file name (press Enter for 'log.txt'): ").strip() or 'log.txt'
+                    print(f"Logging to {self.log_file}")
+                    log_message(f"Log file set to: {self.log_file}")
                 elif command == 'exit':
                     print("Exiting debugger.")
                     log_message("Debugger exited.")
@@ -1925,10 +2023,11 @@ limitations under the License.
                 else:
                     print("Unknown command. Type 'help' for a list of commands.")
         if running_from_file == True:
-            cvf = input("Clear variables and functions dictionaries? (y/n): ")
+            cvf = input("Clear variables, functions and staructs dictionaries? (y/n): ")
             if cvf.lower() == "y":
                 self.variables.clear()
                 self.functions.clear()
+                self.structs.clear()
 
 
     def parse_call_statement(self, statement):
