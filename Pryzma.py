@@ -2483,7 +2483,7 @@ def shell(code):
         running_from_file = True
         file_path = input("Path to the file to debug ('exit' to quit debug mode): ")
         if file_path != "exit":
-            interpreter.debug_interpreter(interpreter, file_path, running_from_file, [])
+            interpreter.debug_interpreter(file_path, running_from_file, [])
         running_from_file = False
     elif code.startswith("history"):
         code_parts = code.split()
