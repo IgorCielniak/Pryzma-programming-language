@@ -41,6 +41,15 @@ str value = 7
 
 7 will be converted to a string
 
+you can define local variables as follows:
+
+/func{
+    loc a = 10;
+    print a #will print 10
+}
+
+print a #will throw an error
+
 List operations:
 
 list = [1,2,3]

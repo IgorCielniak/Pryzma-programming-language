@@ -27,14 +27,15 @@ class PryzmaInterpreter:
         self.variables = eval_dict({})
         self.functions = {}
         self.structs = {}
+        self.locals = {}
         self.tk_vars = {}
         self.custom_handlers = {}
         self.deleted_keywords = []
         self.variables["interpreter_path"] = __file__
         self.variables["err"] = 0
         self.in_try_block = False
-        self.in_func = [None]
-        self.function_tracker = [False]
+        self.in_func = [False]
+        self.function_tracker = [None]
         self.current_func_name = None
         self.preprocess_only = False
         self.no_preproc = False
@@ -559,6 +560,12 @@ class PryzmaInterpreter:
                     else:
                         variable = line.strip()
                         self.variables[line] = ""
+                elif line.startswith("loc"):
+                    var, value = line[3:].split("=", 1)
+                    var = var.strip()
+                    value = value.strip()
+                    self.locals[var] = self.function_tracker[-1]
+                    self.assign_value(var, value)
                 elif line.startswith("assert"):
                     parts = line[6:].strip().split(",", 1)
                     condition = parts[0].strip()
@@ -1461,7 +1468,18 @@ class PryzmaInterpreter:
             else:
                 return ref
         elif expression in self.variables:
-            return self.variables[expression]
+            if expression in self.locals:
+                if self.locals[expression] == self.function_tracker[-1]:
+                    return self.variables[expression]
+                else:
+                    if not self.in_try_block:
+                        self.in_func_err()
+                        self.variables["err"] = 46
+                        print(f"Error near line {self.current_line}: Variable '{expression}' not found in current scope.")
+                    else:
+                        self.variables["err"] = 46
+            else:
+                return self.variables[expression]
         else:
             try:
                 return eval(expression, {}, self.variables)
@@ -2194,6 +2212,7 @@ commands:
 43 - List does not exist for pop function
 44 - Invalid number of arguments for call.
 45 - Invalid call statement format.
+46 - Variable not found in current scope.
 """ 
 )
 

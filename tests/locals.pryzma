@@ -1,0 +1,12 @@
+/func{loc a = 9; @func2(&a)}
+
+/func2{b = *args[0]; print b}
+
+@func
+
+/f{ print b, "\n" }
+
+@f
+
+print a
+
