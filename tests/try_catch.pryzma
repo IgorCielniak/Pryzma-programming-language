@@ -1,0 +1,5 @@
+try{
+    print a
+}catch(38){
+    print "yesu"
+}

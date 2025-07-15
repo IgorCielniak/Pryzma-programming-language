@@ -604,20 +604,20 @@ the funcion in the python module code needs to be named "start"
 
 Try:
 
-Pryzma has a VERY basic try that tries to execute a piece of code and if it fails returns the error code
-how it looks:
+Pryzma has a basic try block, this is how it looks:
 
-try{print a|a = 10}
+try{ print a }catch(38){ print "a is not defined" }
 
 or:
 
 try{
     print a
-    a = 10
+}catch(38){
+    print "a is not defined"
 }
 
-the variable 'err' will hold a value of 40 after executing this code
-becouse the print instruction tries to acces variable a that is created later so it fails with status code 40
+the variable 'err' will hold a value of 38 after executing this code
+becouse the print instruction tries to acces variable a that is not created so it fails with status code 38
 the err variable is reset to zero only after a next try block is successfully executed or when changed manually
 
 startswith and endswith:

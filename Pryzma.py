@@ -532,13 +532,22 @@ class PryzmaInterpreter:
                         self.interpret(self.evaluate_expression(code))
                 elif line.startswith("try{") and line.endswith("}"):
                     self.in_try_block = True
+                    catch_block = None
+                    if "catch(" in line:
+                        line, catch_block = line.split("catch(", 1)
                     instructions = line[4:-1].split("|")
                     error = 0
                     for instruction in instructions:
-                        self.interpret(instruction)
+                        self.interpret(instruction.strip())
                         if self.variables["err"] != 0:
                             error = self.variables["err"]
                     self.variables["err"] = error
+                    if catch_block:
+                        err_code, instructions = catch_block[:-1].split("){", 1)
+                        if int(err_code) == error:
+                            instructions = instructions.split("|")
+                            for instruction in instructions:
+                                self.interpret(instruction.strip())
                     self.in_try_block = False
                 elif line.startswith("int"):
                     line = line[3:].strip()
