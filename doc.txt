@@ -855,6 +855,16 @@ Some, name
 
 everythink should be self explanatory
 
+you can use the fields() function that returns all fields of a given struct instance like this:
+
+print fields(p2)
+
+output:
+
+['name', 'age']
+
+btw. it works on dictionaries and just returns the keys (its not that structs are basicly dictionaries, noooo, not at all)
+
 you can also do nested structs like this:
 
 struct Address {
