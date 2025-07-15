@@ -1587,7 +1587,8 @@ class PryzmaInterpreter:
                 parts[part_count] = parts[part_count].replace("\\n", "\n")
             part_count += 1
         for part in parts:
-            print(part, end="")
+            if not (self.in_try_block and part == None):
+                print(part, end="")
 
     def custom_input(self, variable):
         if "::" in variable:
