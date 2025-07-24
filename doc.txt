@@ -952,6 +952,19 @@ p = &x
 
 print x #would print 10
 
+function references:
+
+/func{ return 2+2 }
+
+a = &func
+
+print @a #prints 4
+
+a in this case can be passed as an argument to another function etc. its just a variable from the point od the backend
+its automaticly dereferenced on call, @*a is not supported but b = *a; @b is becouse
+in pryzma you can dereference all values and if the value isn't a reference it will just be unaffected
+i think its all self explanatory
+
 Running Programs:
 
 To run a Pryzma program, save the code in a text file execute it by launching the

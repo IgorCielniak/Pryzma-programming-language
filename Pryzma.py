@@ -16,6 +16,10 @@ class Reference:
     def __init__(self, var_name):
         self.var_name = var_name
 
+class FuncReference:
+    def __init__(self, func_name):
+        self.func_name = func_name
+
 class eval_dict(UserDict):
     def __getitem__(self, key):
         value = super().__getitem__(key)
@@ -508,6 +512,8 @@ class PryzmaInterpreter:
                                 arg[args] = self.evaluate_expression(arg[args].strip())
                             self.variables["args"] = arg
                     self.function_tracker.append(function_name)
+                    if function_name in self.variables and isinstance(self.variables[function_name], FuncReference):
+                        function_name = self.variables[function_name].func_name
                     if function_name in self.functions:
                         command = 0
                         while command < len(self.functions[function_name]):
@@ -1469,7 +1475,7 @@ class PryzmaInterpreter:
             name, field = expression.split(".", 1)
             return self.acces_field(name, field)
         elif expression.startswith("&"):
-            return Reference(expression[1:])
+            return Reference(expression[1:]) if expression[1:] in self.variables else FuncReference(expression[1:])
         elif expression.startswith("*"):
             ref = self.evaluate_expression(expression[1:])
             if isinstance(ref, Reference):

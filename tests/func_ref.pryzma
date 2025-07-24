@@ -1,0 +1,7 @@
+/func{ return 2+2 }
+
+a = &func
+
+/b{ c = args[0];return @c }
+
+print @b(a)
