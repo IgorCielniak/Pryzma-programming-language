@@ -453,17 +453,17 @@ hello
 
 Exec function:
 
-exec "os command"
+sys("os command")
 
 can be used like that:
 
-exec "echo Hello"
+sys("echo Hello")
 
 or:
 
 command = "echo world"
 
-exec command
+sys(command)
 
 Read and write:
 
@@ -697,6 +697,8 @@ output:
 True
 
 the stack is an optional argument so you can pass your own stack
+
+pyexec() also exists and works the same but uses exec() instead eval() under the hood
 
 inline python:
 

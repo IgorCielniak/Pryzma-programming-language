@@ -528,6 +528,18 @@ class PryzmaInterpreter:
                             self.variables["err"] = 3
                     self.in_func.pop()
                     self.function_tracker.pop()
+                elif line.startswith("pyeval(") and line.endswith(")"):
+                    parts = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', line[7:-1])
+                    if len(parts) == 1:
+                        return eval(self.evaluate_expression(parts[0]))
+                    else:
+                        return eval(self.evaluate_expression(parts[0]),self.evaluate_expression(parts[1]))
+                elif line.startswith("pyexec(") and line.endswith(")"):
+                    parts = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', line[7:-1])
+                    if len(parts) == 1:
+                        return exec(self.evaluate_expression(parts[0]))
+                    else:
+                        return exec(self.evaluate_expression(parts[0]),self.evaluate_expression(parts[1]))
                 elif line.startswith("eval(") and line.endswith(")"):
                     code = line[5:-1]
                     if "|" in code:
@@ -644,8 +656,8 @@ class PryzmaInterpreter:
                     list_name = list_name.strip()
                     var = var.strip()
                     self.variables[list_name].remove(self.evaluate_expression(var))
-                elif line.startswith("exec"):
-                    os.system(self.evaluate_expression(line[4:].strip()))
+                elif line.startswith("sys(") and line.endswith(")"):
+                    os.system(self.evaluate_expression(line[4:-1].strip()))
                 elif line.startswith("write(") and line.endswith(")"):
                     line = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', line[6:-1])
                     if len(line) == 3:
@@ -1131,6 +1143,12 @@ class PryzmaInterpreter:
                 return eval(self.evaluate_expression(parts[0]))
             else:
                 return eval(self.evaluate_expression(parts[0]),self.evaluate_expression(parts[1]))
+        elif expression.startswith("pyexec(") and expression.endswith(")"):
+            parts = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', expression[7:-1])
+            if len(parts) == 1:
+                return exec(self.evaluate_expression(parts[0]))
+            else:
+                return exec(self.evaluate_expression(parts[0]),self.evaluate_expression(parts[1]))
         elif expression.startswith("eval(") and expression.endswith(")"):
             code = expression[5:-1]
             if "|" in code:
