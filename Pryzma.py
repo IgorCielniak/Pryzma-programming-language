@@ -1485,6 +1485,12 @@ class PryzmaInterpreter:
         elif expression.startswith("fields(") and expression.endswith(")"):
             struct = self.evaluate_expression(expression[7:-1])
             return list(struct.keys())
+        elif expression.startswith("is_func(") and expression.endswith(")"):
+            value = self.evaluate_expression(expression[8:-1])
+            return (
+                isinstance(value, FuncReference)
+                or isinstance(value, str) and value in self.functions
+            )
         elif expression in self.variables:
             if expression in self.locals:
                 if self.locals[expression] == self.function_tracker[-1]:

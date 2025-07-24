@@ -965,6 +965,15 @@ its automaticly dereferenced on call, @*a is not supported but b = *a; @b is bec
 in pryzma you can dereference all values and if the value isn't a reference it will just be unaffected
 i think its all self explanatory
 
+you can check if somwthink is a function with is_func()
+
+/func{return 2+2}
+a = &func
+b = @func
+print is_func(a) #True
+print is_func("func") #True
+print is_func("b") #False
+
 Running Programs:
 
 To run a Pryzma program, save the code in a text file execute it by launching the
