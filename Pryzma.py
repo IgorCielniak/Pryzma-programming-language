@@ -1143,6 +1143,10 @@ class PryzmaInterpreter:
     def evaluate_expression(self, expression):
         if re.match(r"^\d+$", expression):
             return int(expression)
+        elif expression.startswith("/"):
+            name = "_lambda" + str(random.getrandbits(32))
+            self.interpret("/" + name +  expression[1:])
+            return FuncReference(name)
         elif expression.startswith("pyeval(") and expression.endswith(")"):
             parts = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', expression[7:-1])
             if len(parts) == 1:
@@ -1615,10 +1619,26 @@ class PryzmaInterpreter:
 
 
     def print_value(self, value):
-        parts = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', value)
+        char_ = 0
+        prog = list(value)
+        in_str = False
+        depth = 0
+        for char in prog:
+            if char == '"':
+                in_str = not in_str
+            elif (char == "{") or (char == "[") or (char == "("):
+                depth += 1
+            elif (char == "}") or (char == "]") or (char == ")"):
+                depth -= 1
+            elif char == "," and depth == 0 and not in_str:
+                prog[char_] = "&#$%^"
+            char_ += 1
+        value = "".join(prog)
+        parts = value.split("&#$%^")
+        #re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', value)
         part_count = 0
         for part in parts:
-            parts[part_count] = self.evaluate_expression(parts[part_count])
+            parts[part_count] = self.evaluate_expression(parts[part_count].strip())
             if isinstance(parts[part_count], str):
                 parts[part_count] = parts[part_count].replace("\\n", "\n")
             part_count += 1

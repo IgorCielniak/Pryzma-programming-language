@@ -976,6 +976,22 @@ print is_func(a) #True
 print is_func("func") #True
 print is_func("b") #False
 
+lambdas:
+
+a = /{return 2+2}
+
+print @a #outputs 4
+
+in this case 'a' is actually a function pointer and it points to a function that gets created that is named _lambda+random id
+
+/func{a = args[0]; @a}
+
+@func(/{print "a"})
+
+output:
+
+a
+
 Running Programs:
 
 To run a Pryzma program, save the code in a text file execute it by launching the
