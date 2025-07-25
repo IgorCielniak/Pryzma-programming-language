@@ -367,7 +367,7 @@ Comments:
 
 Comments in Pryzma start with the # symbol and continue to the end of the line.
 
-#This is a comment
+// This is a comment
 
 you also can do in line comments:
 
@@ -566,7 +566,7 @@ Time:
 you can do some time operations like that:
 
 start_time = timenow
-# ... some code or processing ...
+// ... some code or processing ...
 end_time = timenow
 time = end_time - start_time
 print time

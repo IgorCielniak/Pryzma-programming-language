@@ -63,7 +63,7 @@ class PryzmaInterpreter:
     def preprocess(self, program):
         program = program.splitlines()
         for line in range(0,len(program)-1):
-            program[line] = program[line].split("#")[0]
+            program[line] = program[line].split("//")[0]
         program = ";".join(program)
 
         first_line = program.split(";")[0]
@@ -140,10 +140,10 @@ class PryzmaInterpreter:
             self.current_line += 1
             line = line.strip()
 
-            if line == "" or line.startswith("#") or line.startswith("preproc"):
+            if line == "" or line.startswith("//") or line.startswith("preproc"):
                 continue
-            if "#" in line:
-                line = line.split("#")[0]
+            if "//" in line:
+                line = line.split("//")[0]
 
             deleted_keyword = False
 
@@ -2020,7 +2020,7 @@ limitations under the License.
                 print(f"Breakpoint hit at line {current_line + 1}.")
                 log_message(f"Breakpoint hit at line {current_line + 1}.")
             
-            if not line.startswith("#") and line != "":
+            if not line.startswith("//") and line != "":
                 print(f"Debug: Executing line {current_line + 1}: {line}")
                 log_message(f"Executing line {current_line + 1}: {line}")
 
@@ -2045,7 +2045,7 @@ limitations under the License.
                     log_message("User chose to continue to the next breakpoint.")
                     while current_line < len(lines) and current_line not in breakpoints:
                         line = lines[current_line].strip()
-                        if not line.startswith("#") and line != "":
+                        if not line.startswith("//") and line != "":
                             print(f"Debug: Executing line {current_line + 1}: {line}")
                             log_message(f"Executing line {current_line + 1}: {line}")
 
