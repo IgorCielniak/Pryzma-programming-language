@@ -45,10 +45,10 @@ you can define local variables as follows:
 
 /func{
     loc a = 10;
-    print a #will print 10
+    print a //will print 10
 }
 
-print a #will throw an error
+print a //will throw an error
 
 List operations:
 
@@ -361,17 +361,24 @@ you can also import files over http and https like this:
 
 use https://raw.githubusercontent.com/IgorCielniak/Pryzma-packages/main/net/net.pryzma
 
-in imported files if thres is a funcrion "on_import" it will be called instantly when importing the wile
+in imported files if there is a function "on_import" it will be called instantly when importing the file
+
+you can invoke a pragma for the duration of the import with the 'with' keyword:
+
+use ./module.pryzma with #nan
+
+this will import the module.pryzma file without automatic namespacing, after the import automatic namespacing will be set back
+to the same value it was before the import (either True or False), any valid pragma can be used
 
 Comments:
 
-Comments in Pryzma start with the # symbol and continue to the end of the line.
+Comments in Pryzma start with the // symbol and continue to the end of the line.
 
 // This is a comment
 
 you also can do in line comments:
 
-print "Hello, World" #This prints Hello, world
+print "Hello, World" //This prints Hello, world
 
 
 If statement:
@@ -587,8 +594,8 @@ def start(line):
     if line.startswith("customfunc"):
         text = line[10:].strip()
         print(text)
-        return True  # Indicate that the line was handled
-    return False  # Indicate that the line was not handled
+        return True  // Indicate that the line was handled
+    return False  // Indicate that the line was not handled
 
 this function takes the line and checks if it starts with customfunc and if it does it print the rest of the line
 excluding the "customfunc"
@@ -721,16 +728,18 @@ a = defined(b)
 
 if b is defined a will be True and if b is not defined a will be False
 
-preprocessor flags from code:
+pragmas:
 
-preproc = np,fd,nan
+#preproc = np,fd,nan
 
 fd - forward declare functions
 np - don't preprocess
 nan - no automatic namespacing
+an - enable automatic namespacing
 
-the preprocessor directives must be in the first line
-otherwise they will be ignored
+#nan, #an, #fd and #np are also supported
+
+more pragmas will be added in the future
 
 inline asm:
 
@@ -843,7 +852,7 @@ p = Person {"Some, name", 30}
 print p.name, "\n"
 print p.age, "\n"
 
-p2 = Person {} #fields without a default value will be initialized to None
+p2 = Person {} //fields without a default value will be initialized to None
 
 p2.name = "Alice"
 
@@ -910,7 +919,7 @@ You can get the value of a variable that a reference points to using the `*` ope
 
 x = 8
 p = &x
-print *p #prints 8
+print *p //prints 8
 
 Assigning a new value to a referenced variable:
 
@@ -919,7 +928,7 @@ You can change the value of the original variable by assigning a new value to th
 x = 8
 p = &x
 *p = 10
-print x #prints 10
+print x //prints 10
 
 Assigning a new reference:
 
@@ -930,7 +939,7 @@ y = 12
 p = &x
 p = &y
 *p = 14
-print y #prints 14
+print y //prints 14
 
 Automatic dereferencing:
 
@@ -944,7 +953,7 @@ struct Person {
 p = Person{"Alice", 30}
 p_ref = &p
 p_ref.name = "Bob"
-print p.name #prints "Bob"
+print p.name //prints "Bob"
 
 simple example:
 
@@ -952,7 +961,7 @@ x = 8
 p = &x
 *p = 10
 
-print x #would print 10
+print x //would print 10
 
 function references:
 
@@ -960,7 +969,7 @@ function references:
 
 a = &func
 
-print @a #prints 4
+print @a //prints 4
 
 a in this case can be passed as an argument to another function etc. its just a variable from the point od the backend
 its automaticly dereferenced on call, @*a is not supported but b = *a; @b is becouse
@@ -972,15 +981,15 @@ you can check if somwthink is a function with is_func()
 /func{return 2+2}
 a = &func
 b = @func
-print is_func(a) #True
-print is_func("func") #True
-print is_func("b") #False
+print is_func(a) //True
+print is_func("func") //True
+print is_func("b") //False
 
 lambdas:
 
 a = /{return 2+2}
 
-print @a #outputs 4
+print @a //outputs 4
 
 in this case 'a' is actually a function pointer and it points to a function that gets created that is named _lambda+random id
 

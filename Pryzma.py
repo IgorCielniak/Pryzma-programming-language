@@ -66,20 +66,7 @@ class PryzmaInterpreter:
             program[line] = program[line].split("//")[0]
         program = ";".join(program)
 
-        first_line = program.split(";")[0]
 
-        if first_line.startswith("preproc"):
-            preproc_line = first_line
-            if "=" in preproc_line:
-                args = preproc_line.split("=")[1].split(",")
-                for arg in range(0,len(args)):
-                    args[arg] = args[arg].strip()
-                if "fd" in args:
-                    self.forward_declare = True
-                if "np" in args:
-                    self.no_preproc = True
-                if "nan" in args:
-                    self.nan = True
 
         if not self.no_preproc:
             rep_in_func = 0
@@ -140,7 +127,7 @@ class PryzmaInterpreter:
             self.current_line += 1
             line = line.strip()
 
-            if line == "" or line.startswith("//") or line.startswith("preproc"):
+            if line == "" or line.startswith("//"):
                 continue
             if "//" in line:
                 line = line.split("//")[0]
@@ -177,6 +164,12 @@ class PryzmaInterpreter:
                 elif line.startswith("input"):
                     variable = line[len("input"):].strip()
                     self.custom_input(variable)
+                elif line.startswith("#"):
+                    if line.startswith("#preproc"):
+                        if "=" in line:
+                            self.process_args(line.split("=")[1].split(","))
+                    else:
+                        self.process_args(line[1:].split(","))
                 elif line.startswith("struct"):
                     line = line[6:]
                     name, fields = line[:-1].split("{", 1)
@@ -266,8 +259,21 @@ class PryzmaInterpreter:
                         action = action.strip()
                     self.for_loop(loop_var, range_expr, actions)
                 elif line.startswith("use"):
-                    file_path = line[3:].strip()
-                    self.import_functions(file_path)
+                    if "with" in line:
+                        line, directive = line.split("with")
+                        if directive.strip() != "":
+                            nan = self.nan
+                            fd = self.forward_declare
+                            np = self.no_preproc
+                            self.process_args(directive.strip()[1:].split(","))
+                            file_path = line[3:].strip()
+                            self.import_functions(file_path)
+                            self.nan = nan
+                            self.forward_declare = fd
+                            self.no_preproc = np
+                    else:
+                        file_path = line[3:].strip()
+                        self.import_functions(file_path)
                 elif line.startswith("if"):
                     else_ = False
                     if "else" in line:
@@ -1012,6 +1018,19 @@ class PryzmaInterpreter:
     def in_func_err(self):
         if self.in_func[-1]:
             print(f"Error while calling function '{self.function_tracker[-1]}'")
+
+    def process_args(self, args):
+        for arg in range(0,len(args)):
+            args[arg] = args[arg].strip()
+        if "fd" in args:
+            self.forward_declare = True
+        if "np" in args:
+            self.no_preproc = True
+        if "nan" in args:
+            self.nan = True
+        if "an" in args:
+            self.nan = False
+
 
     def struct_split(self, s):
         result = []
