@@ -85,12 +85,15 @@ class PryzmaInterpreter:
             rep_in_func = 0
             char_ = 0
             prog = list(program)
+            in_str = False
             for char in prog:
-                if char == "{":
+                if char == "{" and not in_str:
                     rep_in_func += 1
-                elif char == "}":
+                elif char == "}" and not in_str:
                     rep_in_func -= 1
-                elif rep_in_func != 0  and char == ";":
+                elif char == '"':
+                    in_str = not in_str
+                elif rep_in_func != 0  and char == ";" and not in_str:
                     prog[char_] = "|"
                 char_ += 1
             prog2 = ""
@@ -479,12 +482,15 @@ class PryzmaInterpreter:
                         char_ = 0
                         rep_in_func = 0
                         function_body = list(function_body)
+                        in_str = False
                         for char in function_body:
-                            if char == "{":
+                            if char == "{" and not in_str:
                                 rep_in_func += 1
-                            elif char == "}":
+                            elif char == "}" and not in_str:
                                 rep_in_func -= 1
-                            elif rep_in_func == 0  and char == "|":
+                            elif char == '"':
+                                in_str = not in_str
+                            elif rep_in_func == 0  and char == "|" and not in_str:
                                 function_body[char_] = "@#%^$"
                             char_ += 1
                         function_body2 = ""

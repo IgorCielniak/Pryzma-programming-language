@@ -5,10 +5,10 @@ ret_var = None
 /eval{
     handeled=False
     value = strip(args[0])
-    check = startswith(""",value)
-    check2 = startswith(""",value)
-    h91 = char(91)
-    h93 = char(93)
+    check = startswith(char(34),value)
+    check2 = startswith(char(34),value)
+    h91 = "["
+    h93 = "]"
 
     if(check == True){if(check2 == True){result = value[1:-1]|handeled=True|return result}}
     if(handeled == False){if(startswith("@",value)==True){@interpret(value)|handeled = True|r = ret_var|return r}}
@@ -273,11 +273,11 @@ ret_var = None
     }
 }
 
-h = char(123)
-h8 = char(124)
-h2 = char(125)
-h3 = char(59)
-h7 = char(38)+char(36)
+h = "{"
+h8 = "|"
+h2 = "}"
+h3 = ";"
+h7 = "&$"
 
 program = read(argv[1])
 program = replace(program,"\n",h3)
