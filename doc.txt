@@ -750,6 +750,15 @@ an - enable automatic namespacing
 
 #nan, #an, #fd and #np are also supported
 
+#replace a -> b
+
+replaces all instances of a with b, a and b can be strings, numbers, variables etc.
+no limits, replaces in all source code no matter what, example:
+
+#replace "a" -> "b"
+
+print "aabbaa" //prints bbbbbb
+
 more pragmas will be added in the future
 
 inline asm:

@@ -168,6 +168,12 @@ class PryzmaInterpreter:
                     if line.startswith("#preproc"):
                         if "=" in line:
                             self.process_args(line.split("=")[1].split(","))
+                    elif line.startswith("#replace"):
+                        a, b = line[8:].split("->")
+                        a = self.evaluate_expression(a)
+                        b = self.evaluate_expression(b)
+                        for i, line in enumerate(lines):
+                            lines[i] = line.replace(a, b)
                     else:
                         self.process_args(line[1:].split(","))
                 elif line.startswith("struct"):
