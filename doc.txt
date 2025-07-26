@@ -370,6 +370,17 @@ use ./module.pryzma with #nan
 this will import the module.pryzma file without automatic namespacing, after the import automatic namespacing will be set back
 to the same value it was before the import (either True or False), any valid pragma can be used
 
+you can import a particular function from a file using the following construction:
+
+from file use function
+
+example:
+
+from ./module.pryzma use func, func2 with #nan
+
+if functions are allready prefixed with module name and dot than
+you should pass the function names without the prefix and the #nan pragma
+
 Comments:
 
 Comments in Pryzma start with the // symbol and continue to the end of the line.

@@ -274,6 +274,29 @@ class PryzmaInterpreter:
                     else:
                         file_path = line[3:].strip()
                         self.import_functions(file_path)
+                elif line.startswith("from"):
+                    if "with" in line:
+                        line, directive = line.split("with")
+                        line = line.strip()
+                        module, functions = line[4:].strip().split("use")
+                        module = module.strip()
+                        functions = functions.strip().split(",")
+                        if directive.strip() != "":
+                            nan = self.nan
+                            fd = self.forward_declare
+                            np = self.no_preproc
+                            self.process_args(directive.strip()[1:].split(","))
+                            for function in functions:
+                                self.load_function_from_file(module, function.strip())
+                            self.nan = nan
+                            self.forward_declare = fd
+                            self.no_preproc = np
+                    else:
+                        module, functions = line[4:].strip().split("use")
+                        module = module.strip()
+                        functions = functions.strip().split(",")
+                        for function in functions:
+                            self.load_function_from_file(module, function.strip())
                 elif line.startswith("if"):
                     else_ = False
                     if "else" in line:
@@ -1736,6 +1759,33 @@ class PryzmaInterpreter:
         else:
             file_path = f"{PackageManager.user_packages_path}/{file_path}/{file_path}.pryzma"
             self.load_functions_from_file(file_path)
+
+    def load_function_from_file(self, file_path, func_name):
+        name = os.path.splitext(os.path.basename(file_path))[0]
+        try:
+            with open(file_path, 'r') as file:
+                program = file.read()
+                lines = self.preprocess(program)
+
+                function_def = False
+                function_name = ""
+                function_body = []
+                match = False
+                for line in lines:
+                    if line.startswith("/"):
+                        if line[1:].startswith(name + "."):
+                            if self.nan:
+                                line = "/" + line[len(name) + 2:]
+                        match = line[1:].startswith(func_name+"{")
+                        if match:
+                            self.interpret(line)
+        except FileNotFoundError:
+            if not self.in_try_block:
+                self.in_func_err()
+                self.variables["err"] = 40
+                print(f"Error near line {self.current_line}: File '{file_path}' not found.")
+            else:
+                self.variables["err"] = 40
 
     def load_functions_from_file(self, file_path):
         name = os.path.splitext(os.path.basename(file_path))[0]
