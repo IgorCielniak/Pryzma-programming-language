@@ -174,6 +174,12 @@ class PryzmaInterpreter:
                         b = self.evaluate_expression(b)
                         for i, line in enumerate(lines):
                             lines[i] = re.sub(a, b, line)
+                    elif line == "#shell":
+                        while True:
+                            code = input("/// ")
+                            if code == "exit":
+                                break
+                            shell(code)
                     else:
                         self.process_args(line[1:].split(","))
                 elif line.startswith("struct"):

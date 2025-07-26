@@ -771,6 +771,11 @@ changes to:
 a = X
 print X
 
+#shell pragma:
+
+not a lot to say, it opens the repl during the program execution
+allowing for inspection of vars, funcs and structs as well as executing arbitrary pryzma code
+
 more pragmas will be added in the future
 
 inline asm:
