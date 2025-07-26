@@ -759,6 +759,18 @@ no limits, replaces in all source code no matter what, example:
 
 print "aabbaa" //prints bbbbbb
 
+replace also supports regural expressions:
+
+#replace "[0-9]+" -> "X"
+
+a = 123
+print 45
+
+changes to:
+
+a = X
+print X
+
 more pragmas will be added in the future
 
 inline asm:

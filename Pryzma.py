@@ -173,7 +173,7 @@ class PryzmaInterpreter:
                         a = self.evaluate_expression(a)
                         b = self.evaluate_expression(b)
                         for i, line in enumerate(lines):
-                            lines[i] = line.replace(a, b)
+                            lines[i] = re.sub(a, b, line)
                     else:
                         self.process_args(line[1:].split(","))
                 elif line.startswith("struct"):
