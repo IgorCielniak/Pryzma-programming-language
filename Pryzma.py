@@ -35,8 +35,8 @@ class PryzmaInterpreter:
         self.tk_vars = {}
         self.custom_handlers = {}
         self.deleted_keywords = []
-        self.variables["interpreter_path"] = __file__
-        self.variables["err"] = 0
+        self.set_var("interpreter_path", __file__)
+        self.set_var("err", 0)
         self.in_try_block = False
         self.in_func = [False]
         self.function_tracker = [None]
@@ -51,8 +51,8 @@ class PryzmaInterpreter:
 
     def interpret_file(self, file_path, *args):
         self.file_path = file_path.strip('"')
-        self.variables["argv"] = args
-        self.variables["__file__"] = os.path.abspath(file_path)
+        self.set_var("argv", args)
+        self.set_var("__file__", os.path.abspath(file_path))
         try:
             with open(self.file_path, 'r') as file:
                 program = file.read()
@@ -142,10 +142,10 @@ class PryzmaInterpreter:
             if deleted_keyword:
                 if not self.in_try_block:
                     self.in_func_err()
-                    self.variables["err"] = 1
+                    self.set_var("err", 1)
                     print(f"Error near line {self.current_line}: keyword deleted '{keyword}'")
                 else:
-                    self.variables["err"] = 1
+                    self.set_var("err", 1)
                 continue
 
             handled = False
@@ -221,9 +221,9 @@ class PryzmaInterpreter:
 
                     self.break_stack.append(False)
 
-                    if list_name in self.variables:
-                        for val in self.variables[list_name]:
-                            self.variables[loop_var] = val
+                    if list_name in self.get_vars_list():
+                        for val in self.get_var(list_name):
+                            self.set_var(loop_var, val)
                             for action in actions:
                                 self.interpret(action)
                                 if self.break_stack[-1]:
@@ -233,10 +233,10 @@ class PryzmaInterpreter:
                     else:
                         if not self.in_try_block:
                             self.in_func_err()
-                            self.variables["err"] = 41
+                            self.set_var("err", 41)
                             print(f"Error near line {self.current_line}: Invalid range expression for loop.")
                         else:
-                            self.variables["err"] = 41
+                            self.set_var("err", 41)
 
                     self.break_stack.pop()
                 elif line.startswith("for"):
@@ -536,10 +536,10 @@ class PryzmaInterpreter:
                     else:
                         if not self.in_try_block:
                             self.in_func_err()
-                            self.variables["err"] = 2
+                            self.set_var("err", 2)
                             print(f"Invalid function definition at line {self.current_line}")
                         else:
-                            self.variables["err"] = 2
+                            self.set_var("err", 2)
                 elif line.startswith("@"):
                     self.in_func.append(True)
                     function_name = line[1:].strip()
@@ -551,10 +551,10 @@ class PryzmaInterpreter:
                             arg = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', arg)
                             for args in range(len(arg)):
                                 arg[args] = self.evaluate_expression(arg[args].strip())
-                            self.variables["args"] = arg
+                            self.set_var("args", arg)
                     self.function_tracker.append(function_name)
-                    if function_name in self.variables and isinstance(self.variables[function_name], FuncReference):
-                        function_name = self.variables[function_name].func_name
+                    if function_name in self.get_vars_list() and isinstance(self.get_var(function_name), FuncReference):
+                        function_name = self.get_var(function_name).func_name
                     if function_name in self.functions:
                         command = 0
                         while command < len(self.functions[function_name]):
@@ -563,10 +563,10 @@ class PryzmaInterpreter:
                     else:
                         if not self.in_try_block:
                             self.in_func_err()
-                            self.variables["err"] = 3
+                            self.set_var("err", 3)
                             print(f"Error near line {self.current_line}: Function '{function_name}' is not defined.")
                         else:
-                            self.variables["err"] = 3
+                            self.set_var("err", 3)
                     self.in_func.pop()
                     self.function_tracker.pop()
                 elif line.startswith("pyeval(") and line.endswith(")"):
@@ -598,9 +598,9 @@ class PryzmaInterpreter:
                     error = 0
                     for instruction in instructions:
                         self.interpret(instruction.strip())
-                        if self.variables["err"] != 0:
-                            error = self.variables["err"]
-                    self.variables["err"] = error
+                        if self.get_var("err") != 0:
+                            error = self.get_var("err")
+                    self.set_var("err", error)
                     if catch_block:
                         err_code, instructions = catch_block[:-1].split("){", 1)
                         if int(err_code) == error:
@@ -614,20 +614,20 @@ class PryzmaInterpreter:
                         variable, expression = line.split("=", 1)
                         variable = variable.strip()
                         expression = expression.strip()
-                        self.variables[variable] = int(self.evaluate_expression(expression))
+                        self.set_var(variable, int(self.evaluate_expression(expression)))
                     else:
                         variable = line.strip()
-                        self.variables[line] = 0
+                        self.set_var(variable, 0)
                 elif line.startswith("str"):
                     line = line[3:].strip()
                     if "=" in line:
                         variable, expression = line.split("=", 1)
                         variable = variable.strip()
                         expression = expression.strip()
-                        self.variables[variable] = str(self.evaluate_expression(expression))
+                        self.set_var(variable, str(self.evaluate_expression(expression)))
                     else:
                         variable = line.strip()
-                        self.variables[line] = ""
+                        self.set_var(variable, "")
                 elif line.startswith("loc"):
                     var, value = line[3:].split("=", 1)
                     var = var.strip()
@@ -639,7 +639,7 @@ class PryzmaInterpreter:
                     condition = parts[0].strip()
                     message = parts[1].strip()
 
-                    result = eval(condition, {}, self.variables)
+                    result = eval(condition, {}, self.get_vars_list())
                     if not result:
                         raise AssertionError(f"AssertionError: {self.evaluate_expression(message)}")
                 elif "=" in line and not line.strip().startswith(("if", "while")) and not any(op in line for op in ["+=", "-=", "==", "!=", "<=", ">="]):
@@ -653,35 +653,35 @@ class PryzmaInterpreter:
                     if len(line) != 2:
                         if not self.in_try_block:
                             self.in_func_err()
-                            self.variables["err"] = 4
+                            self.set_var("err", 4)
                             print(f"Error near line {self.current_line}: Too much arguments")
                         else:
-                            self.variables["err"] = 4
+                            self.set_var("err", 4)
                         continue
                     var = line[0].strip()
                     var2 = line[1].strip()
                     var2 = self.evaluate_expression(var2)
-                    self.variables[var] += var2
+                    self.set_var(var, self.get_var(var) + var2)
                 elif "-=" in line:
                     line = line.split("-=")
                     if len(line) != 2:
                         if not self.in_try_block:
                             self.in_func_err()
-                            self.variables["err"] = 5
+                            self.set_var("err", 5)
                             print(f"Error near line {self.current_line}: Too much arguments")
                         else:
-                            self.variables["err"] = 5
+                            self.set_var("err", 5)
                         continue
                     var = line[0].strip()
                     var2 = line[1].strip()
                     var2 = self.evaluate_expression(var2)
-                    self.variables[var] -= var2
+                    self.set_var(var, self.get_var(var) - var2)
                 elif line.startswith("copy"):
                     list1, list2 = line[4:].split(",")
                     list1 = list1.strip()
                     list2 = list2.strip()
-                    for element in self.variables[list1]:
-                        self.variables[list2].append(element)
+                    for element in self.get_var(list1):
+                        self.set_var(list2, self.get_var(list2).append(element))
                 elif line.startswith("append"):
                     list_name, value = line[6:].split(",")
                     list_name = list_name.strip()
@@ -696,7 +696,7 @@ class PryzmaInterpreter:
                     list_name, var = line[6:].split(",")
                     list_name = list_name.strip()
                     var = var.strip()
-                    self.variables[list_name].remove(self.evaluate_expression(var))
+                    self.set_var(list_name, self.get_var(list_name).remove(self.evaluate_expression(var)))
                 elif line.startswith("sys(") and line.endswith(")"):
                     os.system(self.evaluate_expression(line[4:-1].strip()))
                 elif line.startswith("write(") and line.endswith(")"):
@@ -709,12 +709,12 @@ class PryzmaInterpreter:
                     else:
                         if not self.in_try_block:
                             self.in_func_err()
-                            self.variables["err"] = 6
+                            self.set_var("err", 6)
                             print(f"Error near line {self.current_line}: Invalid number of arguments for write()")
                         else:
-                            self.variables["err"] = 6
+                            self.set_var("err", 6)
                 elif line.startswith("delvar(") and line.endswith(")"):
-                    self.variables.pop(self.evaluate_expression(line[7:-1]))
+                    self.del_var(self.evaluate_expression(line[7:-1]))
                 elif line.startswith("delfunc(") and line.endswith(")"):
                     self.functions.pop(self.evaluate_expression(line[8:-1]))
                 elif line.startswith("delkeyword(") and line.endswith(")"):
@@ -730,46 +730,46 @@ class PryzmaInterpreter:
                     if len(instructions) != 3:
                         if not self.in_try_block:
                             self.in_func_err()
-                            self.variables["err"] = 7
+                            self.set_var("err", 7)
                             print(f"Error near line {self.current_line}: Invalid move instruction syntax. Expected format: move(old index, new index, list name)")
                         else:
-                            self.variables["err"] = 7
+                            self.set_var("err", 7)
                         continue
                     list_name = instructions[2].strip()
                     try:
                         old_index = int(instructions[0])
                         new_index = int(instructions[1])
-                        value = self.variables[list_name].pop(old_index)
-                        self.variables[list_name].insert(new_index, value)
+                        value = self.get_var(list_name).pop(old_index)
+                        self.set_var(list_name, self.get_var(list_name).insert(new_index, value))
                     except ValueError:
                         if not self.in_try_block:
                             self.in_func_err()
-                            self.variables["err"] = 8
+                            self.set_var("err", 8)
                             print(f"Error near line {self.current_line}: Invalid index")
                         else:
-                            self.variables["err"] = 8
+                            self.set_var("err", 8)
                 elif line.startswith("swap(") and line.endswith(")"):
                     instructions = line[5:-1].split(",")
                     if len(instructions) != 3:
                         if not self.in_try_block:
                             self.in_func_err()
-                            self.variables["err"] = 9
+                            self.set_var("err", 9)
                             print(f"Error near line {self.current_line}: Invalid swap instruction syntax. Expected format: swap(index 1, index 2, list name)")
                         else:
-                            self.variables["err"] = 9
+                            self.set_var("err", 9)
                         continue
                     list_name = instructions[2].strip()
                     try:
                         index_1 = int(self.evaluate_expression(instructions[0].strip()))
                         index_2 = int(self.evaluate_expression(instructions[1].strip()))
-                        self.variables[list_name][index_1], self.variables[list_name][index_2] = self.variables[list_name][index_2], self.variables[list_name][index_1]
+                        self.swap_var_index(list_name, index_1, index_2)
                     except ValueError:
                         if not self.in_try_block:
                             self.in_func_err()
-                            self.variables["err"] = 10
+                            self.set_var("err", 10)
                             print("Invalid index for swap()")
                         else:
-                            self.variables["err"] = 10
+                            self.set_var("err", 10)
                 elif line.startswith("tk"):
                     global tkinter_enabled
                     command = line[2:].strip()
@@ -805,10 +805,10 @@ class PryzmaInterpreter:
                             else:
                                 if not self.in_try_block:
                                     self.in_func_err()
-                                    self.variables["err"] = 11
+                                    self.set_var("err", 11)
                                     print(f"Error near line {self.current_line}: Invalid create_button command")
                                 else:
-                                    self.variables["err"] = 11
+                                    self.set_var("err", 11)
                             self.tk_vars[button_name].pack()
                         elif command.startswith("create_label(") and command.endswith(")"):
                             command = command[13:-1]
@@ -823,10 +823,10 @@ class PryzmaInterpreter:
                             else:
                                 if not self.in_try_block:
                                     self.in_func_err()
-                                    self.variables["err"] = 12
+                                    self.set_var("err", 12)
                                     print(f"Error near line {self.current_line}: Invalid create_label command")
                                 else:
-                                    self.variables["err"] = 12
+                                    self.set_var("err", 12)
                             self.tk_vars[label_name].pack()
                         elif command.startswith("create_entry(") and command.endswith(")"):
                             command = command[13:-1]
@@ -841,10 +841,10 @@ class PryzmaInterpreter:
                             else:
                                 if not self.in_try_block:
                                     self.in_func_err()
-                                    self.variables["err"] = 13
+                                    self.set_var("err", 13)
                                     print(f"Error near line {self.current_line}: Invalid create_entry command")
                                 else:
-                                    self.variables["err"] = 13
+                                    self.set_var("err", 13)
                             self.tk_vars[entry_name].pack()
                         elif command.startswith("get_entry_text(") and command.endswith(")"):
                             command = command[15:-1]
@@ -852,14 +852,14 @@ class PryzmaInterpreter:
                             entry_name = command[0].strip()
                             variable_name = command[1].strip()
                             if entry_name in self.tk_vars:
-                                self.variables[variable_name] = self.tk_vars[entry_name].get()
+                                self.set_var(variable_name, self.tk_vars[entry_name].get())
                             else:
                                 if not self.in_try_block:
                                     self.in_func_err()
-                                    self.variables["err"] = 14
+                                    self.set_var("err", 14)
                                     print(f"Error near line {self.current_line}: Invalid get_entry_text command")
                                 else:
-                                    self.variables["err"] = 14
+                                    self.set_var("err", 14)
                         elif command.startswith("set_entry_text(") and command.endswith(")"):
                             command = command[15:-1]
                             command = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', command)
@@ -867,21 +867,21 @@ class PryzmaInterpreter:
                             variable_name = command[1].strip()
                             if entry_name in self.tk_vars:
                                 self.tk_vars[entry_name].delete(0, tk.END)
-                                self.tk_vars[entry_name].insert(0, self.variables[variable_name])
+                                self.tk_vars[entry_name].insert(0, self.get_var(variable_name))
                             else:
                                 if not self.in_try_block:
                                     self.in_func_err()
-                                    self.variables["err"] = 15
+                                    self.set_var("err", 15)
                                     print(f"Error near line {self.current_line}: Invalid set_entry_text command")
                                 else:
-                                    self.variables["err"] = 15
+                                    self.set_var("err", 15)
                     else:
                         if not self.in_try_block:
                             self.in_func_err()
-                            self.variables["err"] = 16
+                            self.set_var("err", 16)
                             print(f"Error near line {self.current_line}: tkinter isn't enabled")
                         else:
-                            self.variables["err"] = 16
+                            self.set_var("err", 16)
                 elif line.startswith("call"):
                     call_statement = line[4:].strip()
                     file_name, function_name, args = self.parse_call_statement(call_statement)
@@ -899,11 +899,11 @@ class PryzmaInterpreter:
                     dict_name, key, value = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', line[5:-1])
                     key = self.evaluate_expression(key)
                     value = self.evaluate_expression(value)
-                    self.variables[dict_name][key] = value
+                    self.set_var_index(dict_name, value, key)
                 elif line.startswith("dpop(") and line.endswith(")"):
                     dict_name, key = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', line[5:-1])
                     key = self.evaluate_expression(key)
-                    self.variables[dict_name].pop(key)
+                    self.set_var(dict_name, self.get_var(dict_name).pop(key))
                 elif line.startswith("return"):
                     self.ret_val = self.evaluate_expression(line[6:].strip())
                 elif line == "break":
@@ -922,14 +922,14 @@ class PryzmaInterpreter:
                         code[line] = self.evaluate_expression(code[line].strip())
                     code = "asm{\n"+"\n".join(code)+"\n}"
                     asm_vars = {}
-                    for i in self.variables:
-                        if type(self.variables[i]) == int:
-                            asm_vars[i] = self.variables[i]
+                    for i in self.get_vars_list():
+                        if type(self.get_var(i)) == int:
+                            asm_vars[i] = self.get_var(i)
                     if asm_emulator:
                         try:
                             results = asm_emulator.run(code, asm_vars)
                             for var, val in results.items():
-                                self.variables[var] = val
+                                self.set_var(var, val)
                         except Exception as e:
                             print(f"ASM emulation error: {e}")
                     else:
@@ -940,7 +940,7 @@ class PryzmaInterpreter:
                     code = list(filter(None, code))
                     for line in range(len(code)):
                         code[line] = self.evaluate_expression(code[line].strip())
-                    exec(";".join(code), {}, self.variables)
+                    exec(";".join(code), {}, self.get_vars_list())
                 elif line.startswith("mkdir(") and line.endswith(")"):
                     path = self.evaluate_expression(line[6:-1])
                     os.mkdir(path)
@@ -1031,22 +1031,54 @@ class PryzmaInterpreter:
                     if not handled:
                         if not self.in_try_block:
                             self.in_func_err()
-                            self.variables["err"] = 17
+                            self.set_var("err", 17)
                             print(f"Invalid statement at line {self.current_line}: {line}")
                         else:
-                            self.variables["err"] = 17
+                            self.set_var("err", 17)
 
             except Exception as e:
                 if not self.in_try_block:
                     self.in_func_err()
-                    self.variables["err"] = 18
+                    self.set_var("err", 18)
                     print(f"Error near line {self.current_line}: {e}")
                 else:
-                    self.variables["err"] = 18
+                    self.set_var("err", 18)
 
     def in_func_err(self):
         if self.in_func[-1]:
             print(f"Error while calling function '{self.function_tracker[-1]}'")
+
+    #variable storage interaction interface
+
+    def del_var(var):
+        self.variables.pop(var)
+
+    def clear_vars(self):
+        self.variables.clear()
+
+    def get_vars_list(self):
+        return self.variables
+
+    def set_var(self, var_name, value):
+        self.variables[var_name] = value
+
+    def set_var_index(self, var_name, value, index):
+        self.variables[var_name][index] = value
+
+    def get_var(self, var_name):
+        return self.variables[var_name]
+
+    def get_var_index(self, var_name, index):
+        return self.variables[var_name][index]
+
+    def swap_var_index(self, list_name, index_1, index_2):
+        self.variables[list_name][index_1], self.variables[list_name][index_2] = self.variables[list_name][index_2], self.variables[list_name][index_1]
+
+    def append_to_var(self, list_name, value):
+        self.variables[list_name].append(self.evaluate_expression(value))
+
+    def append_to_var_index(self, list_name, index, value):
+        self.variables[list_name][self.evaluate_expression(index)].append(self.evaluate_expression(value))
 
     def process_args(self, args):
         for arg in range(0,len(args)):
@@ -1104,55 +1136,55 @@ class PryzmaInterpreter:
             else:
                 if not self.in_try_block:
                     self.in_func_err()
-                    self.variables["err"] = 19
+                    self.set_var("err", 19)
                     print(f"Module '{module_name}' does not have a 'start' function.")
                 else:
-                    self.variables["err"] = 19
+                    self.set_var("err", 19)
         except Exception as e:
             if not self.in_try_block:
                 self.in_func_err()
-                self.variables["err"] = 20
+                self.set_var("err", 20)
                 print(f"Error loading module '{module_path}': {e}")
             else:
-                self.variables["err"] = 20
+                self.set_var("err", 20)
 
     def decrement_variable(self, variable):
-        if variable in self.variables:
-            if isinstance(self.variables[variable], int) or isinstance(self.variables[variable], float):
-                self.variables[variable] -= 1
+        if variable in self.get_vars_list():
+            if isinstance(self.get_var(variable), int) or isinstance(self.get_var(variable), float):
+                self.set_var(variable, self.get_var(variable) - 1)
             else:
                 if not self.in_try_block:
                     self.in_func_err()
-                    self.variables["err"] = 21
+                    self.set_var("err", 21)
                     print(f"Error near line {self.current_line}: Cannot decrement non-integer or float variable '{variable}'.")
                 else:
-                    self.variables["err"] = 21
+                    self.set_var("err", 21)
         else:
             if not self.in_try_block:
                 self.in_func_err()
-                self.variables["err"] = 22
+                self.set_var("err", 22)
                 print(f"Error near line {self.current_line}: Variable '{variable}' not found.")
             else:
-                self.variables["err"] = 22
+                self.set_var("err", 22)
 
     def increment_variable(self, variable):
-        if variable in self.variables:
-            if isinstance(self.variables[variable], int) or isinstance(self.variables[variable], float):
-                self.variables[variable] += 1
+        if variable in self.get_vars_list():
+            if isinstance(self.get_var(variable), int) or isinstance(self.get_var(variable), float):
+                self.set_var(variable, self.get_var(variable) + 1)
             else:
                 if not self.in_try_block:
                     self.in_func_err()
-                    self.variables["err"] = 23
+                    self.set_var("err", 23)
                     print(f"Error near line {self.current_line}: Cannot increment non-integer or float variable '{variable}'.")
                 else:
-                    self.variables["err"] = 23
+                    self.set_var("err", 23)
         else:
             if not self.in_try_block:
                 self.in_func_err()
-                self.variables["err"] = 24
+                self.set_var("err", 24)
                 print(f"Error near line {self.current_line}: Variable '{variable}' not found.")
             else:
-                self.variables["err"] = 24
+                self.set_var("err", 24)
 
 
     def write_to_file(self, file_path, mode, content):
@@ -1166,10 +1198,10 @@ class PryzmaInterpreter:
         except Exception as e:
             if not self.in_try_block:
                 self.in_func_err()
-                self.variables["err"] = 25
+                self.set_var("err", 25)
                 print(f"Error near line {self.current_line} while writing to file '{file_path}': {e}")
             else:
-                self.variables["err"] = 25
+                self.set_var("err", 25)
 
     def add_or_str(self, expr):
         in_quotes = False
@@ -1227,10 +1259,10 @@ class PryzmaInterpreter:
             if len(parts) != 3:
                 if not self.in_try_block:
                     self.in_func_err()
-                    self.variables["err"] = 26
+                    self.set_var("err", 26)
                     print(f"Error near line {self.current_line}: Invalid number of arguments for replace function.")
                 else:
-                    self.variables["err"] = 26
+                    self.set_var("err", 26)
                     return None
             value = self.evaluate_expression(parts[0].strip())
             old = self.evaluate_expression(parts[1].strip())
@@ -1315,10 +1347,10 @@ class PryzmaInterpreter:
             if len(parts) != 2:
                 if not self.in_try_block:
                     self.in_func_err()
-                    self.variables["err"] = 27
+                    self.set_var("err", 27)
                     print(f"Error near line {self.current_line}: Invalid number of arguments for resplit(). Expected 2 arguments.")
                 else:
-                    self.variables["err"] = 27
+                    self.set_var("err", 27)
                 return None
     
             regex_pattern = self.evaluate_expression(parts[0].strip())
@@ -1327,19 +1359,19 @@ class PryzmaInterpreter:
             if not isinstance(regex_pattern, str):
                 if not self.in_try_block:
                     self.in_func_err()
-                    self.variables["err"] = 28
+                    self.set_var("err", 28)
                     print(f"Error near line {self.current_line}: The first argument of resplit() must be a string (regex pattern).")
                 else:
-                    self.variables["err"] = 28
+                    self.set_var("err", 28)
                 return None
             regex_pattern = r"{}".format(regex_pattern) 
             if not isinstance(string_to_split, str):
                 if not self.in_try_block:
                     self.in_func_err()
-                    self.variables["err"] = 29
+                    self.set_var("err", 29)
                     print(f"Error near line {self.current_line}: The second argument of resplit() must be a string.")
                 else:
-                    self.variables["err"] = 29
+                    self.set_var("err", 29)
                 return None
     
             try:
@@ -1347,10 +1379,10 @@ class PryzmaInterpreter:
             except re.error as e:
                 if not self.in_try_block:
                     self.in_func_err()
-                    self.variables["err"] = 30
+                    self.set_var("err", 30)
                     print(f"Error near line {self.current_line}: Invalid regex pattern: {e}")
                 else:
-                    self.variables["err"] = 30
+                    self.set_var("err", 30)
                 return None
         elif expression.startswith("in(") and expression.endswith(")"):
             value1, value2 = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', expression[3:-1])
@@ -1361,19 +1393,19 @@ class PryzmaInterpreter:
             except Exception as e:
                 if not self.in_try_block:
                     self.in_func_err()
-                    self.variables["err"] = 31
+                    self.set_var("err", 31)
                     print(f"in() function error near line {self.current_line}: {e}")
                 else:
-                    self.variables["err"] = 31
+                    self.set_var("err", 31)
         elif expression.startswith("splitby(") and expression.endswith(")"):
             args = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', expression[8:-1])
             if len(args) < 2:
                 if not self.in_try_block:
                     self.in_func_err()
-                    self.variables["err"] = 32
+                    self.set_var("err", 32)
                     print(f"Error near line {self.current_line}: Invalid number of arguments for splitby function.")
                 else:
-                    self.variables["err"] = 32
+                    self.set_var("err", 32)
                 return None
             char_to_split = self.evaluate_expression(args[0].strip())
             string_to_split = self.evaluate_expression(args[1].strip())
@@ -1386,12 +1418,12 @@ class PryzmaInterpreter:
             var = var.strip()
             val = val.strip()
             if var.startswith("int(") and var.endswith(")"):
-                if self.var in self.variables:
-                    return int(self.variables[var])
+                if self.var in self.get_vars_list():
+                    return int(self.get_var(var))
                 return int(self.evaluate_expression(val))
             elif var.startswith("str(") and var.endswith(")"):
-                if self.var in self.variables:
-                    return str(self.variables[var])
+                if self.var in self.get_vars_list():
+                    return str(self.get_var(var))
                 return str(self.evaluate_expression(val))
             else:
                 return self.evaluate_expression(val)
@@ -1405,7 +1437,7 @@ class PryzmaInterpreter:
         elif expression.startswith("len(") and expression.endswith(")"):
             return len(self.evaluate_expression(expression[4:-1].strip()))
         elif expression.startswith("splitlines(") and expression.endswith(")"):
-            return self.variables[expression[11:-1]].splitlines()
+            return self.get_var(expression[11:-1]).splitlines()
         elif expression.startswith("read(") and expression.endswith(")"):
             file_path = self.evaluate_expression(expression[5:-1])
             try:
@@ -1414,53 +1446,53 @@ class PryzmaInterpreter:
             except FileNotFoundError:
                 if not self.in_try_block:
                     self.in_func_err()
-                    self.variables["err"] = 33
+                    self.set_var("err", 33)
                     print(f"Error near line {self.current_line}: File '{file_path}' not found.")
                 else:
-                    self.variables["err"] = 33
+                    self.set_var("err", 33)
                 return ""
         elif expression.startswith("index(") and expression.endswith(")"):
             args = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', expression[6:-1])
             if len(args) != 2:
                 if not self.in_try_block:
                     self.in_func_err()
-                    self.variables["err"] = 34
+                    self.set_var("err", 34)
                     print(f"Error near line {self.current_line}: Invalid number of arguments for index function.")
                 else:
-                    self.variables["err"] = 34
+                    self.set_var("err", 34)
                 return None
             list_name = args[0].strip()
             value = args[1].strip()
-            if list_name in self.variables and isinstance(self.variables[list_name], list):
+            if list_name in self.get_vars_list() and isinstance(self.get_var(list_name), list):
                 value = self.evaluate_expression(value.strip())
                 try:
-                    index_value = self.variables[list_name].index(value)
+                    index_value = self.get_var(list_name).index(value)
                     return index_value
                 except ValueError:
                     if not self.in_try_block:
                         self.in_func_err()
-                        self.variables["err"] = 35
+                        self.set_var("err", 35)
                         print(f"Error near line {self.current_line}: Value '{value}' not found in list '{list_name}'.")
                     else:
-                        self.variables["err"] = 35
+                        self.set_var("err", 35)
             else:
                 if not self.in_try_block:
                     self.in_func_err()
-                    self.variables["err"] = 36
+                    self.set_var("err", 36)
                     print(f"Error near line {self.current_line}: Variable '{list_name}' is not a list.")
                 else:
-                    self.variables["err"] = 36
+                    self.set_var("err", 36)
         elif expression.startswith("all(") and expression.endswith(")"):
             list_name = expression[4:-1]
-            if list_name in self.variables and isinstance(self.variables[list_name], list):
-                return "".join(map(str, self.variables[list_name]))
+            if list_name in self.get_vars_list() and isinstance(self.get_var(list_name), list):
+                return "".join(map(str, self.get_var(list_name)))
             else:
                 if not self.in_try_block:
                     self.in_func_err()
-                    self.variables["err"] = 37
+                    self.set_var("err", 37)
                     print(f"Error near line {self.current_line}: List '{list_name}' is not defined.")
                 else:
-                    self.variables["err"] = 37
+                    self.set_var("err", 37)
                 return None
         elif expression.startswith("isanumber(") and expression.endswith(")"):
             expression = expression[10:-1]
@@ -1484,7 +1516,7 @@ class PryzmaInterpreter:
         elif expression.startswith("get(") and expression.endswith(")"):
             dict_name, key = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', expression[4:-1])
             key = self.evaluate_expression(key)
-            return self.variables[dict_name][key]
+            return self.get_var_index(dict_name, key)
         elif expression.startswith("@"):
             self.in_func.append(True)
             self.function_tracker.append(expression[1:].split("(")[0])
@@ -1501,7 +1533,7 @@ class PryzmaInterpreter:
             value = self.evaluate_expression(value)
             return char.join(value)
         elif expression.startswith("defined(") and expression.endswith(")"):
-            return expression[8:-1] in self.variables
+            return expression[8:-1] in self.get_vars_list()
         elif expression.startswith("is_file(") and expression.endswith(")"):
             path = self.evaluate_expression(expression[8:-1])
             return os.path.isfile(path)
@@ -1551,11 +1583,11 @@ class PryzmaInterpreter:
             name, field = expression.split(".", 1)
             return self.acces_field(name, field)
         elif expression.startswith("&"):
-            return Reference(expression[1:]) if expression[1:] in self.variables else FuncReference(expression[1:])
+            return Reference(expression[1:]) if expression[1:] in self.get_vars_list() else FuncReference(expression[1:])
         elif expression.startswith("*"):
             ref = self.evaluate_expression(expression[1:])
             if isinstance(ref, Reference):
-                return self.variables[ref.var_name]
+                return self.get_var(ref.var_name)
             else:
                 return ref
         elif expression.startswith("fields(") and expression.endswith(")"):
@@ -1567,35 +1599,35 @@ class PryzmaInterpreter:
                 isinstance(value, FuncReference)
                 or isinstance(value, str) and value in self.functions
             )
-        elif expression in self.variables:
+        elif expression in self.get_vars_list():
             if expression in self.locals:
                 if self.locals[expression] == self.function_tracker[-1]:
-                    return self.variables[expression]
+                    return self.get_var(expression)
                 else:
                     if not self.in_try_block:
                         self.in_func_err()
-                        self.variables["err"] = 46
+                        self.set_var("err", 46)
                         print(f"Error near line {self.current_line}: Variable '{expression}' not found in current scope.")
                     else:
-                        self.variables["err"] = 46
+                        self.set_var("err", 46)
             else:
-                return self.variables[expression]
+                return self.get_var(expression)
         else:
             try:
-                return eval(expression, {}, self.variables)
+                return eval(expression, {}, self.get_vars_list())
             except NameError:
                 if not self.in_try_block:
                     self.in_func_err()
-                    self.variables["err"] = 38
+                    self.set_var("err", 38)
                     print(f"Error near line {self.current_line}: Unknown variable or expression: {expression}")
                 else:
-                    self.variables["err"] = 38
+                    self.set_var("err", 38)
         return None
 
     def acces_field(self, name, field):
-        obj = self.variables[name.strip()]
+        obj = self.get_var(name.strip())
         if isinstance(obj, Reference):
-            obj = self.variables[obj.var_name]
+            obj = self.get_var(obj.var_name)
         parts = re.findall(r'\w+|\[.*?\]', field)
 
         for part in parts:
@@ -1624,12 +1656,12 @@ class PryzmaInterpreter:
                 raise ValueError("Invalid struct field")
 
             var_name = tokens[0]
-            if var_name not in self.variables:
+            if var_name not in self.get_vars_list():
                 raise KeyError(f"Variable '{var_name}' not found")
 
-            target = self.variables[var_name]
+            target = self.get_var(var_name)
             if isinstance(target, Reference):
-                target = self.variables[target.var_name]
+                target = self.get_var(target.var_name)
 
             for token in tokens[1:-1]:
                 if token.startswith('['):
@@ -1652,9 +1684,9 @@ class PryzmaInterpreter:
 
                 indexes = re.findall(r'\[(.*?)\]', var_name)
 
-                target = self.variables[base_var]
+                target = self.get_var(base_var)
                 if isinstance(target, Reference):
-                    target = self.variables[target.var_name]
+                    target = self.get_var(target.var_name)
 
                 for index_expr in indexes[:-1]:
                     index = self.evaluate_expression(index_expr)
@@ -1663,7 +1695,7 @@ class PryzmaInterpreter:
                 last_index = self.evaluate_expression(indexes[-1])
                 target[last_index] = value
             else:
-                self.variables[var_name] = value
+                self.set_var(var_name, value)
 
 
     def print_value(self, value):
@@ -1704,7 +1736,7 @@ class PryzmaInterpreter:
             prompt = ""
 
         value = self.get_input(prompt)
-        self.variables[variable_name] = value
+        self.set_var(variable_name, value)
 
 
     def for_loop(self, loop_var, range_expr, actions):
@@ -1716,7 +1748,7 @@ class PryzmaInterpreter:
 
         if isinstance(start_val, int) and isinstance(end_val, int):
             for val in range(start_val, end_val):
-                self.variables[loop_var] = val
+                self.set_var(loop_var, val)
                 for action in actions:
                     self.interpret(action)
                     if self.break_stack[-1]:
@@ -1726,10 +1758,10 @@ class PryzmaInterpreter:
         else:
             if not self.in_try_block:
                 self.in_func_err()
-                self.variables["err"] = 39
+                self.set_var("err", 39)
                 print(f"Error near line {self.current_line}: Invalid range expression for loop.")
             else:
-                self.variables["err"] = 39
+                self.set_var("err", 39)
 
         self.break_stack.pop()
 
@@ -1788,10 +1820,10 @@ class PryzmaInterpreter:
         except FileNotFoundError:
             if not self.in_try_block:
                 self.in_func_err()
-                self.variables["err"] = 40
+                self.set_var("err", 40)
                 print(f"Error near line {self.current_line}: File '{file_path}' not found.")
             else:
-                self.variables["err"] = 40
+                self.set_var("err", 40)
 
     def load_functions_from_file(self, file_path):
         name = os.path.splitext(os.path.basename(file_path))[0]
@@ -1820,10 +1852,10 @@ class PryzmaInterpreter:
         except FileNotFoundError:
             if not self.in_try_block:
                 self.in_func_err()
-                self.variables["err"] = 40
+                self.set_var("err", 40)
                 print(f"Error near line {self.current_line}: File '{file_path}' not found.")
             else:
-                self.variables["err"] = 40
+                self.set_var("err", 40)
 
     def get_input(self, prompt):
         if sys.stdin.isatty():
@@ -1860,36 +1892,38 @@ limitations under the License.
     def append_to_list(self, list_name, value):
         if "[" in list_name:
             list_name, index = list_name[:-1].split("[")
-            self.variables[list_name][self.evaluate_expression(index)].append(self.evaluate_expression(value))
-        elif list_name in self.variables:
-            self.variables[list_name].append(self.evaluate_expression(value))
+            self.append_to_var_index(list_name, index, value)
+        elif list_name in self.get_vars_list():
+            self.append_to_var(list_name, value)
         else:
             if not self.in_try_block:
                 self.in_func_err()
-                self.variables["err"] = 41
+                self.set_var("err", 41)
                 print(f"Error near line {self.current_line}: List '{list_name}' does not exist.")
             else:
-                self.variables["err"] = 41
+                self.set_var("err", 41)
 
     def pop_from_list(self, list_name, index):
-        if list_name in self.variables:
+        if list_name in self.get_vars_list():
             try:
                 index = self.evaluate_expression(index)
-                self.variables[list_name].pop(index)
+                list_ = self.get_var(list_name)
+                list_.pop(index)
+                self.set_var(list_name, list_)
             except IndexError:
                 if not self.in_try_block:
                     self.in_func_err()
-                    self.variables["err"] = 42
+                    self.set_var("err", 42)
                     print(f"Error near line {self.current_line}: Index {index} out of range for list '{list_name}'.")
                 else:
-                    self.variables["err"] = 42
+                    self.set_var("err", 42)
         else:
             if not self.in_try_block:
                 self.in_func_err()
-                self.variables["err"] = 43
+                self.set_var("err", 43)
                 print(f"Error near line {self.current_line}: List '{list_name}' does not exist.")
             else:
-                self.variables["err"] = 43
+                self.set_var("err", 43)
 
     def debug_interpret_func(self, line, current_line, breakpoints, log_message, print_help):
         self.in_func.append(True)
@@ -1902,7 +1936,7 @@ limitations under the License.
                 arg = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', arg)
                 for args in range(len(arg)):
                     arg[args] = self.evaluate_expression(arg[args].strip())
-                self.variables["args"] = arg
+                self.set_var("args", arg)
         self.function_tracker.append(function_name)
         if function_name in self.functions:
             command = 0
@@ -1939,8 +1973,8 @@ limitations under the License.
                         print("Breakpoints:", sorted(breakpoints))
                         log_message(f"Breakpoints listed: {sorted(breakpoints)}")
                     elif command_ == 'v':
-                        print("Variables:", self.variables)
-                        log_message(f"Variables: {self.variables}")
+                        print("Variables:", self.get_vars_list())
+                        log_message(f"Variables: {self.get_vars_list()}")
                     elif command_ == 'f':
                         print("Functions:", self.functions)
                         log_message(f"Functions: {self.functions}")
@@ -1975,10 +2009,10 @@ limitations under the License.
         else:
             if not self.in_try_block:
                 self.in_func_err()
-                self.variables["err"] = 3
+                self.set_var("err", 3)
                 print(f"Error near line {current_line}: Function '{function_name}' is not defined.")
             else:
-                self.variables["err"] = 3
+                self.set_var("err", 3)
         self.in_func.pop()
         self.function_tracker.pop()
 
@@ -1987,8 +2021,8 @@ limitations under the License.
         current_line = 0
         breakpoints = set()
         self.log_file = None
-        self.variables["argv"] = arguments
-        self.variables["__file__"] = os.path.abspath(file_path)
+        self.set_var("argv", arguments)
+        self.set_var("__file__", os.path.abspath(file_path))
 
         if file_path.startswith('"') and file_path.endswith('"'):
             file_path = file_path[1:-1]
@@ -2058,8 +2092,8 @@ limitations under the License.
                 print("Breakpoints:", sorted(breakpoints))
                 log_message(f"Breakpoints listed: {sorted(breakpoints)}")
             elif command == 'v':
-                print("Variables:", self.variables)
-                log_message(f"Variables: {self.variables}")
+                print("Variables:", self.get_vars_list())
+                log_message(f"Variables: {self.get_vars_list()}")
             elif command == 'f':
                 print("Functions:", self.functions)
                 log_message(f"Functions: {self.functions}")
@@ -2155,8 +2189,8 @@ limitations under the License.
                     print("Breakpoints:", sorted(breakpoints))
                     log_message(f"Breakpoints listed: {sorted(breakpoints)}")
                 elif command == 'v':
-                    print("Variables:", self.variables)
-                    log_message(f"Variables: {self.variables}")
+                    print("Variables:", self.get_vars_list())
+                    log_message(f"Variables: {self.get_vars_list()}")
                 elif command == 'f':
                     print("Functions:", self.functions)
                     log_message(f"Functions: {self.functions}")
@@ -2187,7 +2221,7 @@ limitations under the License.
         if running_from_file == True:
             cvf = input("Clear variables, functions and staructs dictionaries? (y/n): ")
             if cvf.lower() == "y":
-                self.variables.clear()
+                self.clear_vars()
                 self.functions.clear()
                 self.structs.clear()
 
@@ -2203,7 +2237,7 @@ limitations under the License.
                     self.variabes["err"] = 44
                     print("Invalid number of arguments for call")
                 else:
-                    self.variables["err"] = 44
+                    self.set_var("err", 44)
             
             file_name = self.evaluate_expression(parts[0])
             function_name = self.evaluate_expression(parts[1])
@@ -2217,10 +2251,10 @@ limitations under the License.
         else:
             if not self.in_try_block:
                 self.in_func_err()
-                self.variables["err"] = 45
+                self.set_var("err", 45)
                 print("Invalid call statement format. Expected format: call(file_name, function_name, arg1, arg2, ...)")
             else:
-                self.variables["err"] = 45
+                self.set_var("err", 45)
 
     def call_function_from_file(self, file_name, function_name, args):
         if not os.path.isfile(file_name):
@@ -2623,7 +2657,7 @@ def shell(code):
     if code == "help":
         interpreter.print_help()
     elif code == "cls":
-        interpreter.variables.clear()
+        interpreter.clear_vars()
         interpreter.functions.clear()
         interpreter.structs.clear()
     elif code == "clear":
@@ -2636,7 +2670,7 @@ def shell(code):
         interpreter.interpret_file2()
         cvf = input("Clear variables, functions and structs dictionaries? (y/n): ")
         if cvf.lower() == "y":
-            interpreter.variables.clear()
+            interpreter.clear_vars()
             interpreter.functions.clear()
             interpreter.structs.clear()
         running_from_file = False
