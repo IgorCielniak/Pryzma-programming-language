@@ -64,7 +64,7 @@ class PryzmaInterpreter:
         program = program.splitlines()
         for line in range(0,len(program)-1):
             program[line] = program[line].split("//")[0]
-            if program[line].startswith("#np"):
+            if program[line].startswith("#np") or (program[line].startswith("#preproc") and "np" in program[line]):
                 self.no_preproc = True
         program = ";".join(program)
 
