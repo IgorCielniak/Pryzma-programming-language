@@ -750,6 +750,11 @@ an - enable automatic namespacing
 
 #nan, #an, #fd and #np are also supported
 
+Important!
+if you want to set the #np directive for the main file, then the source code must start with it,
+there can be any number of empty lines before but the first actuall statement must be #np in this case,
+specificly #np #preproc = np wont work for setting it for the main file
+
 #replace a -> b
 
 replaces all instances of a with b, a and b can be strings, numbers, variables etc.
