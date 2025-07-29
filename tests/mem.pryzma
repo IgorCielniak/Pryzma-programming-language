@@ -1,0 +1,11 @@
+data = 67
+
+write(0x0000, data)
+
+a = ~read(0x0000)
+
+print char(a)
+
+write(0x0000, ascii("g"))
+
+print char(a)

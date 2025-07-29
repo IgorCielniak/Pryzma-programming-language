@@ -48,6 +48,7 @@ class PryzmaInterpreter:
         self.return_val = None
         self.break_stack = []
         self.main_file = 1
+        self.mem = bytearray(4096)
 
     def interpret_file(self, file_path, *args):
         self.file_path = file_path.strip('"')
@@ -707,8 +708,8 @@ class PryzmaInterpreter:
                     self.variables[list_name].remove(self.evaluate_expression(var))
                 elif line.startswith("sys(") and line.endswith(")"):
                     os.system(self.evaluate_expression(line[4:-1].strip()))
-                elif line.startswith("write(") and line.endswith(")"):
-                    line = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', line[6:-1])
+                elif line.startswith("file_write(") and line.endswith(")"):
+                    line = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', line[11:-1])
                     if len(line) == 3:
                         file_path = self.evaluate_expression(line[0].strip())
                         mode = self.evaluate_expression(line[1].strip())
@@ -1033,6 +1034,11 @@ class PryzmaInterpreter:
                     if handeled == False and default_case:
                         for instruction in default_case[1].split("&@$%"):
                             self.interpret(instruction)
+                elif line.startswith("write(") and line.endswith(")"):
+                    addr, data = line[10:-1].split(",", 1)
+                    addr = self.evaluate_expression(addr.strip())
+                    data = self.evaluate_expression(data.strip())
+                    self.mem[addr] = data
                 elif line == "stop":
                     sys.exit()
                 else:
@@ -1414,8 +1420,8 @@ class PryzmaInterpreter:
             return len(self.evaluate_expression(expression[4:-1].strip()))
         elif expression.startswith("splitlines(") and expression.endswith(")"):
             return self.variables[expression[11:-1]].splitlines()
-        elif expression.startswith("read(") and expression.endswith(")"):
-            file_path = self.evaluate_expression(expression[5:-1])
+        elif expression.startswith("file_read(") and expression.endswith(")"):
+            file_path = self.evaluate_expression(expression[10:-1])
             try:
                 with open(file_path, 'r') as file:
                     return file.read()
@@ -1559,7 +1565,10 @@ class PryzmaInterpreter:
             name, field = expression.split(".", 1)
             return self.acces_field(name, field)
         elif expression.startswith("&"):
-            return Reference(expression[1:]) if expression[1:] in self.variables else FuncReference(expression[1:])
+            if expression[1:] in self.variables:
+                return Reference(expression[1:])
+            if expression[1:] in self.functions:
+                return FuncReference(expression[1:])
         elif expression.startswith("*"):
             ref = self.evaluate_expression(expression[1:])
             if isinstance(ref, Reference):
@@ -1575,6 +1584,14 @@ class PryzmaInterpreter:
                 isinstance(value, FuncReference)
                 or isinstance(value, str) and value in self.functions
             )
+        elif expression.startswith("read(") and expression.endswith(")"):
+            addr = self.evaluate_expression(expression[9:-1])
+            return self.mem[addr]
+        elif expression.startswith("ascii(") and expression.endswith(")"):
+            return ord(self.evaluate_expression(expression[6:-1]))
+        elif expression.startswith("~"):
+            value = expression[1:]
+            return lambda: self.evaluate_expression(value)
         elif expression in self.variables:
             if expression in self.locals:
                 if self.locals[expression] == self.function_tracker[-1]:
@@ -2753,7 +2770,7 @@ flags:
                 if arg == "-fd":
                     interpreter.forward_declare = True
                 if arg == "-s":
-                    interpreter.deleted_keywords.extend(["call", "exec", "mkdir", "makeidrs", "rmdir", "removedirs", "copy", "copyfile", "move", "rename", "remove", "symlink", "unlink", "read", "write", "load", "pyeval", "py{", "asm"])
+                    interpreter.deleted_keywords.extend(["call", "exec", "mkdir", "makeidrs", "rmdir", "removedirs", "copy", "copyfile", "move", "rename", "remove", "symlink", "unlink", "file_read", "file_write", "load", "pyeval", "py{", "asm"])
         if debug == False:
             interpreter.interpret_file(file_path, *arguments)
         sys.exit()

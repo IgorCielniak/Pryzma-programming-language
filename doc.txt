@@ -485,11 +485,11 @@ sys(command)
 
 Read and write:
 
-content = read("C:\Users\User\Desktop\Untitled-1.txt")
+content = file_read("C:\Users\User\Desktop\Untitled-1.txt")
 
 content of file C:\Users\User\Desktop\Untitled-1.txt will be assigned to variable content
 
-write("C:\Users\User\Desktop\Untitled-1.txt",mode,content)
+file_write("C:\Users\User\Desktop\Untitled-1.txt",mode,content)
 
 it will write value of variable content to file C:\Users\User\Desktop\Untitled-1.txt in mode stored as a value of variable mode
 
@@ -940,7 +940,7 @@ I think this is also quite self explanatory
 
 references etc. :
 
-Pryzma supports references, which allow you to create variables that point to the memory address of other variables. This is useful for modifying variables within functions or for creating complex data structures.
+Pryzma supports references, which allow you to create variables that point other variables. This is useful for modifying variables within functions or for creating complex data structures.
 
 Creating a reference (&):
 
@@ -1038,6 +1038,27 @@ in this case 'a' is actually a function pointer and it points to a function that
 output:
 
 a
+
+lazy expressions:
+
+a = 7
+b = ~a
+a = 6
+print b //outputs 6
+
+i think this is self explanatory
+
+memory:
+
+Pryzma has some manual memory management capabilities that work as follows:
+
+by default pryzma provides 4kb of memory to the uses and you can use two functions to manipulate it:
+
+write(0x0000, ascii("g"))
+
+print char(read(0x0000)) // outputs g
+
+for now this is all of the memeory manipulation functions
 
 Running Programs:
 

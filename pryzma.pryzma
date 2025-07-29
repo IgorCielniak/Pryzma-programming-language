@@ -279,7 +279,7 @@ h2 = "}"
 h3 = ";"
 h7 = "&$"
 
-program = read(argv[1])
+program = file_read(argv[1])
 program = replace(program,"\n",h3)
 prog = list(program)
 
