@@ -138,7 +138,7 @@ class PryzmaInterpreter:
             deleted_keyword = False
 
             for key_word in self.deleted_keywords:
-                if key_word in line:
+                if key_word in line and not (line.startswith("disablekeyword(") or line.startswith("enablekeyword(")):
                     keyword = key_word
                     deleted_keyword = True
 
@@ -726,8 +726,14 @@ class PryzmaInterpreter:
                     self.variables.pop(self.evaluate_expression(line[7:-1]))
                 elif line.startswith("delfunc(") and line.endswith(")"):
                     self.functions.pop(self.evaluate_expression(line[8:-1]))
-                elif line.startswith("delkeyword(") and line.endswith(")"):
-                    self.deleted_keywords.append(self.evaluate_expression(line[11:-1]))
+                elif line.startswith("disablekeyword(") and line.endswith(")"):
+                    args = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', line[15:-1])
+                    for arg in args:
+                        self.deleted_keywords.append(self.evaluate_expression(arg))
+                elif line.startswith("enablekeyword(") and line.endswith(")"):
+                    args = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', line[14:-1])
+                    for arg in args:
+                        self.deleted_keywords.remove(self.evaluate_expression(arg))
                 elif "++" in line:
                     variable = line.replace("++", "").strip()
                     self.increment_variable(variable)
@@ -2770,7 +2776,7 @@ flags:
                 if arg == "-fd":
                     interpreter.forward_declare = True
                 if arg == "-s":
-                    interpreter.deleted_keywords.extend(["call", "sys(", "mkdir", "makeidrs", "rmdir", "removedirs", "copy", "copyfile", "move", "rename", "remove", "symlink", "unlink", "file_read", "file_write", "load", "pyeval", "py{", "asm"])
+                    interpreter.deleted_keywords.extend(["call", "sys(", "mkdir", "makeidrs", "rmdir", "removedirs", "copy", "copyfile", "move", "rename", "remove", "symlink", "unlink", "file_read", "file_write", "load", "pyeval", "py{", "asm", "enablekeyword", "disablekeyword"])
         if debug == False:
             interpreter.interpret_file(file_path, *arguments)
         sys.exit()

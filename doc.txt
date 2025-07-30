@@ -529,8 +529,22 @@ print a
 
 the output will be the same as in the earlier example
 
-you can also delfunc to to delete a function in the same way or
-delkeyword() to delete a key word (yes this actually works)
+you can also delfunc to to delete a function in the same way
+
+disablekeyword and enablekeyword:
+
+you can enae and disable keywords like this:
+
+disablekeyword("print", "use")
+
+print 5 //error: deleted keyword 'print'
+use math //error: deleted keyword 'use'
+
+and you can enable back the keywords:
+
+enablekeyword("print", "use")
+
+print 5 // outputs 5
 
 exec:
 
