@@ -11,6 +11,7 @@ import platform
 import random
 import ctypes
 from collections import UserDict
+import lzma
 
 class Reference:
     def __init__(self, var_name):
@@ -50,15 +51,19 @@ class PryzmaInterpreter:
         self.main_file = 1
         self.mem = bytearray(4096)
         self.fail = False
+        self.unpack_ = False
 
     def interpret_file(self, file_path, *args):
         self.file_path = file_path.strip('"')
         self.variables["argv"] = args
         self.variables["__file__"] = os.path.abspath(file_path)
         try:
-            with open(self.file_path, 'r') as file:
-                program = file.read()
-                self.interpret(program)
+            if self.unpack_ == True:
+                self.interpret(self.unpack(file_path))
+            else:
+                with open(self.file_path, 'r') as file:
+                    program = file.read()
+                    self.interpret(program)
         except FileNotFoundError:
             print(f"File '{self.file_path}' not found.")
 
@@ -1127,6 +1132,28 @@ class PryzmaInterpreter:
         if self.in_func[-1]:
             print(f"Error while calling function '{self.function_tracker[-1]}'")
 
+    def compress(self, text: str) -> bytes:
+        return lzma.compress(text.encode('utf-8'), preset=9 | lzma.PRESET_EXTREME)
+
+    def decompress(self, data: bytes) -> str:
+        try:
+            return lzma.decompress(data).decode('utf-8')
+        except Exception:
+            print("Can't decompress data")
+            sys.exit()
+
+    def pack(self, file_path):
+        with open(file_path, "r", encoding="utf-8") as f:
+            prog = f.read()
+        prog = ";".join(self.preprocess(prog))
+        prog = "#np;" + prog
+        return self.compress(prog)
+
+    def unpack(self, file_path):
+        with open(file_path, "rb") as f:
+            data = f.read()
+        return self.decompress(data)
+
     def process_args(self, args):
         for arg in range(0,len(args)):
             args[arg] = args[arg].strip()
@@ -1819,7 +1846,6 @@ class PryzmaInterpreter:
             char_ += 1
         value = "".join(prog)
         parts = value.split("&#$%^")
-        #re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', value)
         part_count = 0
         for part in parts:
             parts[part_count] = self.evaluate_expression(parts[part_count].strip())
@@ -2888,6 +2914,9 @@ flags:
     -l '<pryzma code>' - execute a single line
     -fd - forward declare all functions
     -s  - safe mode, disable a lot of potentialy dangerous keywords
+    -pk - output a packed version of a given file to stdout (recomended ext is .prz)
+    -upk - output an unpacked version of a given file to stdout
+    -upi - unpack and interpret the given file
                     """)
                     sys.exit()
                 if arg == "-d":
@@ -2904,6 +2933,15 @@ flags:
                     interpreter.forward_declare = True
                 if arg == "-s":
                     interpreter.deleted_keywords.extend(["call", "sys(", "mkdir", "makeidrs", "rmdir", "removedirs", "copy", "copyfile", "move", "rename", "remove", "symlink", "unlink", "file_read", "file_write", "load", "pyeval", "py{", "asm", "enablekeyword", "disablekeyword"])
+                if arg == "-pk":
+                    sys.stdout.buffer.write(interpreter.pack(file_path))
+                    sys.exit()
+                if arg == "-upk":
+                    print(interpreter.unpack(file_path))
+                    sys.exit()
+                if arg == "-upi":
+                    interpreter.unpack_ = True
+                    arguments.remove(arg)
         if debug == False:
             interpreter.interpret_file(file_path, *arguments)
         sys.exit()
