@@ -300,6 +300,16 @@ class PryzmaInterpreter:
                         line = line.strip()
                         module, functions = line[4:].strip().split("use")
                         module = module.strip()
+                        if '/' in module or '\\' in module:
+                            pass
+                        else:
+                            if "::" in module:
+                                args = module.split("::")
+                                file = args.pop()
+                                folder = "/".join(args)
+                                module = f"{PackageManager.user_packages_path}/{folder}/{file}.pryzma"
+                            else:
+                                module = f"{PackageManager.user_packages_path}/{module}/{module}.pryzma"
                         functions = functions.strip().split(",")
                         if directive.strip() != "":
                             nan = self.nan
@@ -314,6 +324,16 @@ class PryzmaInterpreter:
                     else:
                         module, functions = line[4:].strip().split("use")
                         module = module.strip()
+                        if '/' in module or '\\' in module:
+                            pass
+                        else:
+                            if "::" in module:
+                                args = module.split("::")
+                                file = args.pop()
+                                folder = "/".join(args)
+                                module = f"{PackageManager.user_packages_path}/{folder}/{file}.pryzma"
+                            else:
+                                module = f"{PackageManager.user_packages_path}/{module}/{module}.pryzma"
                         functions = functions.strip().split(",")
                         for function in functions:
                             self.load_function_from_file(module, function.strip())
@@ -1881,7 +1901,13 @@ class PryzmaInterpreter:
         elif '/' in file_path or '\\' in file_path:
             self.load_functions_from_file(file_path)
         else:
-            file_path = f"{PackageManager.user_packages_path}/{file_path}/{file_path}.pryzma"
+            if "::" in file_path:
+                args = file_path.split("::")
+                file = args.pop()
+                folder = "/".join(args)
+                file_path = f"{PackageManager.user_packages_path}/{folder}/{file}.pryzma"
+            else:
+                file_path = f"{PackageManager.user_packages_path}/{file_path}/{file_path}.pryzma"
             self.load_functions_from_file(file_path)
 
     def load_function_from_file(self, file_path, func_name):

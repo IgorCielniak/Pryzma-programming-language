@@ -356,7 +356,7 @@ use file_path
 after import you can use functions from the imported file
 
 if you add ./ before the file path it will look for the given file in the same folder as the file,
-and if you just give the module name it will look for it in the packages folder that is created while installing packages with ppm.
+and if you just give the module name it will look for it in the packages folder that is created while installing packages with ppm (under packages/package_name/package_name.pryzma).
 you can also import files over http and https like this:
 
 use https://raw.githubusercontent.com/IgorCielniak/Pryzma-packages/main/net/net.pryzma
@@ -373,6 +373,18 @@ to the same value it was before the import (either True or False), any valid pra
 you can import a particular function from a file using the following construction:
 
 from file use function
+
+you can also import functiona from files called diffrently than the module like this:
+
+use core::lib
+
+this would import packages/core/lib.pryzma
+
+it also supports submodules
+
+use std::core::lib
+
+this would import packages/std/core/lib.pryzma
 
 example:
 
