@@ -532,11 +532,11 @@ the output will be the same as in the earlier example
 you can also delfunc to to delete a function in the same way or
 delkeyword() to delete a key word (yes this actually works)
 
-eval:
+exec:
 
-there is a function called eval that as the name suggests evaluates pryzma code:
+there is a function called exec that as the name suggests executes pryzma code from a string:
 
-eval("a = 10"|"print a")
+exec("a = 10"|"print a")
 
 and it will output 10
 

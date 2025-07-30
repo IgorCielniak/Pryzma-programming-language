@@ -590,7 +590,7 @@ class PryzmaInterpreter:
                         return exec(self.evaluate_expression(parts[0]))
                     else:
                         return exec(self.evaluate_expression(parts[0]),self.evaluate_expression(parts[1]))
-                elif line.startswith("eval(") and line.endswith(")"):
+                elif line.startswith("exec(") and line.endswith(")"):
                     code = line[5:-1]
                     if "|" in code:
                         code = code.split("|")
@@ -2770,7 +2770,7 @@ flags:
                 if arg == "-fd":
                     interpreter.forward_declare = True
                 if arg == "-s":
-                    interpreter.deleted_keywords.extend(["call", "exec", "mkdir", "makeidrs", "rmdir", "removedirs", "copy", "copyfile", "move", "rename", "remove", "symlink", "unlink", "file_read", "file_write", "load", "pyeval", "py{", "asm"])
+                    interpreter.deleted_keywords.extend(["call", "sys(", "mkdir", "makeidrs", "rmdir", "removedirs", "copy", "copyfile", "move", "rename", "remove", "symlink", "unlink", "file_read", "file_write", "load", "pyeval", "py{", "asm"])
         if debug == False:
             interpreter.interpret_file(file_path, *arguments)
         sys.exit()
