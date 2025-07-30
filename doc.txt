@@ -764,6 +764,12 @@ an - enable automatic namespacing
 
 #nan, #an, #fd and #np are also supported
 
+there also is #fail and #df
+
+by default pryzma programs don't terminate after an error
+
+when #fail is set any error will terminate the program execution
+when #df is set errors will not terminate the program execution
 
 #replace a -> b
 
