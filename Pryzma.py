@@ -58,6 +58,12 @@ class PryzmaInterpreter:
         self.variables["argv"] = args
         self.variables["__file__"] = os.path.abspath(file_path)
         try:
+            with open(file_path, "rb") as f:
+                data = f.read()
+            if data.startswith("prz".encode('utf-8')):
+                data = data[3:]
+                self.unpack_ = True
+
             if self.unpack_ == True:
                 self.interpret(self.unpack(file_path))
             else:
@@ -74,7 +80,6 @@ class PryzmaInterpreter:
             if program[line].startswith("#np") or (program[line].startswith("#preproc") and "np" in program[line]):
                 self.no_preproc = True
         program = ";".join(program)
-
 
 
         if not self.no_preproc:
@@ -1147,11 +1152,13 @@ class PryzmaInterpreter:
             prog = f.read()
         prog = ";".join(self.preprocess(prog))
         prog = "#np;" + prog
-        return self.compress(prog)
+        return bytes("prz".encode('utf-8')) + self.compress(prog)
 
     def unpack(self, file_path):
         with open(file_path, "rb") as f:
             data = f.read()
+        if data.startswith("prz".encode('utf-8')):
+            data = data[3:]
         return self.decompress(data)
 
     def process_args(self, args):
@@ -2916,7 +2923,7 @@ flags:
     -s  - safe mode, disable a lot of potentialy dangerous keywords
     -pk - output a packed version of a given file to stdout (recomended ext is .prz)
     -upk - output an unpacked version of a given file to stdout
-    -upi - unpack and interpret the given file
+    -upi - unpack and interpret the given file (content of packed files is prefixed with prz so its automaticly recognized and this flag isn't needed most of the time)
                     """)
                     sys.exit()
                 if arg == "-d":
