@@ -13,7 +13,7 @@ for(step, 0:steps){
             line += " "
         }
     }
-    print line
+    print line, "\n"
 
     // Compute next generation
     next_cells = []
