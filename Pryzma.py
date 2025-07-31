@@ -350,8 +350,23 @@ class PryzmaInterpreter:
                 elif line.startswith("if"):
                     else_ = False
                     if "else" in line:
+                        line = list(line)
                         else_ = True
-                        sline = line.split("else")
+                        depth = 0
+                        in_str = False
+                        for i, char in enumerate(line):
+                            if char == "{" and not in_str:
+                                depth += 1
+                            elif char == "}" and not in_str:
+                                depth -= 1
+                            elif char == '"':
+                                in_str = not in_str
+                            elif depth == 0 and char == "e" and line[i + 1] == "l" and line[i + 2] == "s" and line[i + 3] == "e":
+                                line[i] = "#"
+                                line[i + 1] = "$"
+                                line[i + 2] = "%"
+                                line[i + 3] = "@"
+                        sline = "".join(line).split("#$%@")
                         line = sline[0]
                         else_part = sline[1]
                     line = line[2:]
@@ -1302,6 +1317,29 @@ class PryzmaInterpreter:
             else:
                 self.variables["err"] = 25
 
+    def add_or_index(self, expr):
+        in_quotes = False
+        escape = False
+        bracket_depth = 0
+
+        for char in expr:
+            if char == '"' and not escape:
+                in_quotes = not in_quotes
+            elif char == '\\':
+                escape = not escape
+                continue
+            elif not in_quotes:
+                if char == '[':
+                    bracket_depth += 1
+                elif char == ']' and bracket_depth > 0:
+                    bracket_depth -= 1
+                elif char == '+' and bracket_depth > 0:
+                    return True
+
+            escape = False
+
+        return False
+
     def add_or_str(self, expr):
         in_quotes = False
         escape = False
@@ -1425,7 +1463,7 @@ class PryzmaInterpreter:
             result = attr(result, "__type__", name)
 
             return result
-        elif "+" in expression and self.add_or_str(expression):
+        elif "+" in expression and self.add_or_str(expression) and not self.add_or_index(expression):
             parts = expression.split("+")
             evaluated_parts = [self.evaluate_expression(part.strip()) for part in parts]
             if all(isinstance(part, str) for part in evaluated_parts):
