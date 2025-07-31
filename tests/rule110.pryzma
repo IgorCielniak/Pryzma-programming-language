@@ -25,8 +25,7 @@ for(step, 0:steps){
         }
         center = cells[i]
         if(i < len(cells)-1){
-            index = i+1
-            right = cells[index]
+            right = cells[i + 1]
         }else{
             right = 0
         }
