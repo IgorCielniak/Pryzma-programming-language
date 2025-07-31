@@ -186,8 +186,8 @@ class PryzmaInterpreter:
                             self.process_args(line.split("=")[1].split(","))
                     elif line.startswith("#replace"):
                         a, b = line[8:].split("->")
-                        a = self.evaluate_expression(a)
-                        b = self.evaluate_expression(b)
+                        a = str(self.evaluate_expression(a.strip()))
+                        b = str(self.evaluate_expression(b.strip()))
                         for i, line in enumerate(lines):
                             lines[i] = re.sub(a, b, line)
                     elif line == "#shell":
