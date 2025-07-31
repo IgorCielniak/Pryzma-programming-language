@@ -809,6 +809,13 @@ print X
 not a lot to say, it opens the repl during the program execution
 allowing for inspection of vars, funcs and structs as well as executing arbitrary pryzma code
 
+insert:
+
+#insert "file.pryzma"
+
+the #insert pragma inserts code from another file in to the source code,
+and thats basicly all it does. (btw under the hood it doesn't insert anythink it just gets the file content and interprets it, same result easier to implement but i wanted a cool name (compleatly not inspired by jai))
+
 more pragmas will be added in the future
 
 inline asm:

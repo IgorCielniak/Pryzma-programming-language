@@ -190,6 +190,10 @@ class PryzmaInterpreter:
                         b = str(self.evaluate_expression(b.strip()))
                         for i, line in enumerate(lines):
                             lines[i] = re.sub(a, b, line)
+                    elif line.startswith("#insert"):
+                        file = self.evaluate_expression(line[7:].strip())
+                        with open(file) as f:
+                            self.interpret(f.read())
                     elif line == "#shell":
                         while True:
                             code = input("/// ")
