@@ -616,6 +616,16 @@ class PryzmaInterpreter:
                     self.function_tracker.append(function_name)
                     if function_name in self.variables and isinstance(self.variables[function_name], FuncReference):
                         function_name = self.variables[function_name].func_name
+                    if function_name not in self.functions:
+                        if not self.in_try_block:
+                            self.in_func_err()
+                            self.variables["err"] = 48
+                            print(f"Error near line {self.current_line}: Referenced function '{function_name}' no longer exists")
+                            if self.fail:
+                                sys.exit()
+                        else:
+                            self.variables["err"] = 48
+                        continue
                     if function_name in self.functions:
                         command = 0
                         while command < len(self.functions[function_name]):
@@ -1754,7 +1764,17 @@ class PryzmaInterpreter:
         elif expression.startswith("*"):
             ref = self.evaluate_expression(expression[1:])
             if isinstance(ref, Reference):
-                return self.variables[ref.var_name]
+                if ref.var_name in self.variables:
+                    return self.variables[ref.var_name]
+                else:
+                    if not self.in_try_block:
+                        self.in_func_err()
+                        self.variables["err"] = 47
+                        print(f"Error near line {self.current_line}: Referenced variable '{ref.var_name}' no longer exists")
+                        if self.fail:
+                            sys.exit()
+                    else:
+                        self.variables["err"] = 47
             else:
                 return ref
         elif expression.startswith("fields(") and expression.endswith(")"):
@@ -2586,6 +2606,8 @@ commands:
 44 - Invalid number of arguments for call.
 45 - Invalid call statement format.
 46 - Variable not found in current scope.
+47 - Referenced variable no longer exists.
+48 - Referenced function no longer exists.
 """ 
 )
 
