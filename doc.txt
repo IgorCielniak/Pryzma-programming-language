@@ -374,7 +374,7 @@ you can import a particular function from a file using the following constructio
 
 from file use function
 
-you can also import functiona from files called diffrently than the module like this:
+you can also import functions from files called diffrently than the module like this:
 
 use core::lib
 
@@ -385,6 +385,9 @@ it also supports submodules
 use std::core::lib
 
 this would import packages/std/core/lib.pryzma
+
+you can also import .prz files the same way, but in a module the main file still must have the .pryzma extension, at least for now,
+you can go about it this way, make a main file with the .pryzma ext. that just has an insert directive pointing to a .prz file and this should work (not tested)
 
 example:
 
@@ -814,7 +817,7 @@ insert:
 #insert "file.pryzma"
 
 the #insert pragma inserts code from another file in to the source code,
-and thats basicly all it does. (btw under the hood it doesn't insert anythink it just gets the file content and interprets it, same result easier to implement but i wanted a cool name (compleatly not inspired by jai))
+and thats basicly all it does, it supports both regular .pryzma files as well as .prz files. (btw under the hood it doesn't insert anythink it just gets the file content and interprets it, same result easier to implement but i wanted a cool name (compleatly not inspired by jai))
 
 more pragmas will be added in the future
 

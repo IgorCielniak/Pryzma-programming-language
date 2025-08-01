@@ -191,9 +191,16 @@ class PryzmaInterpreter:
                         for i, line in enumerate(lines):
                             lines[i] = re.sub(a, b, line)
                     elif line.startswith("#insert"):
-                        file = self.evaluate_expression(line[7:].strip())
-                        with open(file) as f:
-                            self.interpret(f.read())
+                        file_path = self.evaluate_expression(line[7:].strip())
+                        program = None
+                        with open(file_path, "rb") as f:
+                            data = f.read()
+                        if data.startswith("prz".encode('utf-8')):
+                            program = self.decompress(data[3:])
+                        if not program:
+                            with open(file_path, 'r') as file:
+                                program = file.read()
+                        self.interpret(program)
                     elif line == "#shell":
                         while True:
                             code = input("/// ")
@@ -2008,22 +2015,29 @@ class PryzmaInterpreter:
     def load_function_from_file(self, file_path, func_name):
         name = os.path.splitext(os.path.basename(file_path))[0]
         try:
-            with open(file_path, 'r') as file:
-                program = file.read()
-                lines = self.preprocess(program)
+            program = None
+            with open(file_path, "rb") as f:
+                data = f.read()
+            if data.startswith("prz".encode('utf-8')):
+                program = self.decompress(data[3:])
+            if not program:
+                with open(file_path, 'r') as file:
+                    program = file.read()
 
-                function_def = False
-                function_name = ""
-                function_body = []
-                match = False
-                for line in lines:
-                    if line.startswith("/"):
-                        if line[1:].startswith(name + "."):
-                            if self.nan:
-                                line = "/" + line[len(name) + 2:]
-                        match = line[1:].startswith(func_name+"{")
-                        if match:
-                            self.interpret(line)
+            lines = self.preprocess(program)
+
+            function_def = False
+            function_name = ""
+            function_body = []
+            match = False
+            for line in lines:
+                if line.startswith("/"):
+                    if line[1:].startswith(name + "."):
+                        if self.nan:
+                            line = "/" + line[len(name) + 2:]
+                    match = line[1:].startswith(func_name+"{")
+                    if match:
+                        self.interpret(line)
         except FileNotFoundError:
             if not self.in_try_block:
                 self.in_func_err()
@@ -2037,27 +2051,35 @@ class PryzmaInterpreter:
     def load_functions_from_file(self, file_path):
         name = os.path.splitext(os.path.basename(file_path))[0]
         try:
-            with open(file_path, 'r') as file:
-                program = file.read()
-                lines = self.preprocess(program)
+            unpack = False
+            program = None
+            with open(file_path, "rb") as f:
+                data = f.read()
+            if data.startswith("prz".encode('utf-8')):
+                program = self.decompress(data[3:])
+            if not program:
+                with open(file_path, 'r') as file:
+                    program = file.read()
 
-                function_def = False
-                function_name = ""
-                function_body = []
-                for line in lines:
-                    if line.startswith("/"):
-                        if not self.nan:
-                            if line[1:].startswith(name+"."):
-                                line = "/" + line[1:]
-                            else:
-                                line = "/" + name + "."  + line[1:]
-                        self.interpret(line)
-                        if not self.nan:
-                            if line.startswith("/"+name+".on_import"):
-                                self.interpret("@"+name+".on_import")
+            lines = self.preprocess(program)
+
+            function_def = False
+            function_name = ""
+            function_body = []
+            for line in lines:
+                if line.startswith("/"):
+                    if not self.nan:
+                        if line[1:].startswith(name+"."):
+                            line = "/" + line[1:]
                         else:
-                            if line.startswith("/on_import"):
-                                self.interpret("@on_import")
+                            line = "/" + name + "."  + line[1:]
+                    self.interpret(line)
+                    if not self.nan:
+                        if line.startswith("/"+name+".on_import"):
+                            self.interpret("@"+name+".on_import")
+                    else:
+                        if line.startswith("/on_import"):
+                            self.interpret("@on_import")
         except FileNotFoundError:
             if not self.in_try_block:
                 self.in_func_err()
