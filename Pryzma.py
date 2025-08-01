@@ -33,7 +33,6 @@ class PryzmaInterpreter:
         self.functions = {}
         self.structs = {}
         self.locals = {}
-        self.tk_vars = {}
         self.custom_handlers = {}
         self.deleted_keywords = []
         self.variables["interpreter_path"] = __file__
@@ -790,88 +789,6 @@ class PryzmaInterpreter:
                         self.variables[list_name][index_1], self.variables[list_name][index_2] = self.variables[list_name][index_2], self.variables[list_name][index_1]
                     except ValueError:
                         self.error(10, "Invalid index for swap()")
-                elif line.startswith("tk"):
-                    global tkinter_enabled
-                    command = line[2:].strip()
-                    if command.strip().startswith("enable"):
-                        tkinter_enabled = True
-                    elif tkinter_enabled == True:
-                        import tkinter as tk
-                        if command.startswith("window(") and command.endswith(")"):
-                            command = command[7:-1]
-                            self.tk_vars[command] = tk.Tk()
-                        elif command.startswith("title(") and command.endswith(")"):
-                            command = command[6:-1]
-                            command = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', command)
-                            window = command[0].strip()
-                            title = self.evaluate_expression(command[1].strip())
-                            self.tk_vars[window].title(title)
-                        elif command.startswith("mainloop(") and command.endswith(")"):
-                            command = command[9:-1]
-                            self.tk_vars[command].mainloop()
-                        elif command.startswith("create_button(") and command.endswith(")"):
-                            command = command[14:-1]
-                            command = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', command)
-                            window = command[1].strip()
-                            button_name = command[0].strip()
-                            button_text = self.evaluate_expression(command[2].strip())
-                            button_command = command[3].strip()
-                            if len(command) == 2:
-                                self.tk_vars[button_name] = tk.Button(self.tk_vars[window])
-                            elif len(command) == 3:
-                                self.tk_vars[button_name] = tk.Button(self.tk_vars[window],text = button_text)
-                            elif len(command) == 4:
-                                self.tk_vars[button_name] = tk.Button(self.tk_vars[window],text = button_text,command = lambda: self.interpret(button_command))
-                            else:
-                                self.error(11, f"Error near line {self.current_line}: Invalid create_button command")
-                            self.tk_vars[button_name].pack()
-                        elif command.startswith("create_label(") and command.endswith(")"):
-                            command = command[13:-1]
-                            command = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', command)
-                            window = command[1].strip()
-                            label_name = command[0].strip()
-                            label_text = self.evaluate_expression(command[2].strip())
-                            if len(command) == 2:
-                                self.tk_vars[label_name] = tk.Label(self.tk_vars[window])
-                            elif len(command) == 3:
-                                self.tk_vars[label_name] = tk.Label(self.tk_vars[window],text = label_text)
-                            else:
-                                self.error(12, f"Error near line {self.current_line}: Invalid create_label command")
-                            self.tk_vars[label_name].pack()
-                        elif command.startswith("create_entry(") and command.endswith(")"):
-                            command = command[13:-1]
-                            command = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', command)
-                            window = command[1].strip()
-                            entry_name = command[0].strip()
-                            entry_text = self.evaluate_expression(command[2].strip())
-                            if len(command) == 2:
-                                self.tk_vars[entry_name] = tk.Entry(self.tk_vars[window])
-                            elif len(command) == 3:
-                                self.tk_vars[entry_name] = tk.Entry(self.tk_vars[window],text = entry_text)
-                            else:
-                                self.error(13, f"Error near line {self.current_line}: Invalid create_entry command")
-                            self.tk_vars[entry_name].pack()
-                        elif command.startswith("get_entry_text(") and command.endswith(")"):
-                            command = command[15:-1]
-                            command = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', command)
-                            entry_name = command[0].strip()
-                            variable_name = command[1].strip()
-                            if entry_name in self.tk_vars:
-                                self.variables[variable_name] = self.tk_vars[entry_name].get()
-                            else:
-                                self.error(14, f"Error near line {self.current_line}: Invalid get_entry_text command")
-                        elif command.startswith("set_entry_text(") and command.endswith(")"):
-                            command = command[15:-1]
-                            command = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', command)
-                            entry_name = command[0].strip()
-                            variable_name = command[1].strip()
-                            if entry_name in self.tk_vars:
-                                self.tk_vars[entry_name].delete(0, tk.END)
-                                self.tk_vars[entry_name].insert(0, self.variables[variable_name])
-                            else:
-                                self.error(15, f"Error near line {self.current_line}: Invalid set_entry_text command")
-                    else:
-                        self.error(16, f"Error near line {self.current_line}: tkinter isn't enabled")
                 elif line.startswith("call"):
                     call_statement = line[4:].strip()
                     file_name, function_name, args = self.parse_call_statement(call_statement)
@@ -2637,15 +2554,13 @@ def main():
     global history
     global running_from_file
     global debug
-    global tkinter_enabled
     global version
 
     interpreter = PryzmaInterpreter()
 
-    tkinter_enabled = False
     history = []
     running_from_file = False
-    version = 5.8
+    version = 5.9
 
     if len(sys.argv) >= 2:
         file_path = sys.argv[1]
