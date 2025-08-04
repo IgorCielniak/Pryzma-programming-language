@@ -142,7 +142,9 @@ class PryzmaInterpreter:
         for line in lines:
             for stmt, num in self.lines_map:
                 if line.startswith(stmt.strip()) and stmt.strip() != "":
+                    self.lines_map.remove((stmt, num))
                     self.current_line = num + 1
+                    break
             line = line.strip()
 
             if line == "" or line.startswith("//"):
