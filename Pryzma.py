@@ -51,6 +51,8 @@ class PryzmaInterpreter:
         self.mem = bytearray(4096)
         self.fail = False
         self.unpack_ = False
+        self.lines_map = []
+        self.lines_map_done = False
 
     def interpret_file(self, file_path, *args):
         self.file_path = file_path.strip('"')
@@ -74,12 +76,14 @@ class PryzmaInterpreter:
 
     def preprocess(self, program):
         program = program.splitlines()
-        for line in range(0,len(program)-1):
+        for line in range(0,len(program)):
             program[line] = program[line].split("//")[0]
             if program[line].startswith("#np") or (program[line].startswith("#preproc") and "np" in program[line]):
                 self.no_preproc = True
+            if self.lines_map_done == False:
+                self.lines_map.append((program[line], line))
+        self.lines_map_done = True
         program = ";".join(program)
-
 
         if not self.no_preproc:
             rep_in_func = 0
@@ -135,9 +139,10 @@ class PryzmaInterpreter:
                     lines[i] = ""
             self.current_line = 0
 
-
         for line in lines:
-            self.current_line += 1
+            for stmt, num in self.lines_map:
+                if line.startswith(stmt.strip()) and stmt.strip() != "":
+                    self.current_line = num + 1
             line = line.strip()
 
             if line == "" or line.startswith("//"):
