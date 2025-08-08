@@ -1197,19 +1197,33 @@ class PryzmaInterpreter:
             args = args_body
 
             args = list(filter(None, re.split(r'[\$\#\@]\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', args)))
-            for i, arg in enumerate(args):
-                args[i] = self.evaluate_expression(arg.strip()) if arg != "" else None
-
             name = name.strip()
 
             struct_def = self.structs[name]
             result = {}
 
+            pairs = []
+
+            for i, arg in enumerate(args):
+                if "=" in arg:
+                    args[i] = [arg.strip() for arg in arg.strip().split("=", 1)]
+                    pairs.append(i)
+                else:
+                    args[i] = self.evaluate_expression(arg.strip()) if arg != "" else None
+
+            for i, arg in enumerate(args):
+                if i in pairs:
+                    key = args[i][0].strip()
+                    value = args[i][1].strip()
+                    result[key] = self.evaluate_expression(value)
+
             for i, (key, default_value) in enumerate(struct_def.items()):
                 if i < len(args) and args[i] is not None:
-                    result[key] = self.evaluate_expression(args[i]) if repr(args[i]).startswith("@") else args[i]
+                    if key not in result.keys():
+                        result[key] = self.evaluate_expression(args[i]) if repr(args[i]).startswith("@") else args[i]
                 else:
-                    result[key] = self.evaluate_expression(default_value) if repr(default_value).startswith("@") else default_value
+                    if key not in result.keys():
+                        result[key] = self.evaluate_expression(default_value) if repr(default_value).startswith("@") else default_value
 
             #function stolen from https://stackoverflow.com/questions/2444680/how-do-i-add-my-own-custom-attributes-to-existing-built-in-python-types-like-a
             def attr(e,n,v): #will work for any object you feed it, but only that object

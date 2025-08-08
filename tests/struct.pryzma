@@ -3,7 +3,7 @@ struct Person {
     age = 30
 }
 
-p = Person {"Some, name", 30}
+p = Person {age=30, name="Some, name"}
 
 print p.name, "\n"
 print p.age, "\n"
