@@ -2635,6 +2635,11 @@ flags:
             interpreter.interpret_file(file_path, *arguments)
         sys.exit()
 
+    if not sys.stdin.isatty():
+        for line in sys.stdin:
+            interpreter.interpret(line.rstrip("\n"))
+        sys.exit()
+
     print(f"""Pryzma {version}
 To show the license type "license" or "help" to get help.
     """)
