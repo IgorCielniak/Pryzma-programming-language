@@ -1196,7 +1196,7 @@ class PryzmaInterpreter:
                 args_body+=char
             args = args_body
 
-            args = list(filter(None, re.split(r'[\$\#\@]\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', args)))
+            args = list(filter(None, re.split(r'\$\#\@\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', args)))
             name = name.strip()
 
             struct_def = self.structs[name]
