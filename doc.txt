@@ -396,6 +396,12 @@ from ./module.pryzma use func, func2 with #nan
 if functions are allready prefixed with module name and dot than
 you should pass the function names without the prefix and the #nan pragma
 
+you can also import modules with aliases like this:
+
+use matn as m
+
+it would import all functions from the module math with the prefix 'm' instead of 'math', aliases work with the 'with' keyword.
+
 Comments:
 
 Comments in Pryzma start with the // symbol and continue to the end of the line.

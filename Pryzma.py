@@ -299,14 +299,21 @@ class PryzmaInterpreter:
                             fd = self.forward_declare
                             np = self.no_preproc
                             self.process_args(directive.strip()[1:].split(","))
-                            file_path = line[3:].strip()
-                            self.import_functions(file_path)
+                            alias = None
+                            if " as " in line:
+                                file_path, alias = line[3:].strip().split(" as ")
+                            else:
+                                file_path = line[3:].strip()
+                            self.import_functions(file_path, alias)
                             self.nan = nan
                             self.forward_declare = fd
                             self.no_preproc = np
                     else:
                         file_path = line[3:].strip()
-                        self.import_functions(file_path)
+                        alias = None
+                        if " as " in line:
+                            file_path, alias = file_path.split(" as ")
+                        self.import_functions(file_path, alias)
                 elif line.startswith("from"):
                     if "with" in line:
                         line, directive = line.split("with")
@@ -1620,7 +1627,7 @@ class PryzmaInterpreter:
 
         self.break_stack.pop()
 
-    def import_functions(self, file_path):
+    def import_functions(self, file_path, alias=None):
         file_path = file_path.strip('"')
     
         if file_path.startswith("https://") or file_path.startswith("http://"):
@@ -1648,7 +1655,7 @@ class PryzmaInterpreter:
                         if line.startswith("/on_import"):
                             self.interpret("@on_import")
         elif '/' in file_path or '\\' in file_path:
-            self.load_functions_from_file(file_path)
+            self.load_functions_from_file(file_path, alias)
         else:
             if "::" in file_path:
                 args = file_path.split("::")
@@ -1657,10 +1664,13 @@ class PryzmaInterpreter:
                 file_path = f"{PackageManager.user_packages_path}/{folder}/{file}.pryzma"
             else:
                 file_path = f"{PackageManager.user_packages_path}/{file_path}/{file_path}.pryzma"
-            self.load_functions_from_file(file_path)
+            self.load_functions_from_file(file_path, alias)
 
-    def load_function_from_file(self, file_path, func_name):
-        name = os.path.splitext(os.path.basename(file_path))[0]
+    def load_function_from_file(self, file_path, func_name, alias=None):
+        if alias:
+            name = alias
+        else:
+            name = os.path.splitext(os.path.basename(file_path))[0]
         try:
             program = None
             with open(file_path, "rb") as f:
@@ -1688,8 +1698,11 @@ class PryzmaInterpreter:
         except FileNotFoundError:
             self.error(40, f"Error at line {self.current_line}: File '{file_path}' not found.")
 
-    def load_functions_from_file(self, file_path):
-        name = os.path.splitext(os.path.basename(file_path))[0]
+    def load_functions_from_file(self, file_path, alias=None):
+        if alias:
+            name = alias
+        else:
+            name = os.path.splitext(os.path.basename(file_path))[0]
         try:
             unpack = False
             program = None
