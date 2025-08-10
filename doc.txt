@@ -317,38 +317,6 @@ print x
 output:
 5
 
-Tkinter for Pryzma:
-
-to enable the use of tkinter from the code you can do some think like that:
-
-tk enable
-
-now you can use basic tkinter functions in Pryzma, for example:
-
-tk window(name_of_the_window)
-
-this creates a window with the given name
-
-tk create_label(name_of_the_label, name_of_the_window, text_to_display)
-
-this creates a label with the given name, parent window, and text to display
-
-tk create_button(name_of_the_button, name_of_the_window, text_to_display, command_to_execute)
-
-this creates a button with the given name, parent window, text to display, and command to execute when clicked
-
-tk get_entry_text(entry_name, variable_name)
-
-this gets the text from the entry with the given name and assigns it th the variable given
-
-tk title(name_of_the_window, text_to_display_as_the_title)
-
-this sets the title of the window to the given text
-
-tk set_entry_text(entry_name, text_to_display)
-
-this sets the text of the entry with the given name to the given text
-
 importing:
 
 use file_path

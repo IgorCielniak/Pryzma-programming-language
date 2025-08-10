@@ -2649,8 +2649,10 @@ flags:
         sys.exit()
 
     if not sys.stdin.isatty():
+        prog = ""
         for line in sys.stdin:
-            interpreter.interpret(line.rstrip("\n"))
+            prog += line
+        interpreter.interpret(prog)
         sys.exit()
 
     print(f"""Pryzma {version}
