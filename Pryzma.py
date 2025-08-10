@@ -263,7 +263,7 @@ class PryzmaInterpreter:
                             if self.break_stack[-1]:
                                 break
                     else:
-                        self.error(41, f"Error at line {self.current_line}: Invalid range expression for loop.")
+                        self.error(33, f"Error at line {self.current_line}: Invalid range expression for loop.")
 
                     self.break_stack.pop()
                 elif line.startswith("for"):
@@ -620,7 +620,7 @@ class PryzmaInterpreter:
                     if function_name in self.variables and isinstance(self.variables[function_name], FuncReference):
                         function_name = self.variables[function_name].func_name
                     if function_name not in self.functions:
-                        self.error(48, f"Error at line {self.current_line}: Referenced function '{function_name}' no longer exists")
+                        self.error(42, f"Error at line {self.current_line}: Referenced function '{function_name}' no longer exists")
                         continue
                     if function_name in self.functions:
                         command = 0
@@ -955,10 +955,10 @@ class PryzmaInterpreter:
                     sys.exit()
                 else:
                     if not handled:
-                        self.error(17, f"Invalid statement at line {self.current_line}: {line}")
+                        self.error(11, f"Invalid statement at line {self.current_line}: {line}")
 
             except Exception as e:
-                self.error(18, f"Error at line {self.current_line}: {e}")
+                self.error(12, f"Error at line {self.current_line}: {e}")
 
     def error(self, code, message):
         if not self.in_try_block:
@@ -1056,27 +1056,27 @@ class PryzmaInterpreter:
             if hasattr(module, "start"):
                 self.custom_handlers[module_name] = module.start
             else:
-                self.error(19, f"Module '{module_name}' does not have a 'start' function.")
+                self.error(13, f"Module '{module_name}' does not have a 'start' function.")
         except Exception as e:
-            self.error(20, f"Error loading module '{module_path}': {e}")
+            self.error(14, f"Error loading module '{module_path}': {e}")
 
     def decrement_variable(self, variable):
         if variable in self.variables:
             if isinstance(self.variables[variable], int) or isinstance(self.variables[variable], float):
                 self.variables[variable] -= 1
             else:
-                self.error(21, f"Error at line {self.current_line}: Cannot decrement non-integer or float variable '{variable}'.")
+                self.error(15, f"Error at line {self.current_line}: Cannot decrement non-integer or float variable '{variable}'.")
         else:
-            self.error(22, f"Error at line {self.current_line}: Variable '{variable}' not found.")
+            self.error(16, f"Error at line {self.current_line}: Variable '{variable}' not found.")
 
     def increment_variable(self, variable):
         if variable in self.variables:
             if isinstance(self.variables[variable], int) or isinstance(self.variables[variable], float):
                 self.variables[variable] += 1
             else:
-                self.error(23, f"Error at line {self.current_line}: Cannot increment non-integer or float variable '{variable}'.")
+                self.error(17, f"Error at line {self.current_line}: Cannot increment non-integer or float variable '{variable}'.")
         else:
-            self.error(24, f"Error at line {self.current_line}: Variable '{variable}' not found.")
+            self.error(18, f"Error at line {self.current_line}: Variable '{variable}' not found.")
 
 
     def write_to_file(self, file_path, mode, content):
@@ -1088,7 +1088,7 @@ class PryzmaInterpreter:
                 else:
                     file.write(content)
         except Exception as e:
-            self.error(25, f"Error at line {self.current_line} while writing to file '{file_path}': {e}")
+            self.error(19, f"Error at line {self.current_line} while writing to file '{file_path}': {e}")
 
     def add_or_index(self, expr):
         in_quotes = False
@@ -1170,7 +1170,7 @@ class PryzmaInterpreter:
             expression = expression[8:-1]
             parts = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', expression)
             if len(parts) != 3:
-                self.error(26, f"Error at line {self.current_line}: Invalid number of arguments for replace function.")
+                self.error(20, f"Error at line {self.current_line}: Invalid number of arguments for replace function.")
                 return None
             value = self.evaluate_expression(parts[0].strip())
             old = self.evaluate_expression(parts[1].strip())
@@ -1267,24 +1267,24 @@ class PryzmaInterpreter:
             args = expression[8:-1].strip()
             parts = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', args)
             if len(parts) != 2:
-                self.error(27, f"Error at line {self.current_line}: Invalid number of arguments for resplit(). Expected 2 arguments.")
+                self.error(21, f"Error at line {self.current_line}: Invalid number of arguments for resplit(). Expected 2 arguments.")
                 return None
     
             regex_pattern = self.evaluate_expression(parts[0].strip())
             string_to_split = self.evaluate_expression(parts[1].strip())
     
             if not isinstance(regex_pattern, str):
-                self.error(28, f"Error at line {self.current_line}: The first argument of resplit() must be a string (regex pattern).")
+                self.error(22, f"Error at line {self.current_line}: The first argument of resplit() must be a string (regex pattern).")
                 return None
             regex_pattern = r"{}".format(regex_pattern) 
             if not isinstance(string_to_split, str):
-                self.error(29, f"Error at line {self.current_line}: The second argument of resplit() must be a string.")
+                self.error(23, f"Error at line {self.current_line}: The second argument of resplit() must be a string.")
                 return None
     
             try:
                 return re.split(regex_pattern, string_to_split)
             except re.error as e:
-                self.error(30, f"Error at line {self.current_line}: Invalid regex pattern: {e}")
+                self.error(24, f"Error at line {self.current_line}: Invalid regex pattern: {e}")
                 return None
         elif expression.startswith("in(") and expression.endswith(")"):
             value1, value2 = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', expression[3:-1])
@@ -1293,11 +1293,11 @@ class PryzmaInterpreter:
             try:
                 return value2 in value1
             except Exception as e:
-                self.error(31, f"in() function error at line {self.current_line}: {e}")
+                self.error(25, f"in() function error at line {self.current_line}: {e}")
         elif expression.startswith("splitby(") and expression.endswith(")"):
             args = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', expression[8:-1])
             if len(args) < 2:
-                self.error(32, f"Error at line {self.current_line}: Invalid number of arguments for splitby function.")
+                self.error(26, f"Error at line {self.current_line}: Invalid number of arguments for splitby function.")
                 return None
             char_to_split = self.evaluate_expression(args[0].strip())
             string_to_split = self.evaluate_expression(args[1].strip())
@@ -1336,12 +1336,12 @@ class PryzmaInterpreter:
                 with open(file_path, 'r') as file:
                     return file.read()
             except FileNotFoundError:
-                self.error(33, f"Error at line {self.current_line}: File '{file_path}' not found.")
+                self.error(27, f"Error at line {self.current_line}: File '{file_path}' not found.")
                 return ""
         elif expression.startswith("index(") and expression.endswith(")"):
             args = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', expression[6:-1])
             if len(args) != 2:
-                self.error(34, f"Error at line {self.current_line}: Invalid number of arguments for index function.")
+                self.error(28, f"Error at line {self.current_line}: Invalid number of arguments for index function.")
                 return None
             list_name = args[0].strip()
             value = args[1].strip()
@@ -1351,15 +1351,15 @@ class PryzmaInterpreter:
                     index_value = self.variables[list_name].index(value)
                     return index_value
                 except ValueError:
-                    self.error(35, f"Error at line {self.current_line}: Value '{value}' not found in list '{list_name}'.")
+                    self.error(29, f"Error at line {self.current_line}: Value '{value}' not found in list '{list_name}'.")
             else:
-                self.error(36, f"Error at line {self.current_line}: Variable '{list_name}' is not a list.")
+                self.error(30, f"Error at line {self.current_line}: Variable '{list_name}' is not a list.")
         elif expression.startswith("all(") and expression.endswith(")"):
             list_name = expression[4:-1]
             if list_name in self.variables and isinstance(self.variables[list_name], list):
                 return "".join(map(str, self.variables[list_name]))
             else:
-                self.error(37, f"Error at line {self.current_line}: List '{list_name}' is not defined.")
+                self.error(31, f"Error at line {self.current_line}: List '{list_name}' is not defined.")
                 return None
         elif expression.startswith("isanumber(") and expression.endswith(")"):
             expression = expression[10:-1]
@@ -1460,7 +1460,7 @@ class PryzmaInterpreter:
                 if ref.var_name in self.variables:
                     return self.variables[ref.var_name]
                 else:
-                    self.error(47, f"Error at line {self.current_line}: Referenced variable '{ref.var_name}' no longer exists")
+                    self.error(41, f"Error at line {self.current_line}: Referenced variable '{ref.var_name}' no longer exists")
             else:
                 return ref
         elif expression.startswith("fields(") and expression.endswith(")"):
@@ -1482,14 +1482,14 @@ class PryzmaInterpreter:
                 if self.locals[expression] == self.function_tracker[-1]:
                     return self.variables[expression]
                 else:
-                    self.error(46, f"Error at line {self.current_line}: Variable '{expression}' not found in current scope.")
+                    self.error(40, f"Error at line {self.current_line}: Variable '{expression}' not found in current scope.")
             else:
                 return self.variables[expression]
         else:
             try:
                 return eval(expression, {}, self.variables)
             except NameError:
-                self.error(38, f"Error at line {self.current_line}: Unknown variable or expression: {expression}")
+                self.error(32, f"Error at line {self.current_line}: Unknown variable or expression: {expression}")
         return None
 
     def acces_field(self, name, field):
@@ -1623,7 +1623,7 @@ class PryzmaInterpreter:
                 if self.break_stack[-1]:
                     break
         else:
-            self.error(39, f"Error at line {self.current_line}: Invalid range expression for loop.")
+            self.error(33, f"Error at line {self.current_line}: Invalid range expression for loop.")
 
         self.break_stack.pop()
 
@@ -1696,7 +1696,7 @@ class PryzmaInterpreter:
                     if match:
                         self.interpret(line)
         except FileNotFoundError:
-            self.error(40, f"Error at line {self.current_line}: File '{file_path}' not found.")
+            self.error(34, f"Error at line {self.current_line}: File '{file_path}' not found.")
 
     def load_functions_from_file(self, file_path, alias=None):
         if alias:
@@ -1734,7 +1734,7 @@ class PryzmaInterpreter:
                         if line.startswith("/on_import"):
                             self.interpret("@on_import")
         except FileNotFoundError:
-            self.error(40, f"Error at line {self.current_line}: File '{file_path}' not found.")
+            self.error(34, f"Error at line {self.current_line}: File '{file_path}' not found.")
 
     def get_input(self, prompt):
         if sys.stdin.isatty():
@@ -1775,7 +1775,7 @@ limitations under the License.
         elif list_name in self.variables:
             self.variables[list_name].append(self.evaluate_expression(value))
         else:
-            self.error(41, f"Error at line {self.current_line}: List '{list_name}' does not exist.")
+            self.error(35, f"Error at line {self.current_line}: List '{list_name}' does not exist.")
 
     def pop_from_list(self, list_name, index):
         if list_name in self.variables:
@@ -1783,9 +1783,9 @@ limitations under the License.
                 index = self.evaluate_expression(index)
                 self.variables[list_name].pop(index)
             except IndexError:
-                self.error(42, f"Error at line {self.current_line}: Index {index} out of range for list '{list_name}'.")
+                self.error(36, f"Error at line {self.current_line}: Index {index} out of range for list '{list_name}'.")
         else:
-            self.error(43, f"Error at line {self.current_line}: List '{list_name}' does not exist.")
+            self.error(37, f"Error at line {self.current_line}: List '{list_name}' does not exist.")
 
     def debug_interpret_func(self, line, current_line, breakpoints, log_message, print_help):
         self.in_func.append(True)
@@ -2089,7 +2089,7 @@ limitations under the License.
             parts = [part.strip() for part in re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', statement)]
             
             if len(parts) < 2:
-                self.error(44, "Invalid number of arguments for call")
+                self.error(38, "Invalid number of arguments for call")
             
             file_name = self.evaluate_expression(parts[0])
             function_name = self.evaluate_expression(parts[1])
@@ -2101,7 +2101,7 @@ limitations under the License.
             
             return file_name, function_name, args
         else:
-            self.error(45, "Invalid call statement format. Expected format: call(file_name, function_name, arg1, arg2, ...)")
+            self.error(39, "Invalid call statement format. Expected format: call(file_name, function_name, arg1, arg2, ...)")
 
     def call_function_from_file(self, file_name, function_name, args):
         if not os.path.isfile(file_name):
@@ -2202,44 +2202,38 @@ commands:
 8 - Invalid index for move() instruction
 9 - Invalid swap() instruction syntax
 10 - Invalid index for swap() instruction
-11 - Invalid create_button command
-12 - Invalid create_label command
-13 - Invalid create_entry command
-14 - Invalid get_entry_text command
-15 - Invalid set_entry_text command
-16 - Tkinter isn't enabled
-17 - Invalid statement
-18 - Unknown error
-19 - Module does not have a 'start' function.
-20 - Error loading module
-21 - Cannot decrement non-integer variable
-22 - Variable not found for decrement function
-23 - Cannot increment non-integer variable
-24 - Variable not found for increment function
-25 - Error writing to file
-26 - Invalid number of arguments for replace function
-27 - Invalid number of arguments for resplit function
-28 - The first argument of resplit() must be a string (regex pattern).
-29 - The second argument of resplit() must be a string.
-30 - Invalid regex pattern.
-31 - in() function error
-32 - Invalid number of arguments for splitby function
-33 - File not found
-34 - Invalid number of arguments for index function 
-35 - Value not found in list for index function
-36 - Variable is not a list for index function
-37 - List not defined for all()
-38 - Unknown variable or expression
-39 - Invalid range expression for loop
-40 - File not found for use function
-41 - List does not exist for append function
-42 - Index out of range for pop function
-43 - List does not exist for pop function
-44 - Invalid number of arguments for call.
-45 - Invalid call statement format.
-46 - Variable not found in current scope.
-47 - Referenced variable no longer exists.
-48 - Referenced function no longer exists.
+11 - Invalid statement
+12 - Unknown error
+13 - Module does not have a 'start' function.
+14 - Error loading module
+15 - Cannot decrement non-integer variable
+16 - Variable not found for decrement function
+17 - Cannot increment non-integer variable
+18 - Variable not found for increment function
+19 - Error writing to file
+20 - Invalid number of arguments for replace function
+21 - Invalid number of arguments for resplit function
+22 - The first argument of resplit() must be a string (regex pattern).
+23 - The second argument of resplit() must be a string.
+24 - Invalid regex pattern.
+25 - in() function error
+26 - Invalid number of arguments for splitby function
+27 - File not found
+28 - Invalid number of arguments for index function
+29 - Value not found in list for index function
+30 - Variable is not a list for index function
+31 - List not defined for all()
+32 - Unknown variable or expression
+33 - Invalid range expression for loop
+34 - File not found for use function
+35 - List does not exist for append function
+36 - Index out of range for pop function
+37 - List does not exist for pop function
+38 - Invalid number of arguments for call.
+39 - Invalid call statement format.
+40 - Variable not found in current scope.
+41 - Referenced variable no longer exists.
+42 - Referenced function no longer exists.
 """ 
 )
 
