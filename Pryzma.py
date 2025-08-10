@@ -2089,12 +2089,7 @@ limitations under the License.
             parts = [part.strip() for part in re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', statement)]
             
             if len(parts) < 2:
-                if not self.in_try_block:
-                    self.in_func_err()
-                    self.variabes["err"] = 44
-                    print("Invalid number of arguments for call")
-                else:
-                    self.variables["err"] = 44
+                self.error(44, "Invalid number of arguments for call")
             
             file_name = self.evaluate_expression(parts[0])
             function_name = self.evaluate_expression(parts[1])
