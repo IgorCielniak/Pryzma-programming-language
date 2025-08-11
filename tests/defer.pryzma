@@ -1,0 +1,18 @@
+/main{
+    print "start"
+    defer{
+        print "deferred"
+    }
+    @fn
+    print "end"
+}
+
+/fn{
+    print "gg"
+    defer{
+        print "fndefer"
+    }
+    print "hh"
+}
+
+@main

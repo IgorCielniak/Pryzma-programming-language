@@ -53,6 +53,7 @@ class PryzmaInterpreter:
         self.unpack_ = False
         self.lines_map = []
         self.lines_map_done = False
+        self.defer_stack = {}
 
     def interpret_file(self, file_path, *args):
         self.file_path = file_path.strip('"')
@@ -633,10 +634,18 @@ class PryzmaInterpreter:
                         self.error(42, f"Error at line {self.current_line}: Referenced function '{function_name}' no longer exists")
                         continue
                     if function_name in self.functions:
-                        command = 0
-                        while command < len(self.functions[function_name]):
-                            self.interpret(self.functions[function_name][command])
-                            command += 1
+                        try:
+                            command = 0
+                            while command < len(self.functions[function_name]):
+                                self.interpret(self.functions[function_name][command])
+                                command += 1
+                        finally:
+                            if function_name in self.defer_stack:
+                                while self.defer_stack[function_name]:
+                                    deferred = self.defer_stack[function_name].pop()
+                                    deferred = deferred.split("|")
+                                    for line in deferred:
+                                        self.interpret(line.strip())
                     else:
                         self.error(3, f"Error at line {self.current_line}: Function '{function_name}' is not defined.")
                     self.in_func.pop()
@@ -835,6 +844,12 @@ class PryzmaInterpreter:
                     dict_name, key = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', line[5:-1])
                     key = self.evaluate_expression(key)
                     self.variables[dict_name].pop(key)
+                elif line.startswith("defer{") and line.endswith("}"):
+                    if self.function_tracker[-1] in self.defer_stack:
+                        self.defer_stack[self.function_tracker[-1]].append(line[6:-1])
+                    else:
+                        self.defer_stack[self.function_tracker[-1]] = []
+                        self.defer_stack[self.function_tracker[-1]].append(line[6:-1])
                 elif line.startswith("return"):
                     self.ret_val = self.evaluate_expression(line[6:].strip())
                 elif line == "break":

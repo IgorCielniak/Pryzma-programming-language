@@ -457,6 +457,20 @@ output:
 
 hello
 
+defer:
+
+/main{
+    print "start"
+    defer{
+        print "deferred"
+    }
+    print "end"
+}
+
+
+@main
+
+the code inside the defer block will be run after the function finishes execution, preety standard no fancy syntax sugar or anythink
 
 Exec function:
 
