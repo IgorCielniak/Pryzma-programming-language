@@ -954,6 +954,23 @@ print p.address.city
 
 I think this is also quite self explanatory
 
+you can destructurise an instance of a struct in the following way:
+
+struct Person {name, age}
+p = Person {}
+
+p.name = "some name"
+p.age = 7
+
+{name, age} = p
+
+print name, "\n", age
+
+output:
+
+some name
+7
+
 references etc. :
 
 Pryzma supports references, which allow you to create variables that point other variables. This is useful for modifying variables within functions or for creating complex data structures.

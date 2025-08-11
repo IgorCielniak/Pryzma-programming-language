@@ -208,6 +208,16 @@ class PryzmaInterpreter:
                             shell(code)
                     else:
                         self.process_args(line[1:].split(","))
+                elif line.startswith("{"):
+                    variables, instance = line.split("=")
+                    variables = variables.strip()
+                    instance = instance.strip()
+                    args = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', variables[1:-1])
+                    if instance in args:
+                        self.error(43, f"Error at line {self.current_line}: overlaping names of struct instance and one of variables used for destructuring")
+                        continue
+                    for i, key in enumerate(self.variables[instance].keys()):
+                        self.variables[args[i]] = self.variables[instance][key]
                 elif line.startswith("struct"):
                     line = line[6:]
                     name, fields = line[:-1].split("{", 1)
@@ -2234,6 +2244,7 @@ commands:
 40 - Variable not found in current scope.
 41 - Referenced variable no longer exists.
 42 - Referenced function no longer exists.
+43 - Overlaping names of struct instance and one of variables used for destructuring.
 """ 
 )
 

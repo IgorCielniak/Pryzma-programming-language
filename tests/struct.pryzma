@@ -61,5 +61,15 @@ print p.name.surname, "\n"
 
 
 print p.age["age"], "\n"
-print p.age["adult"]
+print p.age["adult"], "\n"
+
+struct Person {name, age}
+a = Person {}
+
+a.name = "some name"
+a.age = 7
+
+{b, c} = a
+
+print b, "\n", c
 
