@@ -470,9 +470,9 @@ defer:
 
 @main
 
-the code inside the defer block will be run after the function finishes execution, preety standard no fancy syntax sugar or anythink
+the code inside the defer block will be run after the function finishes execution, pretty standard no fancy syntax sugar or anythink
 
-Exec function:
+Sys function:
 
 sys("os command")
 
@@ -553,7 +553,7 @@ exec:
 
 there is a function called exec that as the name suggests executes pryzma code from a string:
 
-exec("a = 10"|"print a")
+exec("a = 10", "print a")
 
 and it will output 10
 

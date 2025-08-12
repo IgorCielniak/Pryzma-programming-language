@@ -663,13 +663,9 @@ class PryzmaInterpreter:
                     else:
                         return exec(self.evaluate_expression(parts[0]),self.evaluate_expression(parts[1]))
                 elif line.startswith("exec(") and line.endswith(")"):
-                    code = line[5:-1]
-                    if "|" in code:
-                        code = code.split("|")
-                        for part in code:
-                            self.interpret(self.evaluate_expression(part))
-                    else:
-                        self.interpret(self.evaluate_expression(code))
+                    code = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', line[5:-1])
+                    for part in code:
+                        self.interpret(self.evaluate_expression(part))
                 elif line.startswith("try{") and line.endswith("}"):
                     self.in_try_block = True
                     catch_block = None
@@ -1185,17 +1181,10 @@ class PryzmaInterpreter:
             else:
                 return exec(self.evaluate_expression(parts[0]), self.evaluate_expression(parts[1]))
         elif expression.startswith("eval(") and expression.endswith(")"):
-            code = expression[5:-1]
-            if "|" in code:
-                code = code.split("|")
-                for part in code:
-                    self.ret_val = None
-                    self.interpret(self.evaluate_expression(part))
-                    if self.ret_val != None:
-                        return self.ret_val
-            else:
+            code =  re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', expression[5:-1])
+            for part in code:
                 self.ret_val = None
-                self.interpret(self.evaluate_expression(code))
+                self.interpret(self.evaluate_expression(part))
                 if self.ret_val != None:
                     return self.ret_val
         elif expression.startswith("replace(") and expression.endswith(")"):
