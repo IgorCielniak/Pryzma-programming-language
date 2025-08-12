@@ -1107,6 +1107,29 @@ print char(read(0x0000)) // outputs g
 
 for now this is all of the memeory manipulation functions
 
+patch()
+
+you can patch the body of a function at runtime like so:
+
+/func{
+    try{
+        print a
+    }
+    if(err!=0){
+        patch("func", "func2")
+        @func
+    }
+}
+
+/func2{print "gg"}
+
+@func
+
+as you can see the variable a is not defined anywhere so print a would fail and the err would not be equal to 0 anymore
+so this would run the patch() that would swap the list of instructions for func to the list of instructions of func2
+and than call func once more and the output of all of this code would be 'gg', so this is basicly hot swapping function bodies at runtime
+might prove usefull, or compleatly useless, we will see
+
 Running Programs:
 
 To run a Pryzma program, save the code in a text file execute it by launching the

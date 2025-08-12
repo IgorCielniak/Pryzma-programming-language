@@ -976,6 +976,13 @@ class PryzmaInterpreter:
                     addr = self.evaluate_expression(addr.strip())
                     data = self.evaluate_expression(data.strip())
                     self.mem[addr] = data
+                elif line.startswith("patch(") and line.endswith(")"):
+                    f1, f2 = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', line[6:-1])
+                    f1 = self.evaluate_expression(f1)
+                    f2 = self.evaluate_expression(f2)
+                    if f1 not in self.functions or f2 not in self.functions:
+                        self.error(44, "Name of a non existing function pased as an argument to patch()")
+                    self.functions[f1] = self.functions[f2]
                 elif line == "stop":
                     sys.exit()
                 else:
@@ -2260,6 +2267,7 @@ commands:
 41 - Referenced variable no longer exists.
 42 - Referenced function no longer exists.
 43 - Overlaping names of struct instance and one of variables used for destructuring.
+44 - Name of a non existing function pased as an argument to patch()
 """ 
 )
 
