@@ -175,10 +175,10 @@ class PryzmaInterpreter:
 
             try:
                 if line.startswith("print"):
-                    value = line[len("print"):].strip()
+                    value = line[5:].strip()
                     self.print_value(value)
                 elif line.startswith("input"):
-                    variable = line[len("input"):].strip()
+                    variable = line[5:].strip()
                     self.custom_input(variable)
                 elif line.startswith("#"):
                     if line.startswith("#preproc"):
@@ -829,7 +829,7 @@ class PryzmaInterpreter:
                 elif line.startswith("load(") and line.endswith(")"):
                     self.load_module(self.evaluate_expression(line[5:-1]))
                 elif line.startswith("wait(") and line.endswith(")"):
-                    time_to_wait = float(line[5:-1])
+                    time_to_wait = float(self.evaluate_expression(line[5:-1]))
                     time.sleep(time_to_wait)
                 elif line.startswith("push(") and line.endswith(")"):
                     dict_name, key, value = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', line[5:-1])
