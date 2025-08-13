@@ -37,7 +37,7 @@ ret_var = None
         line = splitby(h6,line,1)
         l = line[0][1:]
         l = splitby(",",l)
-        range = splitby(":",l[1])
+        range = splitby(":",strip(l[1]))
         start_var = @eval(range[0])
         end_var = @eval(range[1])
         var = strip(l[0])
@@ -283,21 +283,37 @@ program = file_read(argv[1])
 program = replace(program,"\n",h3)
 prog = list(program)
 
-in_func = 0
+rep_in_func = 0
 
-for(char,0:len(prog)){
-    if (prog[char]==h){
-        in_func += 1
-    }
-    if (prog[char]==h2){
-        in_func -= 1
-    }
-    if (in_func != 0){
-        if(prog[char] == h3){
-            prog[char] = char(124)
+in_str = False
+
+char_ = 0
+
+foreach(char, prog){
+    if(char == h){
+        if(in_str == False){
+            rep_in_func += 1
         }
     }
+    if(char == h2){
+        if(in_str == False){
+            rep_in_func -= 1
+        }
+    }
+    if(char == char(34)){
+        in_str = not in_str
+    }
+    if(rep_in_func != 0){
+        if(char == h3){
+            if(in_str == False){
+                prog[char_] = h8
+            }
+        }
+    }
+    ++char_
 }
+
+
 
 program = all(prog)
 
