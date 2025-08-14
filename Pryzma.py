@@ -731,7 +731,10 @@ class PryzmaInterpreter:
                     variables = variables.strip().split(",")
                     expression = expression.strip()
                     for variable in variables:
-                        self.assign_value(variable.strip(), expression)
+                        if variable in self.locals:
+                            self.assign_value_local(variable.strip(), expression)
+                        else:
+                            self.assign_value(variable.strip(), expression)
                 elif "+=" in line:
                     line = line.split("+=")
                     if len(line) != 2:
@@ -1544,6 +1547,88 @@ class PryzmaInterpreter:
             else:
                 obj = obj[part.strip()]
         return obj
+
+    def assign_value_local(self, var_name, expression):
+        value = self.evaluate_expression(expression)
+        if isinstance(value, dict):
+            value = value.copy()
+
+        if var_name.startswith("*"):
+            ref = self.evaluate_expression(var_name[1:].strip())
+            if isinstance(ref, Reference):
+                var_name = ref.var_name
+
+        if "." in var_name:
+            tokens = re.findall(r"[a-zA-Z_]\w*|\[\s*[^\]]+\s*\]", var_name)
+
+            if not tokens:
+                raise ValueError("Invalid struct field")
+
+            base_var_name = tokens[0]
+
+            target = None
+            for i in range(len(self.function_tracker) - 1, -1, -1):
+                for item in reversed(self.locals[base_var_name]):
+                    if item[1] == self.function_tracker[i] and item[2] == self.function_ids[i]:
+                        target = item[0]
+                        break
+                if target is not None:
+                    break
+
+            if target is None:
+                self.error(40, f"Error at line {self.current_line}: Variable '{base_var_name}' not found in current scope.")
+                return
+
+            if isinstance(target, Reference):
+                target = self.variables[target.var_name]
+
+            for token in tokens[1:-1]:
+                if token.startswith('['):
+                    index_expr = token[1:-1].strip()
+                    index = self.evaluate_expression(index_expr)
+                    target = target[index]
+                else:
+                    target = target[token]
+
+            last_token = tokens[-1]
+            if last_token.startswith('['):
+                index_expr = last_token[1:-1].strip()
+                index = self.evaluate_expression(index_expr)
+                target[index] = value
+            else:
+                target[last_token] = value
+        elif '[' in var_name:
+            base_var = var_name.split('[')[0]
+            indexes = re.findall(r'\[(.*?)\]', var_name)
+
+            target = None
+            for i in range(len(self.function_tracker) - 1, -1, -1):
+                for item in reversed(self.locals[base_var]):
+                    if item[1] == self.function_tracker[i] and item[2] == self.function_ids[i]:
+                        target = item[0]
+                        break
+                if target is not None:
+                    break
+
+            if target is None:
+                self.error(40, f"Error at line {self.current_line}: Variable '{base_var}' not found in current scope.")
+                return
+
+            if isinstance(target, Reference):
+                target = self.variables[target.var_name]
+
+            for index_expr in indexes[:-1]:
+                index = self.evaluate_expression(index_expr)
+                target = target[index]
+
+            last_index = self.evaluate_expression(indexes[-1])
+            target[last_index] = value
+        else:
+            for i in range(len(self.function_tracker) - 1, -1, -1):
+                for j, item in enumerate(reversed(self.locals[var_name])):
+                    if item[1] == self.function_tracker[i] and item[2] == self.function_ids[i]:
+                        self.locals[var_name][len(self.locals[var_name]) - 1 - j] = (value, item[1], item[2])
+                        return
 
     def assign_value(self, var_name, expression):
         value = self.evaluate_expression(expression)
