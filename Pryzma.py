@@ -40,6 +40,7 @@ class PryzmaInterpreter:
         self.in_try_block = False
         self.in_func = [False]
         self.function_tracker = [None]
+        self.function_ids = [None]
         self.current_func_name = None
         self.preprocess_only = False
         self.no_preproc = False
@@ -628,6 +629,7 @@ class PryzmaInterpreter:
                                 arg[args] = self.evaluate_expression(arg[args].strip())
                             self.variables["args"] = arg
                     self.function_tracker.append(function_name)
+                    self.function_ids.append(random.randint(0,100000000))
                     if function_name in self.variables and isinstance(self.variables[function_name], FuncReference):
                         function_name = self.variables[function_name].func_name
                     if function_name not in self.functions:
@@ -646,10 +648,14 @@ class PryzmaInterpreter:
                                     deferred = deferred.split("|")
                                     for line in deferred:
                                         self.interpret(line.strip())
+                            func_id = self.function_ids[-1]
+                            for var in self.locals:
+                                self.locals[var] = [item for item in self.locals[var] if item[2] != func_id]
                     else:
                         self.error(3, f"Error at line {self.current_line}: Function '{function_name}' is not defined.")
                     self.in_func.pop()
                     self.function_tracker.pop()
+                    self.function_ids.pop()
                 elif line.startswith("pyeval(") and line.endswith(")"):
                     parts = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', line[7:-1])
                     if len(parts) == 1:
@@ -708,9 +714,10 @@ class PryzmaInterpreter:
                 elif line.startswith("loc"):
                     var, value = line[3:].split("=", 1)
                     var = var.strip()
-                    value = value.strip()
-                    self.locals[var] = self.function_tracker[-1]
-                    self.assign_value(var, value)
+                    value = self.evaluate_expression(value.strip())
+                    if var not in self.locals:
+                        self.locals[var] = []
+                    self.locals[var].append((value, self.function_tracker[-1], self.function_ids[-1]))
                 elif line.startswith("assert"):
                     parts = line[6:].strip().split(",", 1)
                     condition = parts[0].strip()
@@ -1408,10 +1415,12 @@ class PryzmaInterpreter:
         elif expression.startswith("@"):
             self.in_func.append(True)
             self.function_tracker.append(expression[1:].split("(")[0])
+            self.function_ids.append(random.randint(0,100000000))
             self.ret_val = None
             self.interpret(expression)
             self.in_func.pop()
             self.function_tracker.pop()
+            self.function_ids.pop()
             return self.ret_val
         elif expression.startswith("char(") and expression.endswith(")"):
             return chr(self.evaluate_expression(expression[5:-1]))
@@ -1498,12 +1507,13 @@ class PryzmaInterpreter:
         elif expression.startswith("~"):
             value = expression[1:]
             return lambda: self.evaluate_expression(value)
-        elif expression in self.variables:
+        elif expression in self.variables or expression in self.locals:
             if expression in self.locals:
-                if self.locals[expression] == self.function_tracker[-1]:
-                    return self.variables[expression]
-                else:
-                    self.error(40, f"Error at line {self.current_line}: Variable '{expression}' not found in current scope.")
+                for i in range(len(self.function_tracker) - 1, -1, -1):
+                    for val, func_name, func_id in reversed(self.locals[expression]):
+                        if func_name == self.function_tracker[i] and func_id == self.function_ids[i]:
+                            return val
+                self.error(40, f"Error at line {self.current_line}: Variable '{expression}' not found in current scope.")
             else:
                 return self.variables[expression]
         else:
@@ -1821,6 +1831,7 @@ limitations under the License.
                     arg[args] = self.evaluate_expression(arg[args].strip())
                 self.variables["args"] = arg
         self.function_tracker.append(function_name)
+        self.function_ids.append(random.randint(0,100000000))
         if function_name in self.functions:
             command = 0
             continue_ = False
@@ -1864,6 +1875,9 @@ limitations under the License.
                     elif command_ == 'st':
                         print("Structs:", self.structs)
                         log_message(f"Structs: {self.structs}")
+                    elif command_.startswith("!!"):
+                        exec(command_[2:])
+                        log_message(f"Run code: {command_[2:]}")
                     elif command_.startswith("!"):
                         self.interpret(command_[1:])
                         print("\n")
@@ -1893,7 +1907,7 @@ limitations under the License.
             self.error(3, f"Error at line {current_line}: Function '{function_name}' is not defined.")
         self.in_func.pop()
         self.function_tracker.pop()
-
+        self.function_ids.pop()
 
     def debug_interpreter(self, file_path, running_from_file, arguments):
         current_line = 0
@@ -1978,6 +1992,9 @@ limitations under the License.
             elif command == 'st':
                 print("Structs:", self.structs)
                 log_message(f"Structs: {self.structs}")
+            elif command.startswith("!!"):
+                exec(command[2:])
+                log_message(f"Run code: {command[2:]}")
             elif command.startswith("!"):
                 self.interpret(command[1:])
                 print("\n")
@@ -2075,6 +2092,9 @@ limitations under the License.
                 elif command == 'st':
                     print("Structs:", self.structs)
                     log_message(f"Structs: {self.structs}")
+                elif command.startswith("!!"):
+                    exec(command[2:])
+                    log_message(f"Run code: {command[2:]}")
                 elif command.startswith("!"):
                     self.interpret(command[1:])
                     print("\n")
