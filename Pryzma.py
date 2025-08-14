@@ -1482,13 +1482,20 @@ class PryzmaInterpreter:
         elif expression.startswith("&"):
             if expression[1:] in self.variables:
                 return Reference(expression[1:])
-            if expression[1:] in self.functions:
+            elif expression[1:] in self.locals:
+                return Reference(expression[1:])
+            elif expression[1:] in self.functions:
                 return FuncReference(expression[1:])
         elif expression.startswith("*"):
             ref = self.evaluate_expression(expression[1:])
             if isinstance(ref, Reference):
                 if ref.var_name in self.variables:
                     return self.variables[ref.var_name]
+                elif ref.var_name in self.locals:
+                    for i in range(len(self.function_tracker) - 1, -1, -1):
+                        for val, func_name, func_id in reversed(self.locals[ref.var_name]):
+                            if func_name == self.function_tracker[i] and func_id == self.function_ids[i]:
+                                return val
                 else:
                     self.error(41, f"Error at line {self.current_line}: Referenced variable '{ref.var_name}' no longer exists")
             else:

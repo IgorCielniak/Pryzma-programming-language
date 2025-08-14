@@ -8,5 +8,19 @@
 
 @f
 
-print a
+print a, "\n"
+
+/fn{
+    loc var = 1
+    @fn2
+    print var
+}
+
+/fn2{
+    loc var = 2
+    print var
+}
+
+
+@fn
 
