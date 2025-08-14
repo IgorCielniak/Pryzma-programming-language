@@ -1523,9 +1523,10 @@ class PryzmaInterpreter:
                     for val, func_name, func_id in reversed(self.locals[expression]):
                         if func_name == self.function_tracker[i] and func_id == self.function_ids[i]:
                             return val
-                self.error(40, f"Error at line {self.current_line}: Variable '{expression}' not found in current scope.")
-            else:
+            if expression in self.variables:
                 return self.variables[expression]
+            else:
+                self.error(40, f"Error at line {self.current_line}: Variable '{expression}' not found in current scope.")
         else:
             try:
                 return eval(expression, {}, self.variables)

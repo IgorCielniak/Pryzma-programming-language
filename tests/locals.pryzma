@@ -24,3 +24,17 @@ print a, "\n"
 
 @fn
 
+
+/fn3{
+    print var2
+    loc var2 = 1
+    var2 = 2
+    print var2
+}
+
+var2 = 9
+
+@fn3
+
+print var2
+
