@@ -1416,14 +1416,8 @@ class PryzmaInterpreter:
             key = self.evaluate_expression(key)
             return self.variables[dict_name][key]
         elif expression.startswith("@"):
-            self.in_func.append(True)
-            self.function_tracker.append(expression[1:].split("(")[0])
-            self.function_ids.append(random.randint(0,100000000))
             self.ret_val = None
             self.interpret(expression)
-            self.in_func.pop()
-            self.function_tracker.pop()
-            self.function_ids.pop()
             return self.ret_val
         elif expression.startswith("char(") and expression.endswith(")"):
             return chr(self.evaluate_expression(expression[5:-1]))
