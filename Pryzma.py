@@ -2128,13 +2128,19 @@ limitations under the License.
         while current_line < len(lines):
             line = lines[current_line].strip()
 
+            for stmt, num in self.lines_map:
+                if line.startswith(stmt.strip()) and stmt.strip() != "":
+                    self.lines_map.remove((stmt, num))
+                    self.current_line = num + 1
+                    break
+
             if current_line in breakpoints:
-                print(f"Breakpoint hit at line {current_line + 1}.")
-                log_message(f"Breakpoint hit at line {current_line + 1}.")
+                print(f"Breakpoint hit at line {self.current_line}.")
+                log_message(f"Breakpoint hit at line {self.current_line}.")
             
             if not line.startswith("//") and line != "":
-                print(f"Debug: Executing line {current_line + 1}: {line}")
-                log_message(f"Executing line {current_line + 1}: {line}")
+                print(f"Debug: Executing line {self.current_line}: {line}")
+                log_message(f"Executing line {self.current_line}: {line}")
 
                 try:
                     if line.startswith("@"):
@@ -2142,7 +2148,7 @@ limitations under the License.
                     else:
                         self.interpret(line)
                 except Exception as e:
-                    error_message = f"Error executing line {current_line + 1}: {e}"
+                    error_message = f"Error executing line {self.current_line}: {e}"
                     print(error_message)
                     log_message(error_message)
             current_line += 1
@@ -2158,8 +2164,8 @@ limitations under the License.
                     while current_line < len(lines) and current_line not in breakpoints:
                         line = lines[current_line].strip()
                         if not line.startswith("//") and line != "":
-                            print(f"Debug: Executing line {current_line + 1}: {line}")
-                            log_message(f"Executing line {current_line + 1}: {line}")
+                            print(f"Debug: Executing line {self.current_line}: {line}")
+                            log_message(f"Executing line {self.current_line}: {line}")
 
                             try:
                                 if line.startswith("@"):
@@ -2167,7 +2173,7 @@ limitations under the License.
                                 else:
                                     self.interpret(line)
                             except Exception as e:
-                                error_message = f"Error executing line {current_line + 1}: {e}"
+                                error_message = f"Error executing line {self.current_line}: {e}"
                                 print(error_message)
                                 log_message(error_message)
                         current_line += 1
