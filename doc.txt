@@ -559,9 +559,9 @@ and it will output 10
 
 instead of a string you can also pass a variable
 
-eval can also be an rvalue like this:
+exec can also be an rvalue like this:
 
-result = eval("@func")
+result = exec("@func")
 
 result would be the return value of func
 
@@ -1129,6 +1129,50 @@ as you can see the variable a is not defined anywhere so print a would fail and 
 so this would run the patch() that would swap the list of instructions for func to the list of instructions of func2
 and than call func once more and the output of all of this code would be 'gg', so this is basicly hot swapping function bodies at runtime
 might prove usefull, or compleatly useless, we will see
+
+isolates:
+
+In pryzma there is a concept of isolates that are basicly isolated instances of the interpreter,
+isolates allow for execution of pryzma code without modifying the main program interpreter's stack.
+This is how to use isolates:
+
+to run some code in an isolate you use the isolate() function, pretty obvious isn't it?,
+the function accepts pryzma code and optionally you can pass an allready existing isolate so you can reuse it later,
+if you don't pass an existing isolate a new one will be created automaticly.
+Now you may ask 'how to get an isolate?', and here comes to play the new_isolate() function,
+it creates and returns a new isolate, this is how to use it:
+
+isolate = new_isolate()
+
+and than calling the isolate function itself:
+
+isolate("a = 1;print a", isolate=isolate)
+
+this would run the code using our existing isolate, if you want to run the code in a new isolate you can just do this:
+
+isolate("a=1;print a")
+
+this would automaticly create a new isolate for you
+
+you can also use the isolate function as an rvalue:
+
+value = isolate("a=5;b=6;return a+b")
+
+value would be equal to 11 but both variables a and b wouldn't be created on the main stack but only on the inner stack of the new automaticly created isolate
+
+if you create an isolate your self, than you can reuse it and acces its inner stack:
+
+isolate = new_isolate()
+
+isolate(isolate=isolate,"a=1")
+
+b = isolate(isolate=isolate, "return a")
+
+print b
+
+the output would be 1
+
+with some pyeval() and pyexec() magick you can pass the main programs stack to the isolate and other interesting stuff, but i will leave it to be explored by you ;)
 
 Running Programs:
 

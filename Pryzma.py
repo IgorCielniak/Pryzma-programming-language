@@ -677,6 +677,17 @@ class PryzmaInterpreter:
                     code = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', line[5:-1])
                     for part in code:
                         self.interpret(self.evaluate_expression(part))
+                elif line.startswith("isolate(") and line.endswith(")"):
+                    args = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', line[8:-1])
+                    isolated_interpreter = None
+                    for arg in args:
+                        if arg.startswith("isolate"):
+                            args.remove(arg)
+                            isolated_interpreter = self.variables[arg.split("=", 1)[1].strip()]
+                    if not isolated_interpreter:
+                        isolated_interpreter = PryzmaInterpreter()
+                    for part in args:
+                        isolated_interpreter.interpret(self.evaluate_expression(part))
                 elif line.startswith("try{") and line.endswith("}"):
                     self.in_try_block = True
                     catch_block = None
@@ -1195,13 +1206,29 @@ class PryzmaInterpreter:
                 return exec(self.evaluate_expression(parts[0]))
             else:
                 return exec(self.evaluate_expression(parts[0]), self.evaluate_expression(parts[1]))
-        elif expression.startswith("eval(") and expression.endswith(")"):
-            code =  re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', expression[5:-1])
+        elif expression.startswith("exec(") and expression.endswith(")"):
+            code = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', expression[5:-1])
             for part in code:
                 self.ret_val = None
                 self.interpret(self.evaluate_expression(part))
                 if self.ret_val != None:
                     return self.ret_val
+        elif expression.startswith("new_isolate(") and expression.endswith(")"):
+            return PryzmaInterpreter()
+        elif expression.startswith("isolate(") and expression.endswith(")"):
+            args = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', expression[8:-1])
+            isolated_interpreter = None
+            for arg in args:
+                if arg.startswith("isolate"):
+                    args.remove(arg)
+                    isolated_interpreter = self.variables[arg.split("=", 1)[1].strip()]
+            if not isolated_interpreter:
+                isolated_interpreter = PryzmaInterpreter()
+            for part in args:
+                isolated_interpreter.ret_val = None
+                isolated_interpreter.interpret(self.evaluate_expression(part))
+                if isolated_interpreter.ret_val != None:
+                    return isolated_interpreter.ret_val
         elif expression.startswith("replace(") and expression.endswith(")"):
             expression = expression[8:-1]
             parts = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', expression)
