@@ -649,8 +649,13 @@ class PryzmaInterpreter:
                                     for line in deferred:
                                         self.interpret(line.strip())
                             func_id = self.function_ids[-1]
+                            to_remove = []
                             for var in self.locals:
                                 self.locals[var] = [item for item in self.locals[var] if item[2] != func_id]
+                                if not self.locals[var]:
+                                    to_remove.append(var)
+                            for var in to_remove:
+                                self.locals.pop(var)
                     else:
                         self.error(3, f"Error at line {self.current_line}: Function '{function_name}' is not defined.")
                     self.in_func.pop()
@@ -1920,76 +1925,92 @@ limitations under the License.
         self.function_tracker.append(function_name)
         self.function_ids.append(random.randint(0,100000000))
         if function_name in self.functions:
-            command = 0
-            continue_ = False
-            while command < len(self.functions[function_name]):
-                if continue_ == False:
-                    command_ = input("Debugger> ").strip()
-                    if command_ == 's':
-                        log_message("User chose to step.")
+            try:
+                command = 0
+                continue_ = False
+                while command < len(self.functions[function_name]):
+                    if continue_ == False:
+                        command_ = input("Debugger> ").strip()
+                        if command_ == 's':
+                            log_message("User chose to step.")
+                            log_message(f"Executing line {self.functions[function_name][command]}")
+                            print(f"Debug: Executing line: {self.functions[function_name][command]}")
+                            self.interpret(self.functions[function_name][command])
+                            command += 1
+                        elif command_ == 'c':
+                            log_message("User chose to continue.")
+                            continue_ = True
+                        elif command_.startswith('b '):
+                            try:
+                                line_num = int(command_.split()[1])
+                                breakpoints.add(line_num-1)
+                                print(f"Breakpoint added at line {line_num}.")
+                                log_message(f"Breakpoint added at line {line_num}.")
+                            except ValueError:
+                                print("Invalid line number. Usage: b <line_number>")
+                        elif command_.startswith('r '):
+                            try:
+                                line_num = int(command_.split()[1])
+                                breakpoints.discard(line_num)
+                                print(f"Breakpoint removed at line {line_num}.")
+                                log_message(f"Breakpoint removed at line {line_num}.")
+                            except ValueError:
+                                print("Invalid line number. Usage: r <line_number>")
+                        elif command_ == 'l':
+                            print("Breakpoints:", sorted(breakpoints))
+                            log_message(f"Breakpoints listed: {sorted(breakpoints)}")
+                        elif command_ == 'v':
+                            print("Variables:", self.variables)
+                            log_message(f"Variables: {self.variables}")
+                        elif command_ == 'f':
+                            print("Functions:", self.functions)
+                            log_message(f"Functions: {self.functions}")
+                        elif command_ == 'st':
+                            print("Structs:", self.structs)
+                            log_message(f"Structs: {self.structs}")
+                        elif command_.startswith("!!"):
+                            exec(command_[2:])
+                            log_message(f"Run code: {command_[2:]}")
+                        elif command_.startswith("!"):
+                            self.interpret(command_[1:])
+                            print("\n")
+                            log_message(f"Run code: {command_[1:]}")
+                        elif command_ == 'log':
+                            self.log_file = input("Enter log file name (press Enter for 'log.txt'): ").strip() or 'log.txt'
+                            print(f"Logging to {self.log_file}")
+                            log_message(f"Log file set to: {self.log_file}")
+                        elif command_ == 'exit':
+                            print("Exiting debugger.")
+                            log_message("Debugger exited.")
+                            return
+                        elif command_ == 'help':
+                            print_help()
+                        elif command_ == 'clear':
+                            if os.name == "posix":
+                                os.system('clear')
+                            else:
+                                os.system('cls')
+                        else:
+                            print("Unknown command. Type 'help' for a list of commands.")
+                    else:
                         log_message(f"Executing line {self.functions[function_name][command]}")
-                        print(f"Debug: Executing line: {self.functions[function_name][command]}")
                         self.interpret(self.functions[function_name][command])
                         command += 1
-                    elif command_ == 'c':
-                        log_message("User chose to continue.")
-                        continue_ = True
-                    elif command_.startswith('b '):
-                        try:
-                            line_num = int(command_.split()[1])
-                            breakpoints.add(line_num-1)
-                            print(f"Breakpoint added at line {line_num}.")
-                            log_message(f"Breakpoint added at line {line_num}.")
-                        except ValueError:
-                            print("Invalid line number. Usage: b <line_number>")
-                    elif command_.startswith('r '):
-                        try:
-                            line_num = int(command_.split()[1])
-                            breakpoints.discard(line_num)
-                            print(f"Breakpoint removed at line {line_num}.")
-                            log_message(f"Breakpoint removed at line {line_num}.")
-                        except ValueError:
-                            print("Invalid line number. Usage: r <line_number>")
-                    elif command_ == 'l':
-                        print("Breakpoints:", sorted(breakpoints))
-                        log_message(f"Breakpoints listed: {sorted(breakpoints)}")
-                    elif command_ == 'v':
-                        print("Variables:", self.variables)
-                        log_message(f"Variables: {self.variables}")
-                    elif command_ == 'f':
-                        print("Functions:", self.functions)
-                        log_message(f"Functions: {self.functions}")
-                    elif command_ == 'st':
-                        print("Structs:", self.structs)
-                        log_message(f"Structs: {self.structs}")
-                    elif command_.startswith("!!"):
-                        exec(command_[2:])
-                        log_message(f"Run code: {command_[2:]}")
-                    elif command_.startswith("!"):
-                        self.interpret(command_[1:])
-                        print("\n")
-                        log_message(f"Run code: {command_[1:]}")
-                    elif command_ == 'log':
-                        self.log_file = input("Enter log file name (press Enter for 'log.txt'): ").strip() or 'log.txt'
-                        print(f"Logging to {self.log_file}")
-                        log_message(f"Log file set to: {self.log_file}")
-                    elif command_ == 'exit':
-                        print("Exiting debugger.")
-                        log_message("Debugger exited.")
-                        return
-                    elif command_ == 'help':
-                        print_help()
-                    elif command_ == 'clear':
-                        if os.name == "posix":
-                            os.system('clear')
-                        else:
-                            os.system('cls')
-                    else:
-                        print("Unknown command. Type 'help' for a list of commands.")
-                else:
-                    log_message(f"Executing line {self.functions[function_name][command]}")
-                    self.interpret(self.functions[function_name][command])
-                    command += 1
+            finally:
+                if function_name in self.defer_stack:
+                    while self.defer_stack[function_name]:
+                        deferred = self.defer_stack[function_name].pop()
+                        deferred = deferred.split("|")
+                        for line in deferred:
+                            self.interpret(line.strip())
+                func_id = self.function_ids[-1]
+                to_remove = []
+                for var in self.locals:
+                    self.locals[var] = [item for item in self.locals[var] if item[2] != func_id]
+                    if not self.locals[var]:
+                        to_remove.append(var)
+                for var in to_remove:
+                    self.locals.pop(var)
         else:
             self.error(3, f"Error at line {current_line}: Function '{function_name}' is not defined.")
         self.in_func.pop()
