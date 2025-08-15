@@ -764,8 +764,10 @@ fd - forward declare functions
 np - don't preprocess
 nan - no automatic namespacing
 an - enable automatic namespacing
+rs - make retrun statements stop the function execution
+rds - make retrun statements don't stop the function execution (default)
 
-#nan, #an, #fd and #np are also supported
+#nan, #an, #fd, #np, #rs and #rds are also supported
 
 there also is #fail and #df
 

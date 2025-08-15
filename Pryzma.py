@@ -46,6 +46,7 @@ class PryzmaInterpreter:
         self.no_preproc = False
         self.forward_declare = False
         self.nan = False
+        self.return_stops = False
         self.return_val = None
         self.break_stack = []
         self.main_file = 1
@@ -639,7 +640,10 @@ class PryzmaInterpreter:
                         try:
                             command = 0
                             while command < len(self.functions[function_name]):
-                                self.interpret(self.functions[function_name][command])
+                                inst = self.functions[function_name][command]
+                                self.interpret(inst)
+                                if self.return_stops and inst.strip().startswith("return"):
+                                    break
                                 command += 1
                         finally:
                             if function_name in self.defer_stack:
@@ -1067,6 +1071,10 @@ class PryzmaInterpreter:
             self.fail = True
         if "df" in args:
             self.fail = False
+        if "rs" in args:
+            self.return_stops = True
+        if "rds" in args:
+            self.return_stops = False
 
 
     def struct_split(self, s):
