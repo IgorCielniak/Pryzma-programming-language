@@ -18,7 +18,7 @@ for(i, 0:100){
 }
 
 num = @sort(num)
-num2 = pyeval("sorted(num)")
+num2 = pyeval("sorted(num)", pyeval("dict(self.variables)"))
 
 if(num==num2){
     print True
