@@ -664,13 +664,13 @@ class PryzmaInterpreter:
                 elif line.startswith("pyeval(") and line.endswith(")"):
                     parts = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', line[7:-1])
                     if len(parts) == 1:
-                        return eval(self.evaluate_expression(parts[0]), dict(self.variables))
+                        return eval(self.evaluate_expression(parts[0]))
                     else:
                         return eval(self.evaluate_expression(parts[0]), self.evaluate_expression(parts[1]))
                 elif line.startswith("pyexec(") and line.endswith(")"):
                     parts = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', line[7:-1])
                     if len(parts) == 1:
-                        return exec(self.evaluate_expression(parts[0]), dict(self.variables))
+                        return exec(self.evaluate_expression(parts[0]))
                     else:
                         return exec(self.evaluate_expression(parts[0]),self.evaluate_expression(parts[1]))
                 elif line.startswith("exec(") and line.endswith(")"):
@@ -1186,13 +1186,13 @@ class PryzmaInterpreter:
         elif expression.startswith("pyeval(") and expression.endswith(")"):
             parts = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', expression[7:-1])
             if len(parts) == 1:
-                return eval(self.evaluate_expression(parts[0]), dict(self.variables))
+                return eval(self.evaluate_expression(parts[0]))
             else:
                 return eval(self.evaluate_expression(parts[0]), self.evaluate_expression(parts[1]))
         elif expression.startswith("pyexec(") and expression.endswith(")"):
             parts = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', expression[7:-1])
             if len(parts) == 1:
-                return exec(self.evaluate_expression(parts[0]), dict(self.variables))
+                return exec(self.evaluate_expression(parts[0]))
             else:
                 return exec(self.evaluate_expression(parts[0]), self.evaluate_expression(parts[1]))
         elif expression.startswith("eval(") and expression.endswith(")"):
