@@ -1459,7 +1459,8 @@ class PryzmaInterpreter:
             value = self.evaluate_expression(value)
             return char.join(value)
         elif expression.startswith("defined(") and expression.endswith(")"):
-            return expression[8:-1] in self.variables
+            name = expression[8:-1]
+            return name in self.variables or name in self.locals or name in self.functions
         elif expression.startswith("is_file(") and expression.endswith(")"):
             path = self.evaluate_expression(expression[8:-1])
             return os.path.isfile(path)
