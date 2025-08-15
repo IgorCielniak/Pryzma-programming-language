@@ -1,4 +1,4 @@
 99
-Error at line 11: Variable 'a' not found in current scope.
+Error at line 11: Unknown variable or expression: a
 None
 21929
