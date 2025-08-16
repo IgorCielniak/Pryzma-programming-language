@@ -646,13 +646,13 @@ class PryzmaInterpreter:
                                     break
                                 command += 1
                         finally:
-                            if function_name in self.defer_stack:
-                                while self.defer_stack[function_name]:
-                                    deferred = self.defer_stack[function_name].pop()
+                            func_id = self.function_ids[-1]
+                            if (function_name, func_id) in self.defer_stack:
+                                while self.defer_stack[(function_name, func_id)]:
+                                    deferred = self.defer_stack[(function_name, func_id)].pop()
                                     deferred = deferred.split("|")
                                     for line in deferred:
                                         self.interpret(line.strip())
-                            func_id = self.function_ids[-1]
                             to_remove = []
                             for var in self.locals:
                                 self.locals[var] = [item for item in self.locals[var] if item[2] != func_id]
@@ -871,11 +871,11 @@ class PryzmaInterpreter:
                     key = self.evaluate_expression(key)
                     self.variables[dict_name].pop(key)
                 elif line.startswith("defer{") and line.endswith("}"):
-                    if self.function_tracker[-1] in self.defer_stack:
-                        self.defer_stack[self.function_tracker[-1]].append(line[6:-1])
+                    if (self.function_tracker[-1], self.function_ids[-1]) in self.defer_stack:
+                        self.defer_stack[(self.function_tracker[-1], self.function_ids[-1])].append(line[6:-1])
                     else:
-                        self.defer_stack[self.function_tracker[-1]] = []
-                        self.defer_stack[self.function_tracker[-1]].append(line[6:-1])
+                        self.defer_stack[(self.function_tracker[-1], self.function_ids[-1])] = []
+                        self.defer_stack[(self.function_tracker[-1], self.function_ids[-1])].append(line[6:-1])
                 elif line.startswith("return"):
                     self.ret_val = self.evaluate_expression(line[6:].strip())
                 elif line == "break":
@@ -2033,13 +2033,13 @@ limitations under the License.
                         self.interpret(self.functions[function_name][command])
                         command += 1
             finally:
-                if function_name in self.defer_stack:
-                    while self.defer_stack[function_name]:
-                        deferred = self.defer_stack[function_name].pop()
+                func_id = self.function_ids[-1]
+                if (function_name, func_id) in self.defer_stack:
+                    while self.defer_stack[(function_name, func_id)]:
+                        deferred = self.defer_stack[(function_name, func_id)].pop()
                         deferred = deferred.split("|")
                         for line in deferred:
                             self.interpret(line.strip())
-                func_id = self.function_ids[-1]
                 to_remove = []
                 for var in self.locals:
                     self.locals[var] = [item for item in self.locals[var] if item[2] != func_id]
