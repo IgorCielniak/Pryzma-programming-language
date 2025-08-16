@@ -40,3 +40,16 @@ print y
 p = "gg"
 
 print p, y
+
+/func2{
+    b = args[0]
+    *b = 6
+}
+
+/func{
+    loc a = 8
+    @func2(&a)
+    print a
+}
+
+@func

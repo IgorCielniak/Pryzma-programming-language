@@ -751,7 +751,15 @@ class PryzmaInterpreter:
                     variables = variables.strip().split(",")
                     expression = expression.strip()
                     for variable in variables:
-                        if variable in self.locals:
+                        if variable.lstrip("*") in self.variables:
+                            if isinstance(self.variables[variable.lstrip("*")], Reference):
+                                var = self.variables[variable.lstrip("*")].var_name
+                                if var in self.locals:
+                                    variable = var
+                        if variable.lstrip("*") in self.locals:
+                            if isinstance(self.locals[variable.lstrip("*")][0], Reference):
+                                variable = self.locals[variable.lstrip("*")][0].var_name
+                        if variable.lstrip("*") in self.locals:
                             self.assign_value_local(variable.strip(), expression)
                         else:
                             self.assign_value(variable.strip(), expression)
