@@ -70,11 +70,11 @@ class PryzmaInterpreter:
                 self.unpack_ = True
 
             if self.unpack_ == True:
-                self.interpret(self.unpack(file_path))
+                self.pre_interpret(self.unpack(file_path))
             else:
                 with open(self.file_path, 'r') as file:
                     program = file.read()
-                    self.interpret(program)
+                    self.pre_interpret(program)
         except FileNotFoundError:
             print(f"File '{self.file_path}' not found.")
 
@@ -87,7 +87,14 @@ class PryzmaInterpreter:
             if self.lines_map_done == False:
                 self.lines_map.append((program[line], line))
         self.lines_map_done = True
-        program = ";".join(program)
+        in_str = False
+        for i, line in enumerate(program):
+            for char in line:
+                if char == '"':
+                    in_str = not in_str
+            if in_str == False:
+                program[i] += ";"
+        program = "".join(program)
 
         if not self.no_preproc:
             rep_in_func = 0
@@ -112,16 +119,7 @@ class PryzmaInterpreter:
         lines = re.split(r';(?=(?:[^"]*"[^"]*")*[^"]*$)', program)
         return [stmt.strip() for stmt in lines if stmt.strip()]
 
-
-    def interpret(self, program):
-        if self.main_file < 1:
-            self.no_preproc = False
-
-        self.main_file -= 1
-
-        if not self.in_func[-1]:
-            self.current_line = 0
-
+    def pre_interpret(self, program):
         lines = self.preprocess(program)
 
         if self.preprocess_only == True:
@@ -144,768 +142,779 @@ class PryzmaInterpreter:
             self.current_line = 0
 
         for line in lines:
-            for stmt, num in self.lines_map:
-                if line.startswith(stmt.strip()) and stmt.strip() != "":
-                    self.lines_map.remove((stmt, num))
-                    self.current_line = num + 1
-                    break
-            line = line.strip()
+            self.interpret(line)
 
-            if line == "" or line.startswith("//"):
-                continue
-            if "//" in line:
-                line = line.split("//")[0]
+    def interpret(self, line):
+        if self.main_file < 1:
+            self.no_preproc = False
 
-            deleted_keyword = False
+        self.main_file -= 1
 
-            for key_word in self.deleted_keywords:
-                if key_word in line and not (line.startswith("disablekeyword(") or line.startswith("enablekeyword(")):
-                    keyword = key_word
-                    deleted_keyword = True
+        if not self.in_func[-1]:
+            self.current_line = 0
 
-            if deleted_keyword:
-                self.error(1, f"Error at line {self.current_line}: keyword deleted '{keyword}'")
-                continue
+        for stmt, num in self.lines_map:
+            if line.startswith(stmt.strip()) and stmt.strip() != "":
+                self.lines_map.remove((stmt, num))
+                self.current_line = num + 1
+                break
+        line = line.strip()
 
-            handled = False
-            for handler in self.custom_handlers.values():
-                if handler(self, line):
-                    handled = True
-                    break
+        if line == "" or line.startswith("//"):
+            return
+        if "//" in line:
+            line = line.split("//")[0]
 
-            if handled:
-                continue
+        deleted_keyword = False
 
-            to_remove = []
-            for var in self.locals:
-                self.locals[var] = [item for item in self.locals[var] if self.ref_to_local_exists(var) or item[2] in self.function_ids]
-                if not self.locals[var]:
-                    to_remove.append(var)
-            for var in to_remove:
-                self.locals.pop(var)
+        for key_word in self.deleted_keywords:
+            if key_word in line and not (line.startswith("disablekeyword(") or line.startswith("enablekeyword(")):
+                keyword = key_word
+                deleted_keyword = True
 
-            try:
-                if line.startswith("print"):
-                    value = line[5:].strip()
-                    self.print_value(value)
-                elif line.startswith("input"):
-                    variable = line[5:].strip()
-                    self.custom_input(variable)
-                elif line.startswith("#"):
-                    if line.startswith("#preproc"):
-                        if "=" in line:
-                            self.process_args(line.split("=")[1].split(","))
-                    elif line.startswith("#replace"):
-                        a, b = line[8:].split("->")
-                        a = str(self.evaluate_expression(a.strip()))
-                        b = str(self.evaluate_expression(b.strip()))
-                        for i, line in enumerate(lines):
-                            lines[i] = re.sub(a, b, line)
-                    elif line.startswith("#insert"):
-                        file_path = self.evaluate_expression(line[7:].strip())
-                        program = None
-                        with open(file_path, "rb") as f:
-                            data = f.read()
-                        if data.startswith("prz".encode('utf-8')):
-                            program = self.decompress(data[3:])
-                        if not program:
-                            with open(file_path, 'r') as file:
-                                program = file.read()
-                        self.interpret(program)
-                    elif line == "#shell":
-                        while True:
-                            code = input("/// ")
-                            if code == "exit":
-                                break
-                            shell(code)
-                    else:
-                        self.process_args(line[1:].split(","))
-                elif line.startswith("{"):
-                    variables, instance = line.split("=")
-                    variables = variables.strip()
-                    instance = instance.strip()
-                    args = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', variables[1:-1])
-                    if instance in args:
-                        self.error(43, f"Error at line {self.current_line}: overlaping names of struct instance and one of variables used for destructuring")
+        if deleted_keyword:
+            self.error(1, f"Error at line {self.current_line}: keyword deleted '{keyword}'")
+            return
+
+        handled = False
+        for handler in self.custom_handlers.values():
+            if handler(self, line):
+                handled = True
+                break
+
+        if handled:
+            return
+
+        to_remove = []
+        for var in self.locals:
+            self.locals[var] = [item for item in self.locals[var] if self.ref_to_local_exists(var) or item[2] in self.function_ids]
+            if not self.locals[var]:
+                to_remove.append(var)
+        for var in to_remove:
+            self.locals.pop(var)
+
+        try:
+            if line.startswith("print"):
+                value = line[5:].strip()
+                self.print_value(value)
+            elif line.startswith("input"):
+                variable = line[5:].strip()
+                self.custom_input(variable)
+            elif line.startswith("#"):
+                if line.startswith("#preproc"):
+                    if "=" in line:
+                        self.process_args(line.split("=")[1].split(","))
+                elif line.startswith("#replace"):
+                    a, b = line[8:].split("->")
+                    a = str(self.evaluate_expression(a.strip()))
+                    b = str(self.evaluate_expression(b.strip()))
+                    for i, line in enumerate(lines):
+                        lines[i] = re.sub(a, b, line)
+                elif line.startswith("#insert"):
+                    file_path = self.evaluate_expression(line[7:].strip())
+                    program = None
+                    with open(file_path, "rb") as f:
+                        data = f.read()
+                    if data.startswith("prz".encode('utf-8')):
+                        program = self.decompress(data[3:])
+                    if not program:
+                        with open(file_path, 'r') as file:
+                            program = file.read()
+                    self.interpret(program)
+                elif line == "#shell":
+                    while True:
+                        code = input("/// ")
+                        if code == "exit":
+                            break
+                        shell(code)
+                else:
+                    self.process_args(line[1:].split(","))
+            elif line.startswith("{"):
+                variables, instance = line.split("=")
+                variables = variables.strip()
+                instance = instance.strip()
+                args = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', variables[1:-1])
+                if instance in args:
+                    self.error(43, f"Error at line {self.current_line}: overlaping names of struct instance and one of variables used for destructuring")
+                    return
+                for i, key in enumerate(self.variables[instance].keys()):
+                    self.variables[args[i]] = self.variables[instance][key]
+            elif line.startswith("struct"):
+                line = line[6:]
+                name, fields = line[:-1].split("{", 1)
+                name = name.strip()
+                fields = self.struct_split(fields.strip())
+                for i, field in enumerate(fields):
+                    fields[i] = field.strip()
+                fields = list(filter(None, fields))
+                fields_dict = {}
+                for field in fields:
+                    if not field:
                         continue
-                    for i, key in enumerate(self.variables[instance].keys()):
-                        self.variables[args[i]] = self.variables[instance][key]
-                elif line.startswith("struct"):
-                    line = line[6:]
-                    name, fields = line[:-1].split("{", 1)
-                    name = name.strip()
-                    fields = self.struct_split(fields.strip())
-                    for i, field in enumerate(fields):
-                        fields[i] = field.strip()
-                    fields = list(filter(None, fields))
-                    fields_dict = {}
-                    for field in fields:
-                        if not field:
-                            continue
-                        if "=" not in field:
-                            fields_dict[field] = None
-                        else:
-                            key, value = field.split("=", 1)
-                            fields_dict[key.strip()] = self.evaluate_expression(value.strip()) if not repr(value.strip()).startswith("@") else value.strip()
-                    self.structs[name] = fields_dict
-                elif line.startswith("foreach"):
-                    line = line[7:].strip()
-                    args, action = line.strip()[1:-1].split("){", 1)
-                    char_ = 0
-                    rep_in_for = 0
-                    for_body = list(action)
-                    for char in for_body:
-                        if char == "{":
-                            rep_in_for += 1
-                        elif char == "}":
-                            rep_in_for -= 1
-                        elif rep_in_for == 0  and char == "|":
-                            for_body[char_] = "#@!$^%"
-                        char_ += 1
-
-                    for_body2 = ""
-                    for char in for_body:
-                        for_body2 += char
-                    actions = for_body2.split("#@!$^%")
-                    loop_var, list_name = args.split(",")
-                    loop_var = loop_var.strip()
-                    list_name = list_name.strip()
-                    for action in actions:
-                        action = action.strip()
-
-                    self.break_stack.append(False)
-
-                    if list_name in self.variables:
-                        for val in self.variables[list_name]:
-                            self.variables[loop_var] = val
-                            for action in actions:
-                                self.interpret(action)
-                                if self.break_stack[-1]:
-                                    break
-                            if self.break_stack[-1]:
-                                break
+                    if "=" not in field:
+                        fields_dict[field] = None
                     else:
-                        self.error(33, f"Error at line {self.current_line}: Invalid range expression for loop.")
+                        key, value = field.split("=", 1)
+                        fields_dict[key.strip()] = self.evaluate_expression(value.strip()) if not repr(value.strip()).startswith("@") else value.strip()
+                self.structs[name] = fields_dict
+            elif line.startswith("foreach"):
+                line = line[7:].strip()
+                args, action = line.strip()[1:-1].split("){", 1)
+                char_ = 0
+                rep_in_for = 0
+                for_body = list(action)
+                for char in for_body:
+                    if char == "{":
+                        rep_in_for += 1
+                    elif char == "}":
+                        rep_in_for -= 1
+                    elif rep_in_for == 0  and char == "|":
+                        for_body[char_] = "#@!$^%"
+                    char_ += 1
 
-                    self.break_stack.pop()
-                elif line.startswith("for"):
-                    line = line[3:].strip()
-                    range_expr, action = line.strip()[1:-1].split("){", 1)
-                    char_ = 0
-                    rep_in_for = 0
-                    for_body = list(action)
-                    for char in for_body:
-                        if char == "{":
-                            rep_in_for += 1
-                        elif char == "}":
-                            rep_in_for -= 1
-                        elif rep_in_for == 0  and char == "|":
-                            for_body[char_] = "*!@#$%&"
-                        char_ += 1
+                for_body2 = ""
+                for char in for_body:
+                    for_body2 += char
+                actions = for_body2.split("#@!$^%")
+                loop_var, list_name = args.split(",")
+                loop_var = loop_var.strip()
+                list_name = list_name.strip()
+                for action in actions:
+                    action = action.strip()
 
-                    for_body2 = ""
-                    for char in for_body:
-                        for_body2 += char
-                    actions = for_body2.split("*!@#$%&")
-                    loop_var, range_expr = range_expr.split(",")
-                    loop_var = loop_var.strip()
-                    range_expr = range_expr.strip()
-                    for action in actions:
-                        action = action.strip()
-                    self.for_loop(loop_var, range_expr, actions)
-                elif line.startswith("use"):
-                    if "with" in line:
-                        line, directive = line.split("with")
-                        if directive.strip() != "":
-                            nan = self.nan
-                            fd = self.forward_declare
-                            np = self.no_preproc
-                            self.process_args(directive.strip()[1:].split(","))
-                            alias = None
-                            if " as " in line:
-                                file_path, alias = line[3:].strip().split(" as ")
-                            else:
-                                file_path = line[3:].strip()
-                            self.import_functions(file_path, alias)
-                            self.nan = nan
-                            self.forward_declare = fd
-                            self.no_preproc = np
-                    else:
-                        file_path = line[3:].strip()
-                        alias = None
-                        if " as " in line:
-                            file_path, alias = file_path.split(" as ")
-                        self.import_functions(file_path, alias)
-                elif line.startswith("from"):
-                    if "with" in line:
-                        line, directive = line.split("with")
-                        line = line.strip()
-                        module, functions = line[4:].strip().split("use")
-                        module = module.strip()
-                        if '/' in module or '\\' in module:
-                            pass
-                        else:
-                            if "::" in module:
-                                args = module.split("::")
-                                file = args.pop()
-                                folder = "/".join(args)
-                                module = f"{PackageManager.user_packages_path}/{folder}/{file}.pryzma"
-                            else:
-                                module = f"{PackageManager.user_packages_path}/{module}/{module}.pryzma"
-                        functions = functions.strip().split(",")
-                        if directive.strip() != "":
-                            nan = self.nan
-                            fd = self.forward_declare
-                            np = self.no_preproc
-                            self.process_args(directive.strip()[1:].split(","))
-                            for function in functions:
-                                self.load_function_from_file(module, function.strip())
-                            self.nan = nan
-                            self.forward_declare = fd
-                            self.no_preproc = np
-                    else:
-                        module, functions = line[4:].strip().split("use")
-                        module = module.strip()
-                        if '/' in module or '\\' in module:
-                            pass
-                        else:
-                            if "::" in module:
-                                args = module.split("::")
-                                file = args.pop()
-                                folder = "/".join(args)
-                                module = f"{PackageManager.user_packages_path}/{folder}/{file}.pryzma"
-                            else:
-                                module = f"{PackageManager.user_packages_path}/{module}/{module}.pryzma"
-                        functions = functions.strip().split(",")
-                        for function in functions:
-                            self.load_function_from_file(module, function.strip())
-                elif line.startswith("if"):
-                    else_ = False
-                    if "else" in line:
-                        line = list(line)
-                        else_ = True
-                        depth = 0
-                        in_str = False
-                        for i, char in enumerate(line):
-                            if char == "{" and not in_str:
-                                depth += 1
-                            elif char == "}" and not in_str:
-                                depth -= 1
-                            elif char == '"':
-                                in_str = not in_str
-                            elif depth == 0 and char == "e" and line[i + 1] == "l" and line[i + 2] == "s" and line[i + 3] == "e":
-                                line[i] = "#"
-                                line[i + 1] = "$"
-                                line[i + 2] = "%"
-                                line[i + 3] = "@"
-                        sline = "".join(line).split("#$%@")
-                        line = sline[0]
-                        else_part = sline[1]
-                    line = line[2:]
-                    condition, action = line.strip()[1:-1].split("){", 1)
-                    handeled = False
-                    char_ = 0
-                    rep_in_if = 0
-                    if_body = list(action)
-                    for char in if_body:
-                        if char == "{":
-                            rep_in_if += 1
-                        elif char == "}":
-                            rep_in_if -= 1
-                        elif rep_in_if == 0  and char == "|":
-                            if_body[char_] = "#!%&*"
-                        char_ += 1
-                    if_body2 = ""
-                    for char in if_body:
-                        if_body2 += char
-                    actions = if_body2.split("#!%&*")
-                    if self.evaluate_expression(condition.strip()):
-                        handeled = True
-                        for action in actions:
-                            self.interpret(action)
+                self.break_stack.append(False)
 
-                    if handeled == False and else_:
-                        char_ = 0
-                        rep_in_if = 0
-                        body = list(else_part[1:-1])
-                        for char in body:
-                            if char == "{":
-                                rep_in_if += 1
-                            elif char == "}":
-                                rep_in_if -= 1
-                            elif rep_in_if == 0  and char == "|":
-                                body[char_] = "$@#%^&"
-                            char_ += 1
-                        body2 = ""
-                        for char in body:
-                            body2 += char
-                        actions = body2.split("$@#%^&")
-                        for action in actions:
-                            self.interpret(action)
-                elif line.startswith("while"):
-                    line = line[5:]
-                    condition, action = line.strip()[1:-1].split("){", 1)
-                    char_ = 0
-                    rep_in_if = 0
-                    if_body = list(action)
-                    for char in if_body:
-                        if char == "{":
-                            rep_in_if += 1
-                        elif char == "}":
-                            rep_in_if -= 1
-                        elif rep_in_if == 0  and char == "|":
-                            if_body[char_] = "%$#@!"
-                        char_ += 1
-                    if_body2 = ""
-                    for char in if_body:
-                        if_body2 += char
-                    actions = if_body2.split("%$#@!")
-                    self.break_stack.append(False)
-                    while self.evaluate_expression(condition):
+                if list_name in self.variables:
+                    for val in self.variables[list_name]:
+                        self.variables[loop_var] = val
                         for action in actions:
                             self.interpret(action)
                             if self.break_stack[-1]:
                                 break
                         if self.break_stack[-1]:
                             break
-                    self.break_stack.pop()
-                elif line.startswith("/"):
-                    function_definition = line[1:].split("{", 1)
-                    if len(function_definition) == 2:
-                        function_name = function_definition[0].strip()
-                        function_body = function_definition[1].strip()[:-1]
-                        char_ = 0
-                        rep_in_func = 0
-                        function_body = list(function_body)
-                        in_str = False
-                        for char in function_body:
-                            if char == "{" and not in_str:
-                                rep_in_func += 1
-                            elif char == "}" and not in_str:
-                                rep_in_func -= 1
-                            elif char == '"':
-                                in_str = not in_str
-                            elif rep_in_func == 0  and char == "|" and not in_str:
-                                function_body[char_] = "@#%^$"
-                            char_ += 1
-                        function_body2 = ""
-                        for char in function_body:
-                            function_body2 += char
-                        function_body = list(filter(None, function_body2.split("@#%^$")))
-                        self.functions[function_name] = function_body
-                    else:
-                        self.error(2, f"Invalid function definition at line {self.current_line}")
-                elif line.startswith("@"):
-                    self.in_func.append(True)
-                    function_name = line[1:].strip()
-                    if "(" in function_name:
-                        function_name, arg = function_name.split("(")
-                        self.current_func_name = function_name
-                        arg = arg.strip(")")
-                        if arg:
-                            arg = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', arg)
-                            for args in range(len(arg)):
-                                arg[args] = self.evaluate_expression(arg[args].strip())
-                            self.variables["args"] = arg
-                    self.function_tracker.append(function_name)
-                    self.function_ids.append(random.randint(0,100000000))
-                    if function_name in self.variables and isinstance(self.variables[function_name], FuncReference):
-                        function_name = self.variables[function_name].func_name
-                    if function_name not in self.functions:
-                        self.error(42, f"Error at line {self.current_line}: Referenced function '{function_name}' no longer exists")
-                        continue
-                    if function_name in self.functions:
-                        try:
-                            command = 0
-                            while command < len(self.functions[function_name]):
-                                inst = self.functions[function_name][command]
-                                self.interpret(inst)
-                                if self.return_stops and inst.strip().startswith("return"):
-                                    break
-                                command += 1
-                        finally:
-                            func_id = self.function_ids[-1]
-                            if (function_name, func_id) in self.defer_stack:
-                                while self.defer_stack[(function_name, func_id)]:
-                                    deferred = self.defer_stack[(function_name, func_id)].pop()
-                                    deferred = deferred.split("|")
-                                    for line in deferred:
-                                        self.interpret(line.strip())
-                            if self.escape == False:
-                                to_remove = []
-                                for var in self.locals:
-                                    self.locals[var] = [item for item in self.locals[var] if item[2] != func_id]
-                                    if not self.locals[var]:
-                                        to_remove.append(var)
-                                for var in to_remove:
-                                    self.locals.pop(var)
-                    else:
-                        self.error(3, f"Error at line {self.current_line}: Function '{function_name}' is not defined.")
-                    self.in_func.pop()
-                    self.function_tracker.pop()
-                    self.function_ids.pop()
-                elif line.startswith("pyeval(") and line.endswith(")"):
-                    parts = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', line[7:-1])
-                    if len(parts) == 1:
-                        eval(self.evaluate_expression(parts[0]))
-                    else:
-                        eval(self.evaluate_expression(parts[0]), self.evaluate_expression(parts[1]))
-                elif line.startswith("pyexec(") and line.endswith(")"):
-                    parts = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', line[7:-1])
-                    if len(parts) == 1:
-                        exec(self.evaluate_expression(parts[0]))
-                    else:
-                        exec(self.evaluate_expression(parts[0]),self.evaluate_expression(parts[1]))
-                elif line.startswith("exec(") and line.endswith(")"):
-                    code = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', line[5:-1])
-                    for part in code:
-                        self.interpret(self.evaluate_expression(part))
-                elif line.startswith("isolate(") and line.endswith(")"):
-                    args = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', line[8:-1])
-                    isolated_interpreter = None
-                    for arg in args:
-                        if arg.startswith("isolate"):
-                            args.remove(arg)
-                            isolated_interpreter = self.variables[arg.split("=", 1)[1].strip()]
-                    if not isolated_interpreter:
-                        isolated_interpreter = PryzmaInterpreter()
-                    for part in args:
-                        isolated_interpreter.interpret(self.evaluate_expression(part))
-                elif line.startswith("try{") and line.endswith("}"):
-                    self.in_try_block = True
-                    catch_block = None
-                    if "catch(" in line:
-                        line, catch_block = line.split("catch(", 1)
-                    instructions = line[4:-1].split("|")
-                    error = 0
-                    for instruction in instructions:
-                        self.interpret(instruction.strip())
-                        if self.variables["err"] != 0:
-                            error = self.variables["err"]
-                    self.variables["err"] = error
-                    if catch_block:
-                        err_code, instructions = catch_block[:-1].split("){", 1)
-                        if int(err_code) == error:
-                            instructions = instructions.split("|")
-                            for instruction in instructions:
-                                self.interpret(instruction.strip())
-                    self.in_try_block = False
-                elif line.startswith("int"):
-                    line = line[3:].strip()
-                    if "=" in line:
-                        variable, expression = line.split("=", 1)
-                        variable = variable.strip()
-                        expression = expression.strip()
-                        self.variables[variable] = int(self.evaluate_expression(expression))
-                    else:
-                        variable = line.strip()
-                        self.variables[line] = 0
-                elif line.startswith("str"):
-                    line = line[3:].strip()
-                    if "=" in line:
-                        variable, expression = line.split("=", 1)
-                        variable = variable.strip()
-                        expression = expression.strip()
-                        self.variables[variable] = str(self.evaluate_expression(expression))
-                    else:
-                        variable = line.strip()
-                        self.variables[line] = ""
-                elif line.startswith("loc"):
-                    var, value = line[3:].split("=", 1)
-                    var = var.strip()
-                    value = self.evaluate_expression(value.strip())
-                    if var not in self.locals:
-                        self.locals[var] = []
-                    self.locals[var].append((value, self.function_tracker[-1], self.function_ids[-1]))
-                elif line.startswith("assert"):
-                    parts = line[6:].strip().split(",", 1)
-                    condition = parts[0].strip()
-                    message = parts[1].strip()
-
-                    result = eval(condition, {}, self.variables)
-                    if not result:
-                        raise AssertionError(f"AssertionError: {self.evaluate_expression(message)}")
-                elif "=" in line and not line.strip().startswith(("if", "while")) and not any(op in line for op in ["+=", "-=", "==", "!=", "<=", ">="]):
-                    variables, expression = line.split('=', 1)
-                    variables = variables.strip().split(",")
-                    expression = expression.strip()
-                    for variable in variables:
-                        ref = False
-                        if variable.lstrip("*") in self.variables:
-                            if isinstance(self.variables[variable.lstrip("*")], Reference):
-                                var = self.variables[variable.lstrip("*")].var_name
-                                if var in self.locals:
-                                    variable = var
-                                    ref = True
-                        if variable.lstrip("*") in self.locals:
-                            if isinstance(self.locals[variable.lstrip("*")][0], Reference):
-                                variable = self.locals[variable.lstrip("*")][0].var_name
-                        if variable.lstrip("*") in self.locals:
-                            self.assign_value_local(variable, expression, ref)
-                        else:
-                            self.assign_value(variable.strip(), expression)
-                elif "+=" in line:
-                    line = line.split("+=")
-                    if len(line) != 2:
-                        self.error(4, f"Error at line {self.current_line}: Too much arguments")
-                        continue
-                    var = line[0].strip()
-                    var2 = line[1].strip()
-                    var2 = self.evaluate_expression(var2)
-                    self.variables[var] += var2
-                elif "-=" in line:
-                    line = line.split("-=")
-                    if len(line) != 2:
-                        self.error(5, f"Error at line {self.current_line}: Too much arguments")
-                        continue
-                    var = line[0].strip()
-                    var2 = line[1].strip()
-                    var2 = self.evaluate_expression(var2)
-                    self.variables[var] -= var2
-                elif line.startswith("copy"):
-                    list1, list2 = line[4:].split(",")
-                    list1 = list1.strip()
-                    list2 = list2.strip()
-                    for element in self.variables[list1]:
-                        self.variables[list2].append(element)
-                elif line.startswith("append"):
-                    list_name, value = line[6:].split(",")
-                    list_name = list_name.strip()
-                    value = value.strip()
-                    self.append_to_list(list_name, value)
-                elif line.startswith("pop"):
-                    list_name, index = line[3:].split(",")
-                    list_name = list_name.strip()
-                    index = index.strip()
-                    self.pop_from_list(list_name, index)
-                elif line.startswith("remove"):
-                    list_name, var = line[6:].split(",")
-                    list_name = list_name.strip()
-                    var = var.strip()
-                    self.variables[list_name].remove(self.evaluate_expression(var))
-                elif line.startswith("sys(") and line.endswith(")"):
-                    os.system(self.evaluate_expression(line[4:-1].strip()))
-                elif line.startswith("file_write(") and line.endswith(")"):
-                    line = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', line[11:-1])
-                    if len(line) == 3:
-                        file_path = self.evaluate_expression(line[0].strip())
-                        mode = self.evaluate_expression(line[1].strip())
-                        content = self.evaluate_expression(line[2].strip())
-                        self.write_to_file(file_path, mode, str(content))
-                    else:
-                        self.error(6, f"Error at line {self.current_line}: Invalid number of arguments for write()")
-                elif line.startswith("delvar(") and line.endswith(")"):
-                    self.variables.pop(self.evaluate_expression(line[7:-1]))
-                elif line.startswith("delfunc(") and line.endswith(")"):
-                    self.functions.pop(self.evaluate_expression(line[8:-1]))
-                elif line.startswith("disablekeyword(") and line.endswith(")"):
-                    args = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', line[15:-1])
-                    for arg in args:
-                        self.deleted_keywords.append(self.evaluate_expression(arg))
-                elif line.startswith("enablekeyword(") and line.endswith(")"):
-                    args = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', line[14:-1])
-                    for arg in args:
-                        self.deleted_keywords.remove(self.evaluate_expression(arg))
-                elif "++" in line:
-                    variable = line.replace("++", "").strip()
-                    self.increment_variable(variable)
-                elif "--" in line:
-                    variable = line.replace("--", "").strip()
-                    self.decrement_variable(variable)
-                elif line.startswith("move(") and line.endswith(")"):
-                    instructions = line[5:-1].split(",")
-                    if len(instructions) != 3:
-                        self.error(7, f"Error at line {self.current_line}: Invalid move instruction syntax. Expected format: move(old index, new index, list name)")
-                        continue
-                    list_name = instructions[2].strip()
-                    try:
-                        old_index = int(instructions[0])
-                        new_index = int(instructions[1])
-                        value = self.variables[list_name].pop(old_index)
-                        self.variables[list_name].insert(new_index, value)
-                    except ValueError:
-                        self.error(8, f"Error at line {self.current_line}: Invalid index")
-                elif line.startswith("swap(") and line.endswith(")"):
-                    instructions = line[5:-1].split(",")
-                    if len(instructions) != 3:
-                        self.error(9, f"Error at line {self.current_line}: Invalid swap instruction syntax. Expected format: swap(index 1, index 2, list name)")
-                        continue
-                    list_name = instructions[2].strip()
-                    try:
-                        index_1 = int(self.evaluate_expression(instructions[0].strip()))
-                        index_2 = int(self.evaluate_expression(instructions[1].strip()))
-                        self.variables[list_name][index_1], self.variables[list_name][index_2] = self.variables[list_name][index_2], self.variables[list_name][index_1]
-                    except ValueError:
-                        self.error(10, "Invalid index for swap()")
-                elif line.startswith("call"):
-                    call_statement = line[4:].strip()
-                    file_name, function_name, args = self.parse_call_statement(call_statement)
-                    self.call_function_from_file(file_name, function_name, args)
-                elif line.startswith("ccall"):
-                    call_statement = line[5:].strip()
-                    file_name, function_name, args = self.parse_call_statement(call_statement)
-                    self.ccall_function_from_file(file_name, function_name, args)
-                elif line.startswith("load(") and line.endswith(")"):
-                    self.load_module(self.evaluate_expression(line[5:-1]))
-                elif line.startswith("wait(") and line.endswith(")"):
-                    time_to_wait = float(self.evaluate_expression(line[5:-1]))
-                    time.sleep(time_to_wait)
-                elif line.startswith("push(") and line.endswith(")"):
-                    dict_name, key, value = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', line[5:-1])
-                    key = self.evaluate_expression(key)
-                    value = self.evaluate_expression(value)
-                    self.variables[dict_name][key] = value
-                elif line.startswith("dpop(") and line.endswith(")"):
-                    dict_name, key = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', line[5:-1])
-                    key = self.evaluate_expression(key)
-                    self.variables[dict_name].pop(key)
-                elif line.startswith("defer{") and line.endswith("}"):
-                    if (self.function_tracker[-1], self.function_ids[-1]) in self.defer_stack:
-                        self.defer_stack[(self.function_tracker[-1], self.function_ids[-1])].append(line[6:-1])
-                    else:
-                        self.defer_stack[(self.function_tracker[-1], self.function_ids[-1])] = []
-                        self.defer_stack[(self.function_tracker[-1], self.function_ids[-1])].append(line[6:-1])
-                elif line.startswith("return"):
-                    self.ret_val = self.evaluate_expression(line[6:].strip())
-                elif line == "break":
-                    self.break_stack[-1] = True
-                elif line.startswith("asm{") and line.endswith("}"):
-                    try:
-                        asm_emulator = X86Emulator()
-                    except ImportError:
-                        asm_emulator = None
-                        print("ERROR: x86 emulation not available (probably missing keystone/unicorn)")
-                        continue
-                    line = line[4:-1]
-                    code = line.split("|")
-                    code = list(filter(None, code))
-                    for line in range(len(code)):
-                        code[line] = self.evaluate_expression(code[line].strip())
-                    code = "asm{\n"+"\n".join(code)+"\n}"
-                    asm_vars = {}
-                    for i in self.variables:
-                        if type(self.variables[i]) == int:
-                            asm_vars[i] = self.variables[i]
-                    if asm_emulator:
-                        try:
-                            results = asm_emulator.run(code, asm_vars)
-                            for var, val in results.items():
-                                self.variables[var] = val
-                        except Exception as e:
-                            print(f"ASM emulation error: {e}")
-                    else:
-                        print("ASM emulation not available")
-                elif line.startswith("py{") and line.endswith("}"):
-                    line = line[3:-1]
-                    code = line.split("|")
-                    code = list(filter(None, code))
-                    for line in range(len(code)):
-                        code[line] = self.evaluate_expression(code[line].strip())
-                    exec(";".join(code), {}, self.variables)
-                elif line.startswith("mkdir(") and line.endswith(")"):
-                    path = self.evaluate_expression(line[6:-1])
-                    os.mkdir(path)
-                elif line.startswith("makedirs(") and line.endswith(")"):
-                    path = self.evaluate_expression(line[9:-1])
-                    os.makedirs(path, exist_ok=True)
-                elif line.startswith("rmdir(") and line.endswith(")"):
-                    path = self.evaluate_expression(line[6:-1])
-                    os.rmdir(path)
-                elif line.startswith("removedirs(") and line.endswith(")"):
-                    path = self.evaluate_expression(line[11:-1])
-                    os.removedirs(path)
-                elif line.startswith("copy(") and line.endswith(")"):
-                    args = self.evaluate_expression(line[5:-1]).split(',')
-                    src = args[0].strip()
-                    dst = args[1].strip()
-                    shutil.copy(src, dst)
-                elif line.startswith("copyfile(") and line.endswith(")"):
-                    args = self.evaluate_expression(line[9:-1]).split(',')
-                    src = args[0].strip()
-                    dst = args[1].strip()
-                    shutil.copyfile(src, dst)
-                elif line.startswith("move(") and line.endswith(")"):
-                    args = self.evaluate_expression(line[5:-1]).split(',')
-                    src = args[0].strip()
-                    dst = args[1].strip()
-                    shutil.move(src, dst)
-                elif line.startswith("rename(") and line.endswith(")"):
-                    args = self.evaluate_expression(line[7:-1]).split(',')
-                    src = args[0].strip()
-                    dst = args[1].strip()
-                    os.rename(src, dst)
-                elif line.startswith("remove(") and line.endswith(")"):
-                    path = self.evaluate_expression(line[7:-1])
-                    os.remove(path)
-                elif line.startswith("symlink(") and line.endswith(")"):
-                    args = self.evaluate_expression(line[8:-1]).split(',')
-                    src = args[0].strip()
-                    dst = args[1].strip()
-                    os.symlink(src, dst)
-                elif line.startswith("unlink(") and line.endswith(")"):
-                    path = self.evaluate_expression(line[7:-1])
-                    os.unlink(path)
-                elif line.startswith("match(") and "{" in line:
-                    line = line[6:-1]
-                    var, cases = line.split("){", 1)
-                    var = self.evaluate_expression(var.strip())
-
-                    processed_cases = ""
-                    depth = 0
-
-                    for char in list(cases):
-                        if char == "{":
-                            processed_cases += char
-                            depth += 1
-                        elif char == "}":
-                            processed_cases += char
-                            depth -= 1
-                        elif depth == 1 and char == "|":
-                            processed_cases += "&@$%"
-                        else:
-                            processed_cases += char
-
-                    cases = processed_cases.split("|")
-                    cases = list(filter(None, cases))
-
-                    default_case = None
-                    handeled = False
-
-                    for case in cases:
-                        case = case.strip()
-                        case = case[5:-1].split("){")
-                        value = self.evaluate_expression(case[0]) if case[0] != "_" else "_"
-                        if value == "_":
-                            default_case = case
-                            continue
-                        if var == value:
-                            handeled = True
-                            for instruction in case[1].split("&@$%"):
-                                self.interpret(instruction)
-
-                    if handeled == False and default_case:
-                        for instruction in default_case[1].split("&@$%"):
-                            self.interpret(instruction)
-                elif line.startswith("write(") and line.endswith(")"):
-                    addr, data = line[6:-1].split(",", 1)
-                    addr = self.evaluate_expression(addr.strip())
-                    data = self.evaluate_expression(data.strip())
-                    self.mem[addr] = data
-                elif line.startswith("patch(") and line.endswith(")"):
-                    f1, f2 = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', line[6:-1])
-                    f1 = self.evaluate_expression(f1)
-                    f2 = self.evaluate_expression(f2)
-                    if f1 not in self.functions or f2 not in self.functions:
-                        self.error(44, "Name of a non existing function pased as an argument to patch()")
-                    self.functions[f1] = self.functions[f2]
-                elif line == "stop":
-                    sys.exit()
                 else:
-                    if not handled:
-                        self.error(11, f"Invalid statement at line {self.current_line}: {line}")
+                    self.error(33, f"Error at line {self.current_line}: Invalid range expression for loop.")
 
-            except Exception as e:
-                self.error(12, f"Error at line {self.current_line}: {e}")
+                self.break_stack.pop()
+            elif line.startswith("for"):
+                line = line[3:].strip()
+                range_expr, action = line.strip()[1:-1].split("){", 1)
+                char_ = 0
+                rep_in_for = 0
+                for_body = list(action)
+                for char in for_body:
+                    if char == "{":
+                        rep_in_for += 1
+                    elif char == "}":
+                        rep_in_for -= 1
+                    elif rep_in_for == 0  and char == "|":
+                        for_body[char_] = "*!@#$%&"
+                    char_ += 1
+
+                for_body2 = ""
+                for char in for_body:
+                    for_body2 += char
+                actions = for_body2.split("*!@#$%&")
+                loop_var, range_expr = range_expr.split(",")
+                loop_var = loop_var.strip()
+                range_expr = range_expr.strip()
+                for action in actions:
+                    action = action.strip()
+                self.for_loop(loop_var, range_expr, actions)
+            elif line.startswith("use"):
+                if "with" in line:
+                    line, directive = line.split("with")
+                    if directive.strip() != "":
+                        nan = self.nan
+                        fd = self.forward_declare
+                        np = self.no_preproc
+                        self.process_args(directive.strip()[1:].split(","))
+                        alias = None
+                        if " as " in line:
+                            file_path, alias = line[3:].strip().split(" as ")
+                        else:
+                            file_path = line[3:].strip()
+                        self.import_functions(file_path, alias)
+                        self.nan = nan
+                        self.forward_declare = fd
+                        self.no_preproc = np
+                else:
+                    file_path = line[3:].strip()
+                    alias = None
+                    if " as " in line:
+                        file_path, alias = file_path.split(" as ")
+                    self.import_functions(file_path, alias)
+            elif line.startswith("from"):
+                if "with" in line:
+                    line, directive = line.split("with")
+                    line = line.strip()
+                    module, functions = line[4:].strip().split("use")
+                    module = module.strip()
+                    if '/' in module or '\\' in module:
+                        pass
+                    else:
+                        if "::" in module:
+                            args = module.split("::")
+                            file = args.pop()
+                            folder = "/".join(args)
+                            module = f"{PackageManager.user_packages_path}/{folder}/{file}.pryzma"
+                        else:
+                            module = f"{PackageManager.user_packages_path}/{module}/{module}.pryzma"
+                    functions = functions.strip().split(",")
+                    if directive.strip() != "":
+                        nan = self.nan
+                        fd = self.forward_declare
+                        np = self.no_preproc
+                        self.process_args(directive.strip()[1:].split(","))
+                        for function in functions:
+                            self.load_function_from_file(module, function.strip())
+                        self.nan = nan
+                        self.forward_declare = fd
+                        self.no_preproc = np
+                else:
+                    module, functions = line[4:].strip().split("use")
+                    module = module.strip()
+                    if '/' in module or '\\' in module:
+                        pass
+                    else:
+                        if "::" in module:
+                            args = module.split("::")
+                            file = args.pop()
+                            folder = "/".join(args)
+                            module = f"{PackageManager.user_packages_path}/{folder}/{file}.pryzma"
+                        else:
+                            module = f"{PackageManager.user_packages_path}/{module}/{module}.pryzma"
+                    functions = functions.strip().split(",")
+                    for function in functions:
+                        self.load_function_from_file(module, function.strip())
+            elif line.startswith("if"):
+                else_ = False
+                if "else" in line:
+                    line = list(line)
+                    else_ = True
+                    depth = 0
+                    in_str = False
+                    for i, char in enumerate(line):
+                        if char == "{" and not in_str:
+                            depth += 1
+                        elif char == "}" and not in_str:
+                            depth -= 1
+                        elif char == '"':
+                            in_str = not in_str
+                        elif depth == 0 and char == "e" and line[i + 1] == "l" and line[i + 2] == "s" and line[i + 3] == "e":
+                            line[i] = "#"
+                            line[i + 1] = "$"
+                            line[i + 2] = "%"
+                            line[i + 3] = "@"
+                    sline = "".join(line).split("#$%@")
+                    line = sline[0]
+                    else_part = sline[1]
+                line = line[2:]
+                condition, action = line.strip()[1:-1].split("){", 1)
+                handeled = False
+                char_ = 0
+                rep_in_if = 0
+                if_body = list(action)
+                for char in if_body:
+                    if char == "{":
+                        rep_in_if += 1
+                    elif char == "}":
+                        rep_in_if -= 1
+                    elif rep_in_if == 0  and char == "|":
+                        if_body[char_] = "#!%&*"
+                    char_ += 1
+                if_body2 = ""
+                for char in if_body:
+                    if_body2 += char
+                actions = if_body2.split("#!%&*")
+                if self.evaluate_expression(condition.strip()):
+                    handeled = True
+                    for action in actions:
+                        self.interpret(action)
+
+                if handeled == False and else_:
+                    char_ = 0
+                    rep_in_if = 0
+                    body = list(else_part[1:-1])
+                    for char in body:
+                        if char == "{":
+                            rep_in_if += 1
+                        elif char == "}":
+                            rep_in_if -= 1
+                        elif rep_in_if == 0  and char == "|":
+                            body[char_] = "$@#%^&"
+                        char_ += 1
+                    body2 = ""
+                    for char in body:
+                        body2 += char
+                    actions = body2.split("$@#%^&")
+                    for action in actions:
+                        self.interpret(action)
+            elif line.startswith("while"):
+                line = line[5:]
+                condition, action = line.strip()[1:-1].split("){", 1)
+                char_ = 0
+                rep_in_if = 0
+                if_body = list(action)
+                for char in if_body:
+                    if char == "{":
+                        rep_in_if += 1
+                    elif char == "}":
+                        rep_in_if -= 1
+                    elif rep_in_if == 0  and char == "|":
+                        if_body[char_] = "%$#@!"
+                    char_ += 1
+                if_body2 = ""
+                for char in if_body:
+                    if_body2 += char
+                actions = if_body2.split("%$#@!")
+                self.break_stack.append(False)
+                while self.evaluate_expression(condition):
+                    for action in actions:
+                        self.interpret(action)
+                        if self.break_stack[-1]:
+                            break
+                    if self.break_stack[-1]:
+                        break
+                self.break_stack.pop()
+            elif line.startswith("/"):
+                function_definition = line[1:].split("{", 1)
+                if len(function_definition) == 2:
+                    function_name = function_definition[0].strip()
+                    function_body = function_definition[1].strip()[:-1]
+                    char_ = 0
+                    rep_in_func = 0
+                    function_body = list(function_body)
+                    in_str = False
+                    for char in function_body:
+                        if char == "{" and not in_str:
+                            rep_in_func += 1
+                        elif char == "}" and not in_str:
+                            rep_in_func -= 1
+                        elif char == '"':
+                            in_str = not in_str
+                        elif rep_in_func == 0  and char == "|" and not in_str:
+                            function_body[char_] = "@#%^$"
+                        char_ += 1
+                    function_body2 = ""
+                    for char in function_body:
+                        function_body2 += char
+                    function_body = list(filter(None, function_body2.split("@#%^$")))
+                    self.functions[function_name] = function_body
+                else:
+                    self.error(2, f"Invalid function definition at line {self.current_line}")
+            elif line.startswith("@"):
+                self.in_func.append(True)
+                function_name = line[1:].strip()
+                if "(" in function_name:
+                    function_name, arg = function_name.split("(")
+                    self.current_func_name = function_name
+                    arg = arg.strip(")")
+                    if arg:
+                        arg = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', arg)
+                        for args in range(len(arg)):
+                            arg[args] = self.evaluate_expression(arg[args].strip())
+                        self.variables["args"] = arg
+                self.function_tracker.append(function_name)
+                self.function_ids.append(random.randint(0,100000000))
+                if function_name in self.variables and isinstance(self.variables[function_name], FuncReference):
+                    function_name = self.variables[function_name].func_name
+                if function_name not in self.functions:
+                    self.error(42, f"Error at line {self.current_line}: Referenced function '{function_name}' no longer exists")
+                    return
+                if function_name in self.functions:
+                    try:
+                        command = 0
+                        while command < len(self.functions[function_name]):
+                            inst = self.functions[function_name][command]
+                            self.interpret(inst)
+                            if self.return_stops and inst.strip().startswith("return"):
+                                break
+                            command += 1
+                    finally:
+                        func_id = self.function_ids[-1]
+                        if (function_name, func_id) in self.defer_stack:
+                            while self.defer_stack[(function_name, func_id)]:
+                                deferred = self.defer_stack[(function_name, func_id)].pop()
+                                deferred = deferred.split("|")
+                                for line in deferred:
+                                    self.interpret(line.strip())
+                        if self.escape == False:
+                            to_remove = []
+                            for var in self.locals:
+                                self.locals[var] = [item for item in self.locals[var] if item[2] != func_id]
+                                if not self.locals[var]:
+                                    to_remove.append(var)
+                            for var in to_remove:
+                                self.locals.pop(var)
+                else:
+                    self.error(3, f"Error at line {self.current_line}: Function '{function_name}' is not defined.")
+                self.in_func.pop()
+                self.function_tracker.pop()
+                self.function_ids.pop()
+            elif line.startswith("pyeval(") and line.endswith(")"):
+                parts = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', line[7:-1])
+                if len(parts) == 1:
+                    eval(self.evaluate_expression(parts[0]))
+                else:
+                    eval(self.evaluate_expression(parts[0]), self.evaluate_expression(parts[1]))
+            elif line.startswith("pyexec(") and line.endswith(")"):
+                parts = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', line[7:-1])
+                if len(parts) == 1:
+                    exec(self.evaluate_expression(parts[0]))
+                else:
+                    exec(self.evaluate_expression(parts[0]),self.evaluate_expression(parts[1]))
+            elif line.startswith("exec(") and line.endswith(")"):
+                code = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', line[5:-1])
+                for part in code:
+                    self.interpret(self.evaluate_expression(part))
+            elif line.startswith("isolate(") and line.endswith(")"):
+                args = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', line[8:-1])
+                isolated_interpreter = None
+                for arg in args:
+                    if arg.startswith("isolate"):
+                        args.remove(arg)
+                        isolated_interpreter = self.variables[arg.split("=", 1)[1].strip()]
+                if not isolated_interpreter:
+                    isolated_interpreter = PryzmaInterpreter()
+                for part in args:
+                    isolated_interpreter.interpret(self.evaluate_expression(part))
+            elif line.startswith("try{") and line.endswith("}"):
+                self.in_try_block = True
+                catch_block = None
+                if "catch(" in line:
+                    line, catch_block = line.split("catch(", 1)
+                instructions = line[4:-1].split("|")
+                error = 0
+                for instruction in instructions:
+                    self.interpret(instruction.strip())
+                    if self.variables["err"] != 0:
+                        error = self.variables["err"]
+                self.variables["err"] = error
+                if catch_block:
+                    err_code, instructions = catch_block[:-1].split("){", 1)
+                    if int(err_code) == error:
+                        instructions = instructions.split("|")
+                        for instruction in instructions:
+                            self.interpret(instruction.strip())
+                self.in_try_block = False
+            elif line.startswith("int"):
+                line = line[3:].strip()
+                if "=" in line:
+                    variable, expression = line.split("=", 1)
+                    variable = variable.strip()
+                    expression = expression.strip()
+                    self.variables[variable] = int(self.evaluate_expression(expression))
+                else:
+                    variable = line.strip()
+                    self.variables[line] = 0
+            elif line.startswith("str"):
+                line = line[3:].strip()
+                if "=" in line:
+                    variable, expression = line.split("=", 1)
+                    variable = variable.strip()
+                    expression = expression.strip()
+                    self.variables[variable] = str(self.evaluate_expression(expression))
+                else:
+                    variable = line.strip()
+                    self.variables[line] = ""
+            elif line.startswith("loc"):
+                var, value = line[3:].split("=", 1)
+                var = var.strip()
+                value = self.evaluate_expression(value.strip())
+                if var not in self.locals:
+                    self.locals[var] = []
+                self.locals[var].append((value, self.function_tracker[-1], self.function_ids[-1]))
+            elif line.startswith("assert"):
+                parts = line[6:].strip().split(",", 1)
+                condition = parts[0].strip()
+                message = parts[1].strip()
+
+                result = eval(condition, {}, self.variables)
+                if not result:
+                    raise AssertionError(f"AssertionError: {self.evaluate_expression(message)}")
+            elif "=" in line and not line.strip().startswith(("if", "while")) and not any(op in line for op in ["+=", "-=", "==", "!=", "<=", ">="]):
+                variables, expression = line.split('=', 1)
+                variables = variables.strip().split(",")
+                expression = expression.strip()
+                for variable in variables:
+                    ref = False
+                    if variable.lstrip("*") in self.variables:
+                        if isinstance(self.variables[variable.lstrip("*")], Reference):
+                            var = self.variables[variable.lstrip("*")].var_name
+                            if var in self.locals:
+                                variable = var
+                                ref = True
+                    if variable.lstrip("*") in self.locals:
+                        if isinstance(self.locals[variable.lstrip("*")][0], Reference):
+                            variable = self.locals[variable.lstrip("*")][0].var_name
+                    if variable.lstrip("*") in self.locals:
+                        self.assign_value_local(variable, expression, ref)
+                    else:
+                        self.assign_value(variable.strip(), expression)
+            elif "+=" in line:
+                line = line.split("+=")
+                if len(line) != 2:
+                    self.error(4, f"Error at line {self.current_line}: Too much arguments")
+                    return
+                var = line[0].strip()
+                var2 = line[1].strip()
+                var2 = self.evaluate_expression(var2)
+                self.variables[var] += var2
+            elif "-=" in line:
+                line = line.split("-=")
+                if len(line) != 2:
+                    self.error(5, f"Error at line {self.current_line}: Too much arguments")
+                    return
+                var = line[0].strip()
+                var2 = line[1].strip()
+                var2 = self.evaluate_expression(var2)
+                self.variables[var] -= var2
+            elif line.startswith("copy"):
+                list1, list2 = line[4:].split(",")
+                list1 = list1.strip()
+                list2 = list2.strip()
+                for element in self.variables[list1]:
+                    self.variables[list2].append(element)
+            elif line.startswith("append"):
+                list_name, value = line[6:].split(",")
+                list_name = list_name.strip()
+                value = value.strip()
+                self.append_to_list(list_name, value)
+            elif line.startswith("pop"):
+                list_name, index = line[3:].split(",")
+                list_name = list_name.strip()
+                index = index.strip()
+                self.pop_from_list(list_name, index)
+            elif line.startswith("remove"):
+                list_name, var = line[6:].split(",")
+                list_name = list_name.strip()
+                var = var.strip()
+                self.variables[list_name].remove(self.evaluate_expression(var))
+            elif line.startswith("sys(") and line.endswith(")"):
+                os.system(self.evaluate_expression(line[4:-1].strip()))
+            elif line.startswith("file_write(") and line.endswith(")"):
+                line = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', line[11:-1])
+                if len(line) == 3:
+                    file_path = self.evaluate_expression(line[0].strip())
+                    mode = self.evaluate_expression(line[1].strip())
+                    content = self.evaluate_expression(line[2].strip())
+                    self.write_to_file(file_path, mode, str(content))
+                else:
+                    self.error(6, f"Error at line {self.current_line}: Invalid number of arguments for write()")
+            elif line.startswith("delvar(") and line.endswith(")"):
+                self.variables.pop(self.evaluate_expression(line[7:-1]))
+            elif line.startswith("delfunc(") and line.endswith(")"):
+                self.functions.pop(self.evaluate_expression(line[8:-1]))
+            elif line.startswith("disablekeyword(") and line.endswith(")"):
+                args = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', line[15:-1])
+                for arg in args:
+                    self.deleted_keywords.append(self.evaluate_expression(arg))
+            elif line.startswith("enablekeyword(") and line.endswith(")"):
+                args = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', line[14:-1])
+                for arg in args:
+                    self.deleted_keywords.remove(self.evaluate_expression(arg))
+            elif "++" in line:
+                variable = line.replace("++", "").strip()
+                self.increment_variable(variable)
+            elif "--" in line:
+                variable = line.replace("--", "").strip()
+                self.decrement_variable(variable)
+            elif line.startswith("move(") and line.endswith(")"):
+                instructions = line[5:-1].split(",")
+                if len(instructions) != 3:
+                    self.error(7, f"Error at line {self.current_line}: Invalid move instruction syntax. Expected format: move(old index, new index, list name)")
+                    return
+                list_name = instructions[2].strip()
+                try:
+                    old_index = int(instructions[0])
+                    new_index = int(instructions[1])
+                    value = self.variables[list_name].pop(old_index)
+                    self.variables[list_name].insert(new_index, value)
+                except ValueError:
+                    self.error(8, f"Error at line {self.current_line}: Invalid index")
+            elif line.startswith("swap(") and line.endswith(")"):
+                instructions = line[5:-1].split(",")
+                if len(instructions) != 3:
+                    self.error(9, f"Error at line {self.current_line}: Invalid swap instruction syntax. Expected format: swap(index 1, index 2, list name)")
+                    return
+                list_name = instructions[2].strip()
+                try:
+                    index_1 = int(self.evaluate_expression(instructions[0].strip()))
+                    index_2 = int(self.evaluate_expression(instructions[1].strip()))
+                    self.variables[list_name][index_1], self.variables[list_name][index_2] = self.variables[list_name][index_2], self.variables[list_name][index_1]
+                except ValueError:
+                    self.error(10, "Invalid index for swap()")
+            elif line.startswith("call"):
+                call_statement = line[4:].strip()
+                file_name, function_name, args = self.parse_call_statement(call_statement)
+                self.call_function_from_file(file_name, function_name, args)
+            elif line.startswith("ccall"):
+                call_statement = line[5:].strip()
+                file_name, function_name, args = self.parse_call_statement(call_statement)
+                self.ccall_function_from_file(file_name, function_name, args)
+            elif line.startswith("load(") and line.endswith(")"):
+                self.load_module(self.evaluate_expression(line[5:-1]))
+            elif line.startswith("wait(") and line.endswith(")"):
+                time_to_wait = float(self.evaluate_expression(line[5:-1]))
+                time.sleep(time_to_wait)
+            elif line.startswith("push(") and line.endswith(")"):
+                dict_name, key, value = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', line[5:-1])
+                key = self.evaluate_expression(key)
+                value = self.evaluate_expression(value)
+                self.variables[dict_name][key] = value
+            elif line.startswith("dpop(") and line.endswith(")"):
+                dict_name, key = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', line[5:-1])
+                key = self.evaluate_expression(key)
+                self.variables[dict_name].pop(key)
+            elif line.startswith("defer{") and line.endswith("}"):
+                if (self.function_tracker[-1], self.function_ids[-1]) in self.defer_stack:
+                    self.defer_stack[(self.function_tracker[-1], self.function_ids[-1])].append(line[6:-1])
+                else:
+                    self.defer_stack[(self.function_tracker[-1], self.function_ids[-1])] = []
+                    self.defer_stack[(self.function_tracker[-1], self.function_ids[-1])].append(line[6:-1])
+            elif line.startswith("return"):
+                self.ret_val = self.evaluate_expression(line[6:].strip())
+            elif line == "break":
+                self.break_stack[-1] = True
+            elif line.startswith("asm{") and line.endswith("}"):
+                try:
+                    asm_emulator = X86Emulator()
+                except ImportError:
+                    asm_emulator = None
+                    print("ERROR: x86 emulation not available (probably missing keystone/unicorn)")
+                    return
+                line = line[4:-1]
+                code = line.split("|")
+                code = list(filter(None, code))
+                for line in range(len(code)):
+                    code[line] = self.evaluate_expression(code[line].strip())
+                code = "asm{\n"+"\n".join(code)+"\n}"
+                asm_vars = {}
+                for i in self.variables:
+                    if type(self.variables[i]) == int:
+                        asm_vars[i] = self.variables[i]
+                if asm_emulator:
+                    try:
+                        results = asm_emulator.run(code, asm_vars)
+                        for var, val in results.items():
+                            self.variables[var] = val
+                    except Exception as e:
+                        print(f"ASM emulation error: {e}")
+                else:
+                    print("ASM emulation not available")
+            elif line.startswith("py{") and line.endswith("}"):
+                line = line[3:-1]
+                code = line.split("|")
+                code = list(filter(None, code))
+                for line in range(len(code)):
+                    code[line] = self.evaluate_expression(code[line].strip())
+                exec(";".join(code), {}, self.variables)
+            elif line.startswith("mkdir(") and line.endswith(")"):
+                path = self.evaluate_expression(line[6:-1])
+                os.mkdir(path)
+            elif line.startswith("makedirs(") and line.endswith(")"):
+                path = self.evaluate_expression(line[9:-1])
+                os.makedirs(path, exist_ok=True)
+            elif line.startswith("rmdir(") and line.endswith(")"):
+                path = self.evaluate_expression(line[6:-1])
+                os.rmdir(path)
+            elif line.startswith("removedirs(") and line.endswith(")"):
+                path = self.evaluate_expression(line[11:-1])
+                os.removedirs(path)
+            elif line.startswith("copy(") and line.endswith(")"):
+                args = self.evaluate_expression(line[5:-1]).split(',')
+                src = args[0].strip()
+                dst = args[1].strip()
+                shutil.copy(src, dst)
+            elif line.startswith("copyfile(") and line.endswith(")"):
+                args = self.evaluate_expression(line[9:-1]).split(',')
+                src = args[0].strip()
+                dst = args[1].strip()
+                shutil.copyfile(src, dst)
+            elif line.startswith("move(") and line.endswith(")"):
+                args = self.evaluate_expression(line[5:-1]).split(',')
+                src = args[0].strip()
+                dst = args[1].strip()
+                shutil.move(src, dst)
+            elif line.startswith("rename(") and line.endswith(")"):
+                args = self.evaluate_expression(line[7:-1]).split(',')
+                src = args[0].strip()
+                dst = args[1].strip()
+                os.rename(src, dst)
+            elif line.startswith("remove(") and line.endswith(")"):
+                path = self.evaluate_expression(line[7:-1])
+                os.remove(path)
+            elif line.startswith("symlink(") and line.endswith(")"):
+                args = self.evaluate_expression(line[8:-1]).split(',')
+                src = args[0].strip()
+                dst = args[1].strip()
+                os.symlink(src, dst)
+            elif line.startswith("unlink(") and line.endswith(")"):
+                path = self.evaluate_expression(line[7:-1])
+                os.unlink(path)
+            elif line.startswith("match(") and "{" in line:
+                line = line[6:-1]
+                var, cases = line.split("){", 1)
+                var = self.evaluate_expression(var.strip())
+
+                processed_cases = ""
+                depth = 0
+
+                for char in list(cases):
+                    if char == "{":
+                        processed_cases += char
+                        depth += 1
+                    elif char == "}":
+                        processed_cases += char
+                        depth -= 1
+                    elif depth == 1 and char == "|":
+                        processed_cases += "&@$%"
+                    else:
+                        processed_cases += char
+
+                cases = processed_cases.split("|")
+                cases = list(filter(None, cases))
+
+                default_case = None
+                handeled = False
+
+                for case in cases:
+                    case = case.strip()
+                    case = case[5:-1].split("){")
+                    value = self.evaluate_expression(case[0]) if case[0] != "_" else "_"
+                    if value == "_":
+                        default_case = case
+                        continue
+                    if var == value:
+                        handeled = True
+                        for instruction in case[1].split("&@$%"):
+                            self.interpret(instruction)
+
+                if handeled == False and default_case:
+                    for instruction in default_case[1].split("&@$%"):
+                        self.interpret(instruction)
+            elif line.startswith("write(") and line.endswith(")"):
+                addr, data = line[6:-1].split(",", 1)
+                addr = self.evaluate_expression(addr.strip())
+                data = self.evaluate_expression(data.strip())
+                self.mem[addr] = data
+            elif line.startswith("patch(") and line.endswith(")"):
+                f1, f2 = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', line[6:-1])
+                f1 = self.evaluate_expression(f1)
+                f2 = self.evaluate_expression(f2)
+                if f1 not in self.functions or f2 not in self.functions:
+                    self.error(44, "Name of a non existing function pased as an argument to patch()")
+                self.functions[f1] = self.functions[f2]
+            elif line == "stop":
+                sys.exit()
+            else:
+                if not handled:
+                    self.error(11, f"Invalid statement at line {self.current_line}: {line}")
+
+        except Exception as e:
+            self.error(12, f"Error at line {self.current_line}: {e}")
 
     def error(self, code, message):
         if not self.in_try_block:
