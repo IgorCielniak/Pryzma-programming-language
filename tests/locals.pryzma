@@ -38,3 +38,17 @@ var2 = 9
 
 print var2
 
+#esc
+
+/esc_test{
+    loc a = 9
+    return &a
+}
+
+b = @esc_test
+
+print *b
+
+*b = 7
+
+print *b

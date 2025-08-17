@@ -56,6 +56,7 @@ class PryzmaInterpreter:
         self.lines_map = []
         self.lines_map_done = False
         self.defer_stack = {}
+        self.escape = False
 
     def interpret_file(self, file_path, *args):
         self.file_path = file_path.strip('"')
@@ -174,6 +175,14 @@ class PryzmaInterpreter:
 
             if handled:
                 continue
+
+            to_remove = []
+            for var in self.locals:
+                self.locals[var] = [item for item in self.locals[var] if self.ref_to_local_exists(var) or item[2] in self.function_ids]
+                if not self.locals[var]:
+                    to_remove.append(var)
+            for var in to_remove:
+                self.locals.pop(var)
 
             try:
                 if line.startswith("print"):
@@ -522,13 +531,14 @@ class PryzmaInterpreter:
                                     deferred = deferred.split("|")
                                     for line in deferred:
                                         self.interpret(line.strip())
-                            to_remove = []
-                            for var in self.locals:
-                                self.locals[var] = [item for item in self.locals[var] if item[2] != func_id]
-                                if not self.locals[var]:
-                                    to_remove.append(var)
-                            for var in to_remove:
-                                self.locals.pop(var)
+                            if self.escape == False:
+                                to_remove = []
+                                for var in self.locals:
+                                    self.locals[var] = [item for item in self.locals[var] if item[2] != func_id]
+                                    if not self.locals[var]:
+                                        to_remove.append(var)
+                                for var in to_remove:
+                                    self.locals.pop(var)
                     else:
                         self.error(3, f"Error at line {self.current_line}: Function '{function_name}' is not defined.")
                     self.in_func.pop()
@@ -620,16 +630,18 @@ class PryzmaInterpreter:
                     variables = variables.strip().split(",")
                     expression = expression.strip()
                     for variable in variables:
+                        ref = False
                         if variable.lstrip("*") in self.variables:
                             if isinstance(self.variables[variable.lstrip("*")], Reference):
                                 var = self.variables[variable.lstrip("*")].var_name
                                 if var in self.locals:
                                     variable = var
+                                    ref = True
                         if variable.lstrip("*") in self.locals:
                             if isinstance(self.locals[variable.lstrip("*")][0], Reference):
                                 variable = self.locals[variable.lstrip("*")][0].var_name
                         if variable.lstrip("*") in self.locals:
-                            self.assign_value_local(variable.strip(), expression)
+                            self.assign_value_local(variable, expression, ref)
                         else:
                             self.assign_value(variable.strip(), expression)
                 elif "+=" in line:
@@ -909,6 +921,15 @@ class PryzmaInterpreter:
         if self.in_func[-1]:
             print(f"Error while calling function '{self.function_tracker[-1]}'")
 
+    def ref_to_local_exists(self, local):
+        for var in self.variables:
+            if isinstance(self.variables[var], Reference) and self.variables[var].var_name == local:
+                return True
+        for var in self.locals:
+            if isinstance(self.locals[var][0], Reference) and self.locals[var][0].var_name == local:
+                return True
+        return False
+
     def compress(self, text: str) -> bytes:
         return lzma.compress(text.encode('utf-8'), preset=9 | lzma.PRESET_EXTREME)
 
@@ -952,6 +973,10 @@ class PryzmaInterpreter:
             self.return_stops = True
         if "rds" in args:
             self.return_stops = False
+        if "esc" in args:
+            self.escape = True
+        if "desc" in args:
+            self.escape = False
 
 
     def struct_split(self, s):
@@ -1395,8 +1420,7 @@ class PryzmaInterpreter:
                 elif ref.var_name in self.locals:
                     for i in range(len(self.function_tracker) - 1, -1, -1):
                         for val, func_name, func_id in reversed(self.locals[ref.var_name]):
-                            if func_name == self.function_tracker[i] and func_id == self.function_ids[i]:
-                                return val
+                            return val
                 else:
                     self.error(41, f"Error at line {self.current_line}: Referenced variable '{ref.var_name}' no longer exists")
             else:
@@ -1471,7 +1495,7 @@ class PryzmaInterpreter:
                 obj = obj[part.strip()]
         return obj
 
-    def assign_value_local(self, var_name, expression):
+    def assign_value_local(self, var_name, expression, ref = False):
         value = self.evaluate_expression(expression)
         if isinstance(value, dict):
             value = value.copy()
@@ -1492,6 +1516,9 @@ class PryzmaInterpreter:
             target = None
             for i in range(len(self.function_tracker) - 1, -1, -1):
                 for item in reversed(self.locals[base_var_name]):
+                    if ref == True:
+                        target = item[0]
+                        break
                     if item[1] == self.function_tracker[i] and item[2] == self.function_ids[i]:
                         target = item[0]
                         break
@@ -1527,6 +1554,9 @@ class PryzmaInterpreter:
             target = None
             for i in range(len(self.function_tracker) - 1, -1, -1):
                 for item in reversed(self.locals[base_var]):
+                    if ref == True:
+                        target = item[0]
+                        break
                     if item[1] == self.function_tracker[i] and item[2] == self.function_ids[i]:
                         target = item[0]
                         break
@@ -1549,6 +1579,9 @@ class PryzmaInterpreter:
         else:
             for i in range(len(self.function_tracker) - 1, -1, -1):
                 for j, item in enumerate(reversed(self.locals[var_name])):
+                    if ref == True:
+                        self.locals[var_name][len(self.locals[var_name]) - 1 - j] = (value, item[1], item[2])
+                        break
                     if item[1] == self.function_tracker[i] and item[2] == self.function_ids[i]:
                         self.locals[var_name][len(self.locals[var_name]) - 1 - j] = (value, item[1], item[2])
                         return

@@ -766,8 +766,39 @@ nan - no automatic namespacing
 an - enable automatic namespacing
 rs - make retrun statements stop the function execution
 rds - make retrun statements don't stop the function execution (default)
+esc - allow for escaping of locals (explained bellow)
+desc - don't allow for escaping of locals (explained below)
 
 #nan, #an, #fd, #np, #rs and #rds are also supported
+
+#esc and #desc pragmas control if local variables can escape their scope, and here is what i mean by that:
+
+#esc
+
+/func{
+    loc a = 9
+    return &a
+}
+
+b = @func
+
+print *b //outputs 9, value of the local a
+
+*b = 7 //sets the local a to 7
+
+print *b //outputs 7 the new value of the local a
+
+in the following example the #esc pragma is set and as you can see
+the function returns a reference to its local variable, in this case
+when the #esc pragma is set the variable would be still accesable via
+the reference and you can read from it and write to it, if you don't
+set the #esc pragma you will get an error saying that the referenced
+variable a no longer exists, and thats true becouse it doesn't just go
+out of scope, if #esc isn't set the locals are deleted by the garbage collector
+after the function finishes execution, the garbage colector also removes the locals
+that had a valid reference but no longer do becouse the variable holding the reference
+got deleted etc. so basicly as of my understanding pryzma now has normal garbage collection.
+I hope that everythink is understandable after this long but i think needed exploanation
 
 there also is #fail and #df
 
