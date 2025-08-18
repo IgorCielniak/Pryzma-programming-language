@@ -2295,6 +2295,10 @@ commands:
     errors - show the error codes table
     exit - exit the interpreter
     reboot - reboot the interpreter
+    v - show all variables
+    f - show all functions
+    s - show all structs
+    l - show all locals
     help - show this help
     license - show the license
 """)
