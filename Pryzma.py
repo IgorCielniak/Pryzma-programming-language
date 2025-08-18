@@ -297,7 +297,7 @@ class PryzmaInterpreter:
                             if self.break_stack[-1]:
                                 break
                     else:
-                        self.error(33, f"Error at line {self.current_line}: Invalid range expression for loop.")
+                        self.error(45, f"Error at line {self.current_line}: List not found for the foreach function.")
 
                     self.break_stack.pop()
                 elif line.startswith("for"):
@@ -2368,6 +2368,7 @@ commands:
 42 - Referenced function no longer exists.
 43 - Overlaping names of struct instance and one of variables used for destructuring.
 44 - Name of a non existing function pased as an argument to patch()
+45 - List not found for the foreach function.
 """ 
 )
 
@@ -2697,11 +2698,16 @@ def shell(code):
         PryzmaInterpreter.display_system_info()
     elif code == "errors":
         PryzmaInterpreter.print_error_codes_table()
+    elif code == "v":
+        print("variables:", interpreter.variables, "\n")
+    elif code == "f":
+        print("functions:", interpreter.functions, "\n")
+    elif code == "s":
+        print("structs:", interpreter.structs, "\n")
+    elif code == "l":
+        print("locals:", interpreter.locals, "\n")
     else:
         interpreter.interpret(code)
-        print("variables:", interpreter.variables, "\n")
-        print("functions:", interpreter.functions, "\n")
-        print("structs:", interpreter.structs, "\n")
 
 
 
