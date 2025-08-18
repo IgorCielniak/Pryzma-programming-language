@@ -19,6 +19,261 @@ ret_var = None
     if(handeled == False){return None}
 }
 
+/interpret2{
+    line = args[0]
+
+    check_ret = startswith("return",line)
+
+    if(check_ret == True){
+        ret_var = @eval(line[6:])
+    }
+
+    check_for = startswith("for",line)
+
+    if(check_for == True){
+        line = line[3:]
+        h6 = char(41)+char(123)
+        line = splitby(h6,line,1)
+        l = line[0][1:]
+        l = splitby(",",l)
+        range = splitby(":",strip(l[1]))
+        start_var2 = @eval(range[0])
+        end_var2 = @eval(range[1])
+        var2 = strip(l[0])
+        actions2 = line[1][:-1]
+        prog = list(actions2)
+        fin = 0
+
+        for(char,0:len(prog)){
+            if (prog[char]==h){
+                fin += 1
+            }
+            if (prog[char]==h2){
+                fin -= 1
+            }
+            if (fin == 0){
+                if(prog[char] == h8){
+                    prog[char] = h7
+                }
+            }
+        }
+
+        program = all(prog)
+
+        actions2 = splitby(h7,program)
+        push(variables,var2,i)
+
+        for(i,start_var2:end_var2){
+            variables[var2] = i
+            for(action2,0:len(actions2)){
+                actions2[action2] = strip(actions2[action2])
+                if(actions2[action2] != ""){
+                    @interpret(actions2[action2])
+                }
+            }
+        }
+        dpop(variables, var)
+    }
+
+    check = startswith("print",line)
+
+    if(check == True){
+        line = line[5:]
+        result = @eval(line)
+        print result
+    }
+
+    check_func = startswith("/",line)
+
+    if(check_func == True){
+        line2 = splitby(char(123),line[:-1],1)
+        func_name = line2[0][1:]
+        prog = list(line2[1])
+        in_func = 0
+
+        for(char,0:len(prog)){
+            if (prog[char]==h){
+                in_func += 1
+            }
+            if (prog[char]==h2){
+                in_func -= 1
+            }
+            if (in_func == 0){
+                if(prog[char] == h8){
+                    prog[char] = h7
+                }
+            }
+        }
+
+        func_body = all(prog)
+
+        func_body = splitby(h7,func_body)
+        push(functions,func_name,func_body)
+    }
+
+
+    check = startswith("@",line)
+    if(check == True){
+        func_name = line[1:]
+        check = in(func_name,char(40))
+        if(check==True){
+            func = func_name[:-1]
+            h4 = char(40)
+            func = splitby(h4,func)
+            func_name = func[0]
+            h5 = char(44)
+            args = func[1]
+            args = splitby(h5,args)
+            for(arg,0:len(args)){
+                args[arg] = @eval(args[arg])
+            }
+            push(variables,"args",args)
+        }
+        actions = functions[func_name]
+        actions_count = len(actions)
+        for(i,0:actions_count){
+            action = strip(functions[func_name][i])
+            if(action!=""){
+                @interpret(action)
+            }
+        }
+    }
+
+
+    check_if = False
+
+    if(check_for == False){
+        check_if = startswith("if",line)
+    }
+
+    if(check_if == True){
+        h6 = char(41)+char(123)
+        line2 = splitby(h6,line,1)
+        line2[0] = line2[0][3:]
+        line2[1] = line2[1][:-1]
+        cond = line2[0]
+        heq2 = char(61) + char(61)
+        if(in(cond,heq2)==True){
+            cond = splitby(heq2,cond)
+            cond[0] = @eval(cond[0])
+            cond[1] = @eval(cond[1])
+            if(cond[0] == cond[1]){
+                cond_check = True
+            }
+        }
+        hneq2 = char(33) + char(61)
+        if(in(cond,hneq2)==True){
+            cond = splitby(hneq2,cond)
+            cond[0] = @eval(cond[0])
+            cond[1] = @eval(cond[1])
+            if(cond[0] != cond[1]){
+                cond_check = True
+            }
+        }
+        hseq2 = char(60) + char(61)
+        if(in(cond,hseq2)==True){
+            cond = splitby(hseq2,cond)
+            cond[0] = @eval(cond[0])
+            cond[1] = @eval(cond[1])
+            if(cond[0] <= cond[1]){
+                cond_check = True
+            }
+        }
+        hbeq2 = char(62) + char(61)
+        if(in(cond,hbeq2)==True){
+            cond = splitby(hbeq2,cond)
+            cond[0] = @eval(cond[0])
+            cond[1] = @eval(cond[1])
+            if(cond[0] >= cond[1]){
+                cond_check = True
+            }
+        }
+        hb2 = char(62)
+        if(in(cond,hb2)==True){
+            cond = splitby(hb2,cond)
+            cond[0] = @eval(cond[0])
+            cond[1] = @eval(cond[1])
+            if(cond[0] > cond[1]){
+                cond_check = True
+            }
+        }
+        hs2 = char(60)
+        if(in(cond,hs2)==True){
+            cond = splitby(hs2,cond)
+            cond[0] = @eval(cond[0])
+            cond[1] = @eval(cond[1])
+            if(cond[0] < cond[1]){
+                cond_check = True
+            }
+        }
+        if(cond_check==True){
+            prog = list(line2[1])
+            in_if = 0
+
+            for(char,0:len(prog)){
+                if (prog[char]==h){
+                    in_if += 1
+                }
+                if (prog[char]==h2){
+                    in_if -= 1
+                }
+                if (in_if == 0){
+                    if(prog[char] == h8){
+                        prog[char] = h7
+                    }
+                }
+            }
+
+            program = all(prog)
+
+            actions = splitby(h7,program)
+            for(action,0:len(actions)){
+                actions[action] = strip(actions[action])
+                @interpret(actions[action])
+            }
+        }
+    }
+
+    line = args[0]
+
+
+    if(check_if != True){
+        if(check_func == False){
+
+            check = in(line,"=")
+
+            if(check==True){
+                expr = splitby("=",line)
+                var = strip(expr[0])
+                value = strip(expr[1])
+                eqcheck = in(var,"[")
+                eqcheck2 = startswith("[",value)
+                ccheck = startswith("@",value)
+                if(ccheck==True){var_name=var}
+                if(ccheck==True){@interpret(value)|r = ret_var|push(variables,var_name,r)}
+                if(ccheck==False){
+                    if(eqcheck2==True){
+                        aresult = pyeval(value)
+                    }
+                    if(eqcheck2==False){
+                        aresult = @eval(value)
+                    }
+                    if(eqcheck==False){
+                        push(variables,var,aresult)
+                    }
+                    if(eqcheck==True){
+                        var_ = splitby("[",var)
+                        var = var_[0]
+                        var1 = var_[1]
+                        index = @eval(var1[:-1])
+                        variables[var][index] = aresult
+                    }
+                }
+            }
+        }
+    }
+}
+
 
 /interpret{
     line = args[0]
@@ -68,7 +323,9 @@ ret_var = None
             variables[var] = i
             for(action,0:len(actions)){
                 actions[action] = strip(actions[action])
-                @interpret(actions[action])
+                if(actions[action] != ""){
+                    @interpret2(actions[action])
+                }
             }
         }
         dpop(variables, var)
