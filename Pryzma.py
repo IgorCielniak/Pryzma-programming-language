@@ -2573,9 +2573,9 @@ class PackageManager:
 Available commands:
     - remove <package_name>: Remove a package from the repository.
     - list: List all installed packages.
-    - install <package_name>: Install a package from the repository.
-    - update <package_name>: Update a specific package or all packages if no name is provided.
-    - show <package_name>: Show information about a specific package or all packages if no name is provided.
+    - install [<package_name>]: Install packages from the repository.
+    - update [<package_name>]: Update specified packages or all packages if no name is provided.
+    - show [<package_name>]: Show information about specific packages or all packages if no name is provided.
     - help: Show this help message.
     - exit: Exit the Pryzma package manager.
         """
@@ -2593,17 +2593,20 @@ Available commands:
             self.list_packages(PackageManager)
         elif user_input[0] == "install":
             if len(user_input) > 1:
-                self.install_package(PackageManager, user_input[1])
+                for package in user_input[1:]:
+                    self.install_package(PackageManager, package)
             else:
                 print("Please provide a package name.")
         elif user_input[0] == "update":
             if len(user_input) > 1:
-                self.update_package(PackageManager, user_input[1])
+                for package in user_input[1:]:
+                    self.update_package(PackageManager, package)
             else:
                 self.update_package(PackageManager)
         elif user_input[0] == "show":
             if len(user_input) > 1:
-                self.get_package_info(PackageManager, user_input[1])
+                for package in user_input[1:]:
+                    self.get_package_info(PackageManager, package)
             else:
                 if os.listdir(self.user_packages_path):
                     for package_name in os.listdir(self.user_packages_path):
