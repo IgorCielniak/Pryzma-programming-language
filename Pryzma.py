@@ -2714,7 +2714,8 @@ def shell(code):
     elif code == "l":
         print("locals:", interpreter.locals, "\n")
     else:
-        interpreter.interpret(code)
+        for line in interpreter.preprocess(code):
+            interpreter.interpret(line)
 
 
 
