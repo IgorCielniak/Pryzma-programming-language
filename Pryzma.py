@@ -414,27 +414,49 @@ class PryzmaInterpreter:
                         line = sline[0]
                         else_part = sline[1]
                     line = line[2:]
-                    condition, action = line.strip()[1:-1].split("){", 1)
+                    if "elif" in line:
+                        line = list(line)
+                        depth = 0
+                        in_str = False
+                        for i, char in enumerate(line):
+                            if char == "{" and not in_str:
+                                depth += 1
+                            elif char == "}" and not in_str:
+                                depth -= 1
+                            elif char == '"':
+                                in_str = not in_str
+                            elif depth == 0 and char == "e" and line[i + 1] == "l" and line[i + 2] == "i" and line[i + 3] == "f":
+                                line[i] = "#"
+                                line[i + 1] = "$"
+                                line[i + 2] = "&"
+                                line[i + 3] = "@"
+                        line = "".join(line)
+                    branches = line.split("#$&@")
                     handeled = False
-                    char_ = 0
-                    rep_in_if = 0
-                    if_body = list(action)
-                    for char in if_body:
-                        if char == "{":
-                            rep_in_if += 1
-                        elif char == "}":
-                            rep_in_if -= 1
-                        elif rep_in_if == 0  and char == "|":
-                            if_body[char_] = "#!%&*"
-                        char_ += 1
-                    if_body2 = ""
-                    for char in if_body:
-                        if_body2 += char
-                    actions = if_body2.split("#!%&*")
-                    if self.evaluate_expression(condition.strip()):
-                        handeled = True
-                        for action in actions:
-                            self.interpret(action)
+                    for branch in branches:
+                        if handeled == True:
+                            break
+                        condition, action = branch.strip()[1:-1].split("){", 1)
+                        handeled = False
+                        char_ = 0
+                        rep_in_if = 0
+                        if_body = list(action)
+                        for char in if_body:
+                            if char == "{":
+                                rep_in_if += 1
+                            elif char == "}":
+                                rep_in_if -= 1
+                            elif rep_in_if == 0  and char == "|":
+                                if_body[char_] = "#!%&*"
+                            char_ += 1
+                        if_body2 = ""
+                        for char in if_body:
+                            if_body2 += char
+                        actions = if_body2.split("#!%&*")
+                        if self.evaluate_expression(condition.strip()):
+                            handeled = True
+                            for action in actions:
+                                self.interpret(action)
 
                     if handeled == False and else_:
                         char_ = 0

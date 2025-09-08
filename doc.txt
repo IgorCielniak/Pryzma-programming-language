@@ -385,13 +385,15 @@ If statement:
 
 input variable::"var1:"
 input variable2::"var2:"
-if(variable==variable2){print "true"|print "text"}else{print "no"}
+if(variable==variable2){print "true"|print "text"}elif(variable>variable2){print ">"}else{print "no"}
 
 or
 
 if(variable==variable2){
 print "true"
 print "text"
+}elif(variable>variable2){
+print ">"
 }else{
 print "no"
 }
