@@ -1497,6 +1497,9 @@ class PryzmaInterpreter:
             value1 = self.evaluate_expression(expression.split(">")[0].strip())
             value2 = self.evaluate_expression(expression.split(">")[1].strip())
             return value1 > value2
+        elif expression.startswith("pop"):
+            list_name = expression[3:].strip()
+            return self.variables[list_name].pop()
         elif expression in self.variables or expression in self.locals:
             if expression in self.locals:
                 for i in range(len(self.function_tracker) - 1, -1, -1):

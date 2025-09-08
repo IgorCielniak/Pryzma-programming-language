@@ -72,11 +72,21 @@ output will be [1,2,3,4]
 
 a = ["text", "text2"]
 
-pop a, "text"
+pop a, 0
 
 print a
 
-it will pop text from list a and output ["text2"]
+it will pop the index 0 ("text") from list a and output ["text2"]
+
+pop as an rvalue:
+
+a = ["text", "text2"]
+
+print pop a //output text2
+
+'a' after pop:
+
+["text"]
 
 you can remove from a list like this:
 
