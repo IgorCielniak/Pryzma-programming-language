@@ -2515,8 +2515,8 @@ class PackageManager:
             print("No packages installed.")
 
 
-    def install_package(self, package_name):
-        package_url = f"{self.package_api_url}/{package_name}"
+    def install_package(self, package_name, url = package_api_url):
+        package_url = f"{url}/{package_name}"
         import_err = False
         try:
             import requests
@@ -2529,21 +2529,52 @@ class PackageManager:
                 if response.status_code == 200:
                     package_dir = os.path.join(self.user_packages_path, package_name)
                     os.makedirs(package_dir, exist_ok=True)
-    
+
                     package_file_path = os.path.join(package_dir, f"{package_name}.zip")
                     with open(package_file_path, 'wb') as file:
                         file.write(response.content)
 
                     with zipfile.ZipFile(package_file_path, 'r') as zip_ref:
                         zip_ref.extractall(package_dir)
-    
+
                     os.remove(package_file_path)
                     print("Package", package_name, "downloaded and installed successfully.")
                 else:
                     print("Package", package_name, "not found in the repository.")
             except requests.exceptions.ConnectionError as ex:
-                print("Connection error, check your inernet connection.")
+                print(f"Primary source failed: {package_url}")
+                print("Trying fallback source (GitHub)...")
 
+                github_repo_url = "https://github.com/IgorCielniak/Pryzma-packages"
+                clone_dir = os.path.join("/tmp", f"ppm_temp_{package_name}")
+
+                import_err = False
+                try:
+                    import subprocess
+                except ImportError:
+                    import_err = True
+                    print("module requests not found")
+
+                if not import_err:
+                    try:
+                        subprocess.run(["git", "clone", "--depth=1", github_repo_url, clone_dir], check=True)
+                        package_folder = os.path.join(clone_dir, package_name)
+                        if not os.path.isdir(package_folder):
+                            raise FileNotFoundError(f"Package '{package_name}' not found in GitHub repo.")
+
+                        package_path = os.path.join(self.user_packages_path, package_name)
+
+                        if os.path.exists(package_path):
+                            shutil.rmtree(package_path)
+
+                        shutil.copytree(package_folder, package_path)
+                        print(f"{package_name} installed successfully from GitHub.")
+                    except Exception as e:
+                        print(f"Fallback source failed: {e}")
+                        print("Package installation failed from both sources.")
+                    finally:
+                        if os.path.exists(clone_dir):
+                            shutil.rmtree(clone_dir)
 
     def update_package(self, package_name=None):
         if package_name:
@@ -2556,7 +2587,7 @@ class PackageManager:
     def get_package_info(self, package_name):
         package_dir = os.path.join(self.user_packages_path, package_name)
         metadata_path = os.path.join(package_dir, "metadata.json")
-        
+
         if os.path.exists(metadata_path):
             with open(metadata_path, "r") as metadata_file:
                 metadata = json.load(metadata_file)
@@ -2572,15 +2603,40 @@ class PackageManager:
         help_text = """
 Available commands:
     - remove <package_name>: Remove a package from the repository.
-    - list: List all installed packages.
-    - install [<package_name>]: Install packages from the repository.
-    - update [<package_name>]: Update specified packages or all packages if no name is provided.
-    - show [<package_name>]: Show information about specific packages or all packages if no name is provided.
+    - list <avaliable> <url>: List all installed packages, optinally pass 'avaliable' to see all avalible to download instaed of allready installed ones, and url option to download from a custom server.
+    - from url [package_name, package_name]: install packages from a custom server.
+    - install [<package_name>, <package_name>]: Install packages from the repository.
+    - update [<package_name>, <package_name>]: Update specified packages or all packages if no name is provided.
+    - show [<package_name>, <package_name>]: Show information about specific packages or all packages if no name is provided.
     - help: Show this help message.
     - exit: Exit the Pryzma package manager.
         """
         print(help_text)
-    
+
+
+    def fetch_and_print_packages(self, url = "http://igorcielniak.pythonanywhere.com/api/fetch"):
+        import_err = False
+        try:
+            import requests
+        except ImportError:
+            import_err = True
+            print("module requests not found")
+        if not import_err:
+            try:
+                response = requests.get(url)
+                if response.status_code == 200:
+                    package_list = response.json()
+                    if package_list:
+                        print("Available packages:")
+                        for package in package_list:
+                            print("-", package)
+                    else:
+                        print("No packages available on the server.")
+                else:
+                    print("Failed to fetch packages from the server. Status code:", response.status_code)
+            except requests.exceptions.RequestException as e:
+                print("Error fetching packages:", e)
+
     def execute_ppm_command(self,user_input):
         if user_input[0] == "help":
             self.display_help(PackageManager)
@@ -2590,7 +2646,21 @@ Available commands:
             else:
                 print("Please provide a package name.")
         elif user_input[0] == "list":
-            self.list_packages(PackageManager)
+            if len(user_input) > 1 and user_input[1] == "avaliable":
+                if len(user_input) > 2:
+                    url = user_input[2]
+                    self.fetch_and_print_packages(PackageManager, url)
+                else:
+                    self.fetch_and_print_packages(PackageManager)
+            else:
+                self.list_packages(PackageManager)
+        elif user_input[0] == "from":
+            if len(user_input) > 2:
+                url = user_input[1]
+                for package in user_input[2:]:
+                    self.install_package(PackageManager, package, url)
+            else:
+                print("Please provide a url and package name.")
         elif user_input[0] == "install":
             if len(user_input) > 1:
                 for package in user_input[1:]:
@@ -2628,8 +2698,6 @@ Available commands:
                 break
             else:
                 self.execute_ppm_command(PackageManager, user_input)
-
-
 
 
 
