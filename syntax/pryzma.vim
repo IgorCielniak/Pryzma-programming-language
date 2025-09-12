@@ -20,6 +20,7 @@ syntax keyword pryzmaKeyword ascii strip splitby resplit replace in defined
 syntax keyword pryzmaKeyword sys wait timenow print input assert delvar
 syntax keyword pryzmaKeyword disablekeyword enablekeyword asm py read write
 syntax keyword pryzmaKeyword randint startswith endswith is_func list isolate
+syntax keyword pryzmaKeyword using global
 syntax keyword pryzmaBoolean True False None
 
 " Operators
