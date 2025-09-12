@@ -932,6 +932,10 @@ class PryzmaInterpreter:
                     if f1 not in self.functions or f2 not in self.functions:
                         self.error(44, "Name of a non existing function pased as an argument to patch()")
                     self.functions[f1] = self.functions[f2]
+                elif line.startswith("using"):
+                    instance = line[5:].strip()
+                    for key in self.variables[instance].keys():
+                        self.variables[key] = self.variables[instance][key]
                 elif line == "stop":
                     sys.exit()
                 else:

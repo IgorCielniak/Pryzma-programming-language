@@ -1030,7 +1030,24 @@ output:
 some name
 7
 
+using:
+
+struct Person {
+    age = 20
+    name = "Alex"
+}
+
+a = Person {}
+
+using a
+
+print age //20
+print name //Alex
+
+using exports all fields of the struct to the global namespace
+
 references etc. :
+
 
 Pryzma supports references, which allow you to create variables that point other variables. This is useful for modifying variables within functions or for creating complex data structures.
 
