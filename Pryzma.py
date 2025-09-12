@@ -933,9 +933,34 @@ class PryzmaInterpreter:
                         self.error(44, "Name of a non existing function pased as an argument to patch()")
                     self.functions[f1] = self.functions[f2]
                 elif line.startswith("using"):
-                    instance = line[5:].strip()
-                    for key in self.variables[instance].keys():
-                        self.variables[key] = self.variables[instance][key]
+                    parts = line.split()
+                    is_global = len(parts) > 2 and parts[1] == "global"
+                    instance_name = parts[-1]
+
+                    instance = self.evaluate_expression(instance_name)
+
+                    if isinstance(instance, Reference):
+                        instance = self.variables[instance.var_name]
+
+                    if instance is None:
+                        self.error(32, f"Error at line {self.current_line}: Unknown variable or expression: {instance_name}")
+                        return
+
+                    if not isinstance(instance, dict):
+                        self.error(46, f"Error at line {self.current_line}: 'using' statement can only be used with structs.")
+                        return
+
+                    if is_global:
+                        for key, value in instance.items():
+                            self.variables[key] = value
+                    elif self.in_func[-1]:
+                        for key, value in instance.items():
+                            if key not in self.locals:
+                                self.locals[key] = []
+                            self.locals[key].append((value, self.function_tracker[-1], self.function_ids[-1]))
+                    else:
+                        for key, value in instance.items():
+                            self.variables[key] = value
                 elif line == "stop":
                     sys.exit()
                 else:
@@ -2402,6 +2427,7 @@ commands:
 43 - Overlaping names of struct instance and one of variables used for destructuring.
 44 - Name of a non existing function pased as an argument to patch()
 45 - List not found for the foreach function.
+46 - 'using' statement can only be used with struct instances.
 """ 
 )
 

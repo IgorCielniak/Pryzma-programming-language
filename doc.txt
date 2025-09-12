@@ -1044,7 +1044,34 @@ using a
 print age //20
 print name //Alex
 
-using exports all fields of the struct to the global namespace
+using exports all fields of the struct to the local namespace by default, to export to global use the following syntax (more advanced example):
+
+struct t {val = 0}
+i = t {}
+i.val = 45
+/func{
+    using global args[0]
+    print val //prints 45
+}
+@func(&i)
+
+print val //also prints 45
+
+in this form of the example:
+
+struct t {val = 0}
+i = t {}
+i.val = 45
+/func{
+    using args[0]
+    print val //prints 45
+}
+@func(&i)
+
+print val //error, variable not found
+
+the fields are exported to the local namespace specific to the call and later the print outside of the func fails
+
 
 references etc. :
 

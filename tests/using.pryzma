@@ -1,0 +1,11 @@
+struct t {val = 0}
+i = t {}
+i.val = 45
+/func{
+    using global args[0]
+    print val
+}
+@func(&i)
+
+print val
+
