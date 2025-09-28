@@ -780,6 +780,8 @@ rs - make retrun statements stop the function execution
 rds - make retrun statements don't stop the function execution (default)
 esc - allow for escaping of locals (explained bellow)
 desc - don't allow for escaping of locals (explained below)
+fail - explained below
+df - explained below
 
 #nan, #an, #fd, #np, #rs and #rds are also supported
 

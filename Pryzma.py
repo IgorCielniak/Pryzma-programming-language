@@ -1465,7 +1465,7 @@ class PryzmaInterpreter:
             call_statement = expression[5:].strip()
             file_name, function_name, args = self.parse_call_statement(call_statement)
             return self.ccall_function_from_file(file_name, function_name, args)
-        elif "." in expression:
+        elif "." in expression and not expression.split(".", 1)[0].isdigit():
             name, field = expression.split(".", 1)
             return self.acces_field(name, field)
         elif expression.startswith("&"):
