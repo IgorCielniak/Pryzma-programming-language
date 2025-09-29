@@ -12,7 +12,6 @@ import random
 import ctypes
 from collections import UserDict
 import lzma
-import copy
 
 class Reference:
     def __init__(self, var_name):
@@ -1957,11 +1956,11 @@ limitations under the License.
         actions = if_body2.split("%$#@!")
         self.break_stack.append(False)
         self.in_loop = True
-        lines_map_snapshot = copy.deepcopy(self.lines_map)
+        lines_map_snapshot = self.lines_map.copy()
         while self.evaluate_expression(condition):
             command = 0
             continue_ = False
-            self.lines_map = copy.deepcopy(lines_map_snapshot)
+            self.lines_map = lines_map_snapshot.copy()
             for action in actions:
                 line = action.strip()
                 if not line:
@@ -2086,12 +2085,12 @@ limitations under the License.
         self.in_loop = True
 
         if list_name in self.variables:
-            lines_map_snapshot = copy.deepcopy(self.lines_map)
+            lines_map_snapshot = self.lines_map.copy()
             for val in self.variables[list_name]:
                 self.variables[loop_var] = val
                 command = 0
                 continue_ = False
-                self.lines_map = copy.deepcopy(lines_map_snapshot)
+                self.lines_map = lines_map_snapshot.copy()
                 for action in actions:
                     line = action.strip()
                     if not line:
@@ -2224,12 +2223,12 @@ limitations under the License.
         self.in_loop = True
 
         if isinstance(start_val, int) and isinstance(end_val, int):
-            lines_map_snapshot = copy.deepcopy(self.lines_map)
+            lines_map_snapshot = self.lines_map.copy()
             for val in range(start_val, end_val):
                 self.variables[loop_var] = val
                 command = 0
                 continue_ = False
-                self.lines_map = copy.deepcopy(lines_map_snapshot)
+                self.lines_map = lines_map_snapshot.copy()
                 for action in actions:
                     line = action.strip()
                     if not line:
