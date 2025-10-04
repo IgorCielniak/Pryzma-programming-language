@@ -598,6 +598,10 @@ class PryzmaInterpreter:
                     code = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', line[5:-1])
                     for part in code:
                         self.interpret(self.evaluate_expression(part))
+                elif line.startswith("eval(") and line.endswith(")"):
+                    code = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', line[5:-1])
+                    for part in code:
+                        self.evaluate_expression(part)
                 elif line.startswith("isolate(") and line.endswith(")"):
                     args = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', line[8:-1])
                     isolated_interpreter = None
@@ -1190,6 +1194,12 @@ class PryzmaInterpreter:
                 self.interpret(self.evaluate_expression(part))
                 if self.ret_val != None:
                     return self.ret_val
+        elif expression.startswith("eval(") and expression.endswith(")"):
+            code = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', expression[5:-1])
+            for part in code:
+                result = self.evaluate_expression(part)
+                if result != None:
+                    return result
         elif expression.startswith("new_isolate(") and expression.endswith(")"):
             return PryzmaInterpreter()
         elif expression.startswith("isolate(") and expression.endswith(")"):
