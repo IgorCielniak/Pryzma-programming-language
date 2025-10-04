@@ -1,3 +1,4 @@
+
 "this syntax file is made for an older version of pryzma but still
 "provides some highlight today, i may update it in the furure
 
@@ -7,20 +8,7 @@ if exists("b:current_syntax")
 endif
 
 " Keywords
-syntax keyword pryzmaKeyword if else for foreach while break return try catch
-syntax keyword pryzmaKeyword defer match stop int str loc struct use from load
-syntax keyword pryzmaKeyword call ccall pyeval pyexec exec delfunc file_read
-syntax keyword pryzmaKeyword file_write mkdir makedirs rmdir removedirs copy
-syntax keyword pryzmaKeyword copyfile move rename remove symlink unlink is_file
-syntax keyword pryzmaKeyword is_dir exists file_size join_path abs_path basename
-syntax keyword pryzmaKeyword split_ext list_dir walk is_link read_link append
-syntax keyword pryzmaKeyword pop remove move swap push dpop get fields len
-syntax keyword pryzmaKeyword splitlines all join index type isanumber char
-syntax keyword pryzmaKeyword ascii strip splitby resplit replace in defined
-syntax keyword pryzmaKeyword sys wait timenow print input assert delvar
-syntax keyword pryzmaKeyword disablekeyword enablekeyword asm py read write
-syntax keyword pryzmaKeyword randint startswith endswith is_func list isolate
-syntax keyword pryzmaKeyword using global
+syntax keyword pryzmaKeyword print input #preproc #insert struct foreach for use from if while pyeval pyexec exec isolate try int str loc assert copy append pop remove sys file_write delvar delfunc disablekeyword enablekeyword move swap call ccall load wait push dpop defer return asm py mkdir makedirs rmdir removedirs copyfile rename symlink unlink match write patch using read new_isolate replace resplit in splitby type len splitlines file_read index all isanumber dirname startswith endswith randint strip get char join defined is_file is_dir exists file_size join_path abs_path basename split_ext list_dir walk is_link read_link fields is_func ascii #fd #np #nan #an #fail #df #rs #rds #esc #desc #replace global timenow else break catch stop list
 syntax keyword pryzmaBoolean True False None
 
 " Operators
