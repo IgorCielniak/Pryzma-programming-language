@@ -1,7 +1,3 @@
-
-"this syntax file is made for an older version of pryzma but still
-"provides some highlight today, i may update it in the furure
-
 " Check if syntax is already loaded
 if exists("b:current_syntax")
   finish
