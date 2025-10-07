@@ -1437,7 +1437,7 @@ class PryzmaInterpreter:
             path = self.evaluate_expression(expression[10:-1])
             return os.path.getsize(path)
         elif expression.startswith("join_path(") and expression.endswith(")"):
-            args = self.evaluate_expression(line[10:-1]).split(',')
+            args = self.evaluate_expression(expression[10:-1]).split(',')
             paths = [p.strip() for p in args]
             return os.path.join(*paths)
         elif expression.startswith("abs_path(") and expression.endswith(")"):

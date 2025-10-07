@@ -584,7 +584,7 @@ lines = resplit(regex, program)
 
 variables["argv"] = argv[1:]
 
-for(line_count,0:len(lines)-1){
+for(line_count,0:len(lines)){
     line = strip(lines[line_count])
     if(line!=""){
         try{@interpret(line)}
