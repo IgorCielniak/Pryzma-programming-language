@@ -577,6 +577,10 @@ result = exec("@func")
 
 result would be the return value of func
 
+there is also eval() that is used the same way but instead of interpreting it evaluates the given expression,
+if the expression returns somethink the eval also returns the same think but if you pass multiple expressions
+it returns the value of the firts expression that does not return None
+
 Cli arguments:
 by running:
 
