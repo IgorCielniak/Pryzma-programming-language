@@ -548,7 +548,7 @@ you can also delfunc to to delete a function in the same way
 
 disablekeyword and enablekeyword:
 
-you can enae and disable keywords like this:
+you can enable and disable keywords like this:
 
 disablekeyword("print", "use")
 
