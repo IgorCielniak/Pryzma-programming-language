@@ -330,72 +330,6 @@ class PryzmaInterpreter:
                     self.in_loop = True
                     self.for_loop(loop_var, range_expr, actions)
                     self.in_loop = False
-                elif line.startswith("use"):
-                    if "with" in line:
-                        line, directive = line.split("with")
-                        if directive.strip() != "":
-                            nan = self.nan
-                            fd = self.forward_declare
-                            np = self.no_preproc
-                            self.process_args(directive.strip()[1:].split(","))
-                            alias = None
-                            if " as " in line:
-                                file_path, alias = line[3:].strip().split(" as ")
-                            else:
-                                file_path = line[3:].strip()
-                            self.import_functions(file_path, alias)
-                            self.nan = nan
-                            self.forward_declare = fd
-                            self.no_preproc = np
-                    else:
-                        file_path = line[3:].strip()
-                        alias = None
-                        if " as " in line:
-                            file_path, alias = file_path.split(" as ")
-                        self.import_functions(file_path, alias)
-                elif line.startswith("from"):
-                    if "with" in line:
-                        line, directive = line.split("with")
-                        line = line.strip()
-                        module, functions = line[4:].strip().split("use")
-                        module = module.strip()
-                        if '/' in module or '\\' in module:
-                            pass
-                        else:
-                            if "::" in module:
-                                args = module.split("::")
-                                file = args.pop()
-                                folder = "/".join(args)
-                                module = f"{PackageManager.user_packages_path}/{folder}/{file}.pryzma"
-                            else:
-                                module = f"{PackageManager.user_packages_path}/{module}/{module}.pryzma"
-                        functions = functions.strip().split(",")
-                        if directive.strip() != "":
-                            nan = self.nan
-                            fd = self.forward_declare
-                            np = self.no_preproc
-                            self.process_args(directive.strip()[1:].split(","))
-                            for function in functions:
-                                self.load_function_from_file(module, function.strip())
-                            self.nan = nan
-                            self.forward_declare = fd
-                            self.no_preproc = np
-                    else:
-                        module, functions = line[4:].strip().split("use")
-                        module = module.strip()
-                        if '/' in module or '\\' in module:
-                            pass
-                        else:
-                            if "::" in module:
-                                args = module.split("::")
-                                file = args.pop()
-                                folder = "/".join(args)
-                                module = f"{PackageManager.user_packages_path}/{folder}/{file}.pryzma"
-                            else:
-                                module = f"{PackageManager.user_packages_path}/{module}/{module}.pryzma"
-                        functions = functions.strip().split(",")
-                        for function in functions:
-                            self.load_function_from_file(module, function.strip())
                 elif line.startswith("if"):
                     else_ = False
                     if "else" in line:
@@ -705,6 +639,72 @@ class PryzmaInterpreter:
                     var2 = line[1].strip()
                     var2 = self.evaluate_expression(var2)
                     self.variables[var] -= var2
+                elif line.startswith("use"):
+                    if "with" in line:
+                        line, directive = line.split("with")
+                        if directive.strip() != "":
+                            nan = self.nan
+                            fd = self.forward_declare
+                            np = self.no_preproc
+                            self.process_args(directive.strip()[1:].split(","))
+                            alias = None
+                            if " as " in line:
+                                file_path, alias = line[3:].strip().split(" as ")
+                            else:
+                                file_path = line[3:].strip()
+                            self.import_functions(file_path, alias)
+                            self.nan = nan
+                            self.forward_declare = fd
+                            self.no_preproc = np
+                    else:
+                        file_path = line[3:].strip()
+                        alias = None
+                        if " as " in line:
+                            file_path, alias = file_path.split(" as ")
+                        self.import_functions(file_path, alias)
+                elif line.startswith("from"):
+                    if "with" in line:
+                        line, directive = line.split("with")
+                        line = line.strip()
+                        module, functions = line[4:].strip().split("use")
+                        module = module.strip()
+                        if '/' in module or '\\' in module:
+                            pass
+                        else:
+                            if "::" in module:
+                                args = module.split("::")
+                                file = args.pop()
+                                folder = "/".join(args)
+                                module = f"{PackageManager.user_packages_path}/{folder}/{file}.pryzma"
+                            else:
+                                module = f"{PackageManager.user_packages_path}/{module}/{module}.pryzma"
+                        functions = functions.strip().split(",")
+                        if directive.strip() != "":
+                            nan = self.nan
+                            fd = self.forward_declare
+                            np = self.no_preproc
+                            self.process_args(directive.strip()[1:].split(","))
+                            for function in functions:
+                                self.load_function_from_file(module, function.strip())
+                            self.nan = nan
+                            self.forward_declare = fd
+                            self.no_preproc = np
+                    else:
+                        module, functions = line[4:].strip().split("use")
+                        module = module.strip()
+                        if '/' in module or '\\' in module:
+                            pass
+                        else:
+                            if "::" in module:
+                                args = module.split("::")
+                                file = args.pop()
+                                folder = "/".join(args)
+                                module = f"{PackageManager.user_packages_path}/{folder}/{file}.pryzma"
+                            else:
+                                module = f"{PackageManager.user_packages_path}/{module}/{module}.pryzma"
+                        functions = functions.strip().split(",")
+                        for function in functions:
+                            self.load_function_from_file(module, function.strip())
                 elif line.startswith("copy"):
                     list1, list2 = line[4:].split(",")
                     list1 = list1.strip()
