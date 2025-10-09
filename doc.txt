@@ -376,7 +376,7 @@ you should pass the function names without the prefix and the #nan pragma
 
 you can also import modules with aliases like this:
 
-use matn as m
+use math as m
 
 it would import all functions from the module math with the prefix 'm' instead of 'math', aliases work with the 'with' keyword.
 
