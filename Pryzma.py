@@ -587,7 +587,7 @@ class PryzmaInterpreter:
                     else:
                         variable = line.strip()
                         self.variables[line] = ""
-                elif line.startswith("loc"):
+                elif line.startswith("loc "):
                     var, value = line[3:].split("=", 1)
                     var = var.strip()
                     value = self.evaluate_expression(value.strip())
@@ -812,14 +812,14 @@ class PryzmaInterpreter:
                     self.ret_val = self.evaluate_expression(line[6:].strip())
                 elif line == "break":
                     self.break_stack[-1] = True
-                elif line.startswith("asm{") and line.endswith("}"):
+                elif (line.startswith("asm{") or line.startswith("asm {")) and line.endswith("}"):
                     try:
                         asm_emulator = X86Emulator()
                     except ImportError:
                         asm_emulator = None
                         print("ERROR: x86 emulation not available (probably missing keystone/unicorn)")
                         return
-                    line = line[4:-1]
+                    line = line[4:-1] if line.startswith("asm{") else line[5:-1]
                     code = line.split("|")
                     code = list(filter(None, code))
                     for line in range(len(code)):
@@ -838,8 +838,8 @@ class PryzmaInterpreter:
                             print(f"ASM emulation error: {e}")
                     else:
                         print("ASM emulation not available")
-                elif line.startswith("py{") and line.endswith("}"):
-                    line = line[3:-1]
+                elif (line.startswith("py{") or line.startswith("py {")) and line.endswith("}"):
+                    line = line[3:-1] if line.starstwith("py{") else line[4:-1]
                     code = line.split("|")
                     code = list(filter(None, code))
                     for line in range(len(code)):
@@ -3253,7 +3253,6 @@ class X86Emulator:
         resolved_asm, reg_map, mem_map = self._resolve_variables(asm, variables)
         code = self._assemble(resolved_asm)
         return self._emulate(code, reg_map, mem_map)
-
 
 class PackageManager:
     user_packages_path = os.path.dirname(os.path.abspath(__file__)) + "/packages/"
