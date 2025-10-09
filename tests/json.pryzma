@@ -1,0 +1,15 @@
+data = {"name": "John", "age": 30, "city": "New York"}
+json_string = json_dump(data)
+print json_string, "\n"
+data2 = json_load(json_string)
+print data2.name, "\n"
+print data2.age, "\n"
+print data2.city, "\n"
+
+json_dump(data, "tests/test.json")
+data3 = json_load("tests/test.json")
+print data3.name, "\n"
+print data3.age, "\n"
+print data3.city, "\n"
+
+remove_path("tests/test.json")

@@ -721,7 +721,7 @@ class PryzmaInterpreter:
                     list_name = list_name.strip()
                     index = index.strip()
                     self.pop_from_list(list_name, index)
-                elif line.startswith("remove"):
+                elif line.startswith("remove") and not line.startswith("remove_path("):
                     list_name, var = line[6:].split(",")
                     list_name = list_name.strip()
                     var = var.strip()
@@ -877,8 +877,8 @@ class PryzmaInterpreter:
                     src = args[0].strip()
                     dst = args[1].strip()
                     os.rename(src, dst)
-                elif line.startswith("remove(") and line.endswith(")"):
-                    path = self.evaluate_expression(line[7:-1])
+                elif line.startswith("remove_path(") and line.endswith(")"):
+                    path = self.evaluate_expression(line[12:-1])
                     os.remove(path)
                 elif line.startswith("symlink(") and line.endswith(")"):
                     args = self.evaluate_expression(line[8:-1]).split(',')
@@ -941,6 +941,15 @@ class PryzmaInterpreter:
                     if f1 not in self.functions or f2 not in self.functions:
                         self.error(44, "Name of a non existing function pased as an argument to patch()")
                     self.functions[f1] = self.functions[f2]
+                elif line.startswith("json_dump(") and line.endswith(")"):
+                    args = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', line[10:-1])
+                    obj = self.evaluate_expression(args[0])
+                    if len(args) > 1:
+                        file_path = self.evaluate_expression(args[1])
+                        with open(file_path, "w") as f:
+                            json.dump(obj, f)
+                    else:
+                        print(json.dumps(obj))
                 elif line.startswith("using"):
                     parts = line.split()
                     is_global = len(parts) > 2 and parts[1] == "global"
@@ -1231,6 +1240,22 @@ class PryzmaInterpreter:
             if new == "\\n":
                new = "\n"
             return value.replace(old, new)
+        elif expression.startswith("json_dump(") and expression.endswith(")"):
+            args = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', expression[10:-1])
+            obj = self.evaluate_expression(args[0])
+            if len(args) > 1:
+                file_path = self.evaluate_expression(args[1])
+                with open(file_path, "w") as f:
+                    json.dump(obj, f)
+            else:
+                return json.dumps(obj)
+        elif expression.startswith("json_load(") and expression.endswith(")"):
+            arg = self.evaluate_expression(expression[10:-1])
+            if os.path.exists(arg):
+                with open(arg, "r") as f:
+                    return json.load(f)
+            else:
+                return json.loads(arg)
         elif any(expression.startswith(name) for name in self.structs.keys()) and "{" in expression and "}" in expression:
             name, args = expression[:-1].split("{", 1)
             rep_in_args = 0

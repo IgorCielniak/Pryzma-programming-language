@@ -899,7 +899,7 @@ move(src, dst)
 
 rename(src, dst)
 
-remove(path)
+remove_path(path)
 
 symlink(src, dst)
 
@@ -1268,6 +1268,33 @@ print b
 the output would be 1
 
 with some pyeval() and pyexec() magick you can pass the main programs stack to the isolate and other interesting stuff, but i will leave it to be explored by you ;)
+
+json:
+
+pryzma has basic json functions json_dump() and json_load(), here is a simple example that should explain everythink:
+
+data = {"name": "John", "age": 30, "city": "New York"}
+
+json_string = json_dump(data)
+print json_string, "\n"
+
+data2 = json_load(json_string)
+print data2.name, "\n"
+print data2.age, "\n"
+print data2.city, "\n"
+
+json_dump(data, "tests/test.json")
+
+data3 = json_load("tests/test.json")
+
+print data3.name, "\n"
+print data3.age, "\n"
+print data3.city, "\n"
+
+remove_path("tests/test.json")
+
+pryzma provides only those two functions becouse you can treat the dictionary as
+a struct and use the functions for interacting with structs to interact with the object that it returns
 
 Running Programs:
 
