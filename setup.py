@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='pryzma',
-    version='5.7',
+    version='6.0',
     py_modules=['Pryzma'],
     entry_points={
         'console_scripts': [
