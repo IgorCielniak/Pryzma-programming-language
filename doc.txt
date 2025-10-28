@@ -786,6 +786,8 @@ esc - allow for escaping of locals (explained bellow)
 desc - don't allow for escaping of locals (explained below)
 fail - explained below
 df - explained below
+gc - enable garbage colection (default)
+ngc - disable garbage colection
 
 #nan, #an, #fd, #np, #rs and #rds are also supported
 
