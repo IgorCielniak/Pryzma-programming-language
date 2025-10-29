@@ -3043,7 +3043,7 @@ limitations under the License.
         if hasattr(module, function_name):
             func = getattr(module, function_name)
             if callable(func):
-                return func(self, *args)
+                return func(*args)
             else:
                 print(f"'{function_name}' is not callable in '{file_name}'.")
         else:
