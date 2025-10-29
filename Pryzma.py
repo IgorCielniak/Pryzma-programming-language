@@ -59,6 +59,7 @@ class PryzmaInterpreter:
         self.escape = False
         self.in_loop = False
         self.debug = False
+        self.gc = True
 
     def interpret_file(self, file_path, *args):
         self.file_path = file_path.strip('"')
@@ -197,13 +198,14 @@ class PryzmaInterpreter:
             if handled:
                 return
 
-            to_remove = []
-            for var in self.locals:
-                self.locals[var] = [item for item in self.locals[var] if self.ref_to_local_exists(var) or item[2] in self.function_ids]
-                if not self.locals[var]:
-                    to_remove.append(var)
-            for var in to_remove:
-                self.locals.pop(var)
+            if self.gc == True:
+                to_remove = []
+                for var in self.locals:
+                    self.locals[var] = [item for item in self.locals[var] if self.ref_to_local_exists(var) or item[2] in self.function_ids]
+                    if not self.locals[var]:
+                        to_remove.append(var)
+                for var in to_remove:
+                    self.locals.pop(var)
 
             try:
                 if line.startswith("print"):
@@ -505,13 +507,14 @@ class PryzmaInterpreter:
                                     for line in deferred:
                                         self.interpret(line.strip())
                             if self.escape == False:
-                                to_remove = []
-                                for var in self.locals:
-                                    self.locals[var] = [item for item in self.locals[var] if item[2] != func_id]
-                                    if not self.locals[var]:
-                                        to_remove.append(var)
-                                for var in to_remove:
-                                    self.locals.pop(var)
+                                if self.gc == True:
+                                    to_remove = []
+                                    for var in self.locals:
+                                        self.locals[var] = [item for item in self.locals[var] if item[2] != func_id]
+                                        if not self.locals[var]:
+                                            to_remove.append(var)
+                                    for var in to_remove:
+                                        self.locals.pop(var)
                     else:
                         self.error(3, f"Error at line {self.current_line}: Function '{function_name}' is not defined.")
                     self.in_func.pop()
@@ -1058,6 +1061,10 @@ class PryzmaInterpreter:
             self.escape = True
         if "desc" in args:
             self.escape = False
+        if "gc" in args:
+            self.gc = True
+        if "ngc" in args:
+            self.gc = False
 
 
     def struct_split(self, s):
@@ -2479,13 +2486,14 @@ limitations under the License.
                         deferred = deferred.split("|")
                         for line in deferred:
                             self.interpret(line.strip())
-                to_remove = []
-                for var in self.locals:
-                    self.locals[var] = [item for item in self.locals[var] if item[2] != func_id]
-                    if not self.locals[var]:
-                        to_remove.append(var)
-                for var in to_remove:
-                    self.locals.pop(var)
+                if self.gc == True:
+                    to_remove = []
+                    for var in self.locals:
+                        self.locals[var] = [item for item in self.locals[var] if item[2] != func_id]
+                        if not self.locals[var]:
+                            to_remove.append(var)
+                    for var in to_remove:
+                        self.locals.pop(var)
         else:
             self.error(3, f"Error at line {self.current_line}: Function '{function_name}' is not defined.")
         self.in_func.pop()
