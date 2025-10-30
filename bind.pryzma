@@ -1,0 +1,3 @@
+/test{
+    return call("t.py","test",args[0],args[1])
+}

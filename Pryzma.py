@@ -473,6 +473,7 @@ class PryzmaInterpreter:
                 elif line.startswith("@"):
                     self.in_func.append(True)
                     function_name = line[1:].strip()
+                    self.variables["args"] = []
                     if "(" in function_name:
                         function_name, arg = function_name.split("(")
                         self.current_func_name = function_name
