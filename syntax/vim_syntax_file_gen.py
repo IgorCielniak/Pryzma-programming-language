@@ -88,6 +88,7 @@ final.append("break")
 final.append("catch")
 final.append("stop")
 final.append("list")
+final.append("with")
 
 template = rf"""
 " Check if syntax is already loaded

@@ -3611,7 +3611,7 @@ def main():
 
     history = []
     running_from_file = False
-    version = 6.0
+    version = 6.1
 
     if len(sys.argv) >= 2:
         file_path = sys.argv[1]
