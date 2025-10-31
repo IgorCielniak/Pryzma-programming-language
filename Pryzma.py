@@ -556,7 +556,24 @@ class PryzmaInterpreter:
                     catch_block = None
                     if "catch(" in line:
                         line, catch_block = line.split("catch(", 1)
-                    instructions = line[4:-1].split("|")
+                    rep_in_line = 0
+                    char_ = 0
+                    in_str = False
+                    chars = list(line[4:-1])
+                    for char in chars:
+                        if char == "{":
+                            rep_in_line += 1
+                        elif char == "}":
+                            rep_in_line -= 1
+                        elif not in_str and char == '"':
+                            in_str = True
+                        elif in_str and char == '"':
+                            in_str = False
+                        elif (rep_in_line == 0 and char == "|" and not in_str):
+                            chars[char_] = "@!#$%^"
+                        char_ += 1
+                    body = "".join(chars)
+                    instructions = body.split("@!#$%^")
                     error = 0
                     for instruction in instructions:
                         self.interpret(instruction.strip())
