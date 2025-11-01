@@ -89,6 +89,7 @@ final.append("catch")
 final.append("stop")
 final.append("list")
 final.append("with")
+final.append("as")
 
 template = rf"""
 " Check if syntax is already loaded
