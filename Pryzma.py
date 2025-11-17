@@ -3426,7 +3426,7 @@ class X86Emulator:
 
 class PackageManager:
     user_packages_path = os.path.dirname(os.path.abspath(__file__)) + "/packages/"
-    package_api_url = "http://igorcielniak.pythonanywhere.com/api/download"
+    package_api_url = "http://pryzma.dzordz.pl/download"
 
     def remove_package(self, package_name):
         package_dir = os.path.join(self.user_packages_path, package_name)
@@ -3545,7 +3545,7 @@ Available commands:
         print(help_text)
 
 
-    def fetch_and_print_packages(self, url = "http://igorcielniak.pythonanywhere.com/api/fetch"):
+    def fetch_and_print_packages(self, url = "http://pryzma.dzordz.pl/api/fetch"):
         import_err = False
         try:
             import requests
@@ -3730,7 +3730,7 @@ def main():
 
     history = []
     running_from_file = False
-    version = 6.0
+    version = 6.1
 
     if len(sys.argv) >= 2:
         file_path = sys.argv[1]
