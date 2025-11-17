@@ -475,9 +475,10 @@ class PryzmaInterpreter:
                     function_name = line[1:].strip()
                     self.variables["args"] = []
                     if "(" in function_name:
-                        function_name, arg = function_name.split("(")
+                        function_name, arg = function_name.split("(", 1)
                         self.current_func_name = function_name
-                        arg = arg.strip(")")
+                        if arg.endswith(")"):
+                            arg = arg[:-1]
                         if arg:
                             arg = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', arg)
                             for args in range(len(arg)):
@@ -649,8 +650,7 @@ class PryzmaInterpreter:
                         return
                     var = line[0].strip()
                     var2 = line[1].strip()
-                    var2 = self.evaluate_expression(var2)
-                    self.variables[var] += var2
+                    self.increment_var(var, var2)
                 elif "-=" in line:
                     line = line.split("-=")
                     if len(line) != 2:
@@ -658,8 +658,7 @@ class PryzmaInterpreter:
                         return
                     var = line[0].strip()
                     var2 = line[1].strip()
-                    var2 = self.evaluate_expression(var2)
-                    self.variables[var] -= var2
+                    self.decrement_var(var, var2)
                 elif line.startswith("use"):
                     if "with" in line:
                         line, directive = line.split("with")
@@ -1000,6 +999,11 @@ class PryzmaInterpreter:
                     else:
                         for key, value in instance.items():
                             self.variables[key] = value
+                elif ".@" in line:
+                    var_name, func = line.split(".@", 1)
+                    func_name, args = func[:-1].split("(", 1)
+                    code = f"@{func_name}({var_name}, {args})"
+                    self.interpret(code)
                 elif line == "stop":
                     sys.exit()
                 else:
@@ -1775,6 +1779,121 @@ class PryzmaInterpreter:
             else:
                 self.variables[var_name] = value
 
+    def increment_var(self, var_name, expression):
+        value = self.evaluate_expression(expression)
+        if isinstance(value, dict):
+            value = value.copy()
+
+        if var_name.startswith("*"):
+            ref = self.evaluate_expression(var_name[1:].strip())
+            if isinstance(ref, Reference):
+                var_name = ref.var_name
+
+        if "." in var_name:
+            tokens = re.findall(r"[a-zA-Z_]\w*|\[\s*[^\]]+\s*\]", var_name)
+
+            if not tokens:
+                raise ValueError("Invalid struct field")
+
+            var_name = tokens[0]
+            if var_name not in self.variables:
+                raise KeyError(f"Variable '{var_name}' not found")
+
+            target = self.variables[var_name]
+            if isinstance(target, Reference):
+                target = self.variables[target.var_name]
+
+            for token in tokens[1:-1]:
+                if token.startswith('['):
+                    index_expr = token[1:-1].strip()
+                    index = self.evaluate_expression(index_expr)
+                    target = target[index]
+                else:
+                    target = target[token]
+
+            last_token = tokens[-1]
+            if last_token.startswith('['):
+                index_expr = last_token[1:-1].strip()
+                index = self.evaluate_expression(index_expr)
+                target[index] += value
+            else:
+                target[last_token] += value
+        else:
+            if '[' in var_name:
+                base_var = var_name.split('[')[0]
+
+                indexes = re.findall(r'\[(.*?)\]', var_name)
+
+                target = self.variables[base_var]
+                if isinstance(target, Reference):
+                    target = self.variables[target.var_name]
+
+                for index_expr in indexes[:-1]:
+                    index = self.evaluate_expression(index_expr)
+                    target = target[index]
+
+                last_index = self.evaluate_expression(indexes[-1])
+                target[last_index] += value
+            else:
+                self.variables[var_name] += value
+
+    def decrement_var(self, var_name, expression):
+        value = self.evaluate_expression(expression)
+        if isinstance(value, dict):
+            value = value.copy()
+
+        if var_name.startswith("*"):
+            ref = self.evaluate_expression(var_name[1:].strip())
+            if isinstance(ref, Reference):
+                var_name = ref.var_name
+
+        if "." in var_name:
+            tokens = re.findall(r"[a-zA-Z_]\w*|\[\s*[^\]]+\s*\]", var_name)
+
+            if not tokens:
+                raise ValueError("Invalid struct field")
+
+            var_name = tokens[0]
+            if var_name not in self.variables:
+                raise KeyError(f"Variable '{var_name}' not found")
+
+            target = self.variables[var_name]
+            if isinstance(target, Reference):
+                target = self.variables[target.var_name]
+
+            for token in tokens[1:-1]:
+                if token.startswith('['):
+                    index_expr = token[1:-1].strip()
+                    index = self.evaluate_expression(index_expr)
+                    target = target[index]
+                else:
+                    target = target[token]
+
+            last_token = tokens[-1]
+            if last_token.startswith('['):
+                index_expr = last_token[1:-1].strip()
+                index = self.evaluate_expression(index_expr)
+                target[index] -= value
+            else:
+                target[last_token] -= value
+        else:
+            if '[' in var_name:
+                base_var = var_name.split('[')[0]
+
+                indexes = re.findall(r'\[(.*?)\]', var_name)
+
+                target = self.variables[base_var]
+                if isinstance(target, Reference):
+                    target = self.variables[target.var_name]
+
+                for index_expr in indexes[:-1]:
+                    index = self.evaluate_expression(index_expr)
+                    target = target[index]
+
+                last_index = self.evaluate_expression(indexes[-1])
+                target[last_index] -= value
+            else:
+                self.variables[var_name] -= value
 
     def print_value(self, value):
         char_ = 0
