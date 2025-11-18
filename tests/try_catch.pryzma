@@ -1,5 +1,5 @@
 try{
     print a
-}catch(32){
+}catch(28){
     print "yesu"
 }
