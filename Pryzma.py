@@ -1458,7 +1458,7 @@ class PryzmaInterpreter:
             return self.variables[dict_name][key]
         elif expression.startswith("@"):
             self.ret_val = None
-            self.debug_interpret_func(expression) if self.debug == True else self.interpret(expression)
+            debuger.debug_interpret_func(expression) if self.debug == True else self.interpret(expression)
             return self.ret_val
         elif expression.startswith("char(") and expression.endswith(")"):
             return chr(self.evaluate_expression(expression[5:-1]))
@@ -2097,6 +2097,165 @@ limitations under the License.
         else:
             self.error(33, f"Error at line {self.current_line}: List '{list_name}' does not exist.")
 
+    def parse_call_statement(self, statement):
+        if statement.startswith("(") and statement.endswith(")"):
+            statement = statement[1:-1]
+            parts = [part.strip() for part in re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', statement)]
+
+            if len(parts) < 2:
+                self.error(34, "Invalid number of arguments for call")
+
+            file_name = self.evaluate_expression(parts[0])
+            function_name = self.evaluate_expression(parts[1])
+
+            args = parts[2:]
+
+            for i, arg in enumerate(args):
+                args[i] = self.evaluate_expression(arg)
+
+            return file_name, function_name, args
+        else:
+            self.error(35, "Invalid call statement format. Expected format: call(file_name, function_name, arg1, arg2, ...)")
+
+    def call_function_from_file(self, file_name, function_name, args):
+        if not os.path.isfile(file_name):
+            print(f"File '{file_name}' does not exist.")
+            return
+
+        spec = importlib.util.spec_from_file_location("module.name", file_name)
+
+        if spec is None:
+            print(f"Could not load the module from '{file_name}'.")
+            return
+
+        module = importlib.util.module_from_spec(spec)
+
+        try:
+            spec.loader.exec_module(module)
+        except Exception as e:
+            print(f"Error loading module '{file_name}': {e}")
+            return
+
+        if hasattr(module, function_name):
+            func = getattr(module, function_name)
+            if callable(func):
+                return func(*args)
+            else:
+                print(f"'{function_name}' is not callable in '{file_name}'.")
+        else:
+            print(f"Function '{function_name}' is not defined in '{file_name}'.")
+
+    def ccall_function_from_file(self, file_name, function_name, args):
+        if not os.path.isfile(file_name):
+            print(f"File '{file_name}' does not exist.")
+            return
+
+        c_functions = ctypes.CDLL(file_name)
+
+        try:
+            c_func = getattr(c_functions, function_name)
+        except AttributeError:
+            print(f"Function '{function_name}' not found in '{file_name}'.")
+            return
+
+        return c_func(*args)
+
+    def print_help(self):
+        print("""
+commands:
+    file - run a program from a file
+    cls - clear the functions, variables and structs dictionaries
+    clear - clear the console
+    debug - start debugging mode
+    history - show the commands history
+    history <number> - execute the command from the history by number
+    history clear - clear the commands history
+    history <term> - search the commands history for a term
+    info - show the interpreter version along with some other information
+    ppm - lunch the Pryzma Package Manager shell
+    ppm <command> - execute a Pryzma package manager command
+    errors - show the error codes table
+    exit - exit the interpreter
+    reboot - reboot the interpreter
+    v - show all variables
+    f - show all functions
+    s - show all structs
+    l - show all locals
+    help - show this help
+    license - show the license
+""")
+
+
+    def display_system_info():
+        current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+        os_info = platform.system() + " " + platform.release()
+
+        cpu_info = platform.processor()
+
+        machine_arch = platform.machine()
+        if machine_arch in ['x86_64', 'AMD64']:
+            arch_info = '64-bit'
+        elif machine_arch in ['i386', 'i686']:
+            arch_info = '32-bit'
+        else:
+            arch_info = 'Unknown'
+
+        print(f"Pryzma {version}")
+        print(f"Current Date and Time: {current_time}")
+        print(f"Operating System: {os_info} {arch_info} ({machine_arch})")
+        print(f"Processor: {cpu_info}")
+
+
+    def print_error_codes_table():
+        print(
+"""
+1 - Error keyword deleted
+2 - Invalid function definition
+3 - Function not defined
+4 - Too much arguments for +=
+5 - Too much arguments for -=
+6 - Invalid number of arguments for write()
+7 - Invalid move() instruction syntax
+8 - Invalid index for move() instruction
+9 - Invalid swap() instruction syntax
+10 - Invalid index for swap() instruction
+11 - Invalid statement
+12 - Unknown error
+13 - Module does not have a 'start' function.
+14 - Error loading module
+15 - Error writing to file
+16 - Invalid number of arguments for replace function
+17 - Invalid number of arguments for resplit function
+18 - The first argument of resplit() must be a string (regex pattern).
+19 - The second argument of resplit() must be a string.
+20 - Invalid regex pattern.
+21 - in() function error
+22 - Invalid number of arguments for splitby function
+23 - File not found
+24 - Invalid number of arguments for index function
+25 - Value not found in list for index function
+26 - Variable is not a list for index function
+27 - List not defined for all()
+28 - Unknown variable or expression
+29 - Invalid range expression for loop
+30 - File not found for use function
+31 - List does not exist for append function
+32 - Index out of range for pop function
+33 - List does not exist for pop function
+34 - Invalid number of arguments for call.
+35 - Invalid call statement format.
+36 - Variable not found in current scope.
+37 - Referenced variable no longer exists.
+38 - Referenced function no longer exists.
+39 - Overlaping names of struct instance and one of variables used for destructuring.
+40 - Name of a non existing function pased as an argument to patch()
+41 - List not found for the foreach function.
+42 - 'using' statement can only be used with struct instances.
+"""
+)
+
+class Debuger:
     def debug_interpret_while(self, line):
         line = line[5:]
         condition, action = line.strip()[1:-1].split("){", 1)
@@ -2115,29 +2274,29 @@ limitations under the License.
         for char in if_body:
             if_body2 += char
         actions = if_body2.split("%$#@!")
-        self.break_stack.append(False)
-        self.in_loop = True
-        lines_map_snapshot = self.lines_map.copy()
-        while self.evaluate_expression(condition):
+        interpreter.break_stack.append(False)
+        interpreter.in_loop = True
+        lines_map_snapshot = interpreter.lines_map.copy()
+        while interpreter.evaluate_expression(condition):
             command = 0
             continue_ = False
-            self.lines_map = lines_map_snapshot.copy()
+            interpreter.lines_map = lines_map_snapshot.copy()
             for action in actions:
                 line = action.strip()
                 if not line:
                     continue
-                for stmt, num in self.lines_map:
+                for stmt, num in interpreter.lines_map:
                     if line.startswith(stmt.strip()) and stmt.strip() != "":
-                        self.lines_map.remove((stmt, num))
-                        self.current_line = num + 1
+                        interpreter.lines_map.remove((stmt, num))
+                        interpreter.current_line = num + 1
                         break
 
                 if continue_ == False:
                     command_ = input("Debugger> ").strip()
                     if command_ == 's':
                         self.debug_log_message("User chose to step.")
-                        self.debug_log_message(f"Executing line {self.current_line}: {line}")
-                        print(f"Debug: Executing line {self.current_line}: {line}")
+                        self.debug_log_message(f"Executing line {interpreter.current_line}: {line}")
+                        print(f"Debug: Executing line {interpreter.current_line}: {line}")
                         if line.startswith("if"):
                             self.debug_interpret_if(line)
                         elif line.startswith("@"):
@@ -2149,7 +2308,7 @@ limitations under the License.
                         elif line.startswith("foreach"):
                             self.debug_interpret_foreach(line)
                         else:
-                            self.interpret(line)
+                            interpreter.interpret(line)
                         command += 1
                     elif command_ == 'c':
                         self.debug_log_message("User chose to continue.")
@@ -2174,19 +2333,19 @@ limitations under the License.
                         print("Breakpoints:", sorted(self.breakpoints))
                         self.debug_log_message(f"Breakpoints listed: {sorted(self.breakpoints)}")
                     elif command_ == 'v':
-                        print("Variables:", self.variables)
-                        self.debug_log_message(f"Variables: {self.variables}")
+                        print("Variables:", interpreter.variables)
+                        self.debug_log_message(f"Variables: {interpreter.variables}")
                     elif command_ == 'f':
-                        print("Functions:", self.functions)
-                        self.debug_log_message(f"Functions: {self.functions}")
+                        print("Functions:", interpreter.functions)
+                        self.debug_log_message(f"Functions: {interpreter.functions}")
                     elif command_ == 'st':
-                        print("Structs:", self.structs)
-                        self.debug_log_message(f"Structs: {self.structs}")
+                        print("Structs:", interpreter.structs)
+                        self.debug_log_message(f"Structs: {interpreter.structs}")
                     elif command_.startswith("!!"):
                         exec(command_[2:])
                         self.debug_log_message(f"Run code: {command_[2:]}")
                     elif command_.startswith("!"):
-                        self.interpret(command_[1:])
+                        interpreter.interpret(command_[1:])
                         print("\n")
                         self.debug_log_message(f"Run code: {command_[1:]}")
                     elif command_ == 'log':
@@ -2207,15 +2366,15 @@ limitations under the License.
                     else:
                         print("Unknown command. Type 'help' for a list of commands.")
                 else:
-                    self.debug_log_message(f"Executing line {self.current_line}: {line}")
-                    self.interpret(line)
+                    self.debug_log_message(f"Executing line {interpreter.current_line}: {line}")
+                    interpreter.interpret(line)
                     command += 1
-                if self.break_stack[-1]:
+                if interpreter.break_stack[-1]:
                     break
-            if self.break_stack[-1]:
+            if interpreter.break_stack[-1]:
                 break
-        self.break_stack.pop()
-        self.in_loop = False
+        interpreter.break_stack.pop()
+        interpreter.in_loop = False
 
     def debug_interpret_foreach(self, line):
         line = line[7:].strip()
@@ -2242,32 +2401,32 @@ limitations under the License.
         for action in actions:
             action = action.strip()
 
-        self.break_stack.append(False)
-        self.in_loop = True
+        interpreter.break_stack.append(False)
+        interpreter.in_loop = True
 
-        if list_name in self.variables:
-            lines_map_snapshot = self.lines_map.copy()
-            for val in self.variables[list_name]:
-                self.variables[loop_var] = val
+        if list_name in interpreter.variables:
+            lines_map_snapshot = interpreter.lines_map.copy()
+            for val in interpreter.variables[list_name]:
+                interpreter.variables[loop_var] = val
                 command = 0
                 continue_ = False
-                self.lines_map = lines_map_snapshot.copy()
+                interpreter.lines_map = lines_map_snapshot.copy()
                 for action in actions:
                     line = action.strip()
                     if not line:
                         continue
-                    for stmt, num in self.lines_map:
+                    for stmt, num in interpreter.lines_map:
                         if line.startswith(stmt.strip()) and stmt.strip() != "":
-                            self.lines_map.remove((stmt, num))
-                            self.current_line = num + 1
+                            interpreter.lines_map.remove((stmt, num))
+                            interpreter.current_line = num + 1
                             break
 
                     if continue_ == False:
                         command_ = input("Debugger> ").strip()
                         if command_ == 's':
                             self.debug_log_message("User chose to step.")
-                            self.debug_log_message(f"Executing line {self.current_line}: {line}")
-                            print(f"Debug: Executing line {self.current_line}: {line}")
+                            self.debug_log_message(f"Executing line {interpreter.current_line}: {line}")
+                            print(f"Debug: Executing line {interpreter.current_line}: {line}")
                             if line.startswith("if"):
                                 self.debug_interpret_if(line)
                             elif line.startswith("@"):
@@ -2279,7 +2438,7 @@ limitations under the License.
                             elif line.startswith("foreach"):
                                 self.debug_interpret_foreach(line)
                             else:
-                                self.interpret(line)
+                                interpreter.interpret(line)
                             command += 1
                         elif command_ == 'c':
                             self.debug_log_message("User chose to continue.")
@@ -2304,19 +2463,19 @@ limitations under the License.
                             print("Breakpoints:", sorted(self.breakpoints))
                             self.debug_log_message(f"Breakpoints listed: {sorted(self.breakpoints)}")
                         elif command_ == 'v':
-                            print("Variables:", self.variables)
-                            self.debug_log_message(f"Variables: {self.variables}")
+                            print("Variables:", interpreter.variables)
+                            self.debug_log_message(f"Variables: {interpreter.variables}")
                         elif command_ == 'f':
-                            print("Functions:", self.functions)
-                            self.debug_log_message(f"Functions: {self.functions}")
+                            print("Functions:", interpreter.functions)
+                            self.debug_log_message(f"Functions: {interpreter.functions}")
                         elif command_ == 'st':
-                            print("Structs:", self.structs)
-                            self.debug_log_message(f"Structs: {self.structs}")
+                            print("Structs:", interpreter.structs)
+                            self.debug_log_message(f"Structs: {interpreter.structs}")
                         elif command_.startswith("!!"):
                             exec(command_[2:])
                             self.debug_log_message(f"Run code: {command_[2:]}")
                         elif command_.startswith("!"):
-                            self.interpret(command_[1:])
+                            interpreter.interpret(command_[1:])
                             print("\n")
                             self.debug_log_message(f"Run code: {command_[1:]}")
                         elif command_ == 'log':
@@ -2337,18 +2496,18 @@ limitations under the License.
                         else:
                             print("Unknown command. Type 'help' for a list of commands.")
                     else:
-                        self.debug_log_message(f"Executing line {self.current_line}: {line}")
-                        self.interpret(line)
+                        self.debug_log_message(f"Executing line {interpreter.current_line}: {line}")
+                        interpreter.interpret(line)
                         command += 1
-                    if self.break_stack[-1]:
+                    if interpreter.break_stack[-1]:
                         break
-                if self.break_stack[-1]:
+                if interpreter.break_stack[-1]:
                     break
         else:
-            self.error(41, f"Error at line {self.current_line}: List not found for the foreach function.")
+            interpreter.error(41, f"Error at line {interpreter.current_line}: List not found for the foreach function.")
 
-        self.break_stack.pop()
-        self.in_loop = False
+        interpreter.break_stack.pop()
+        interpreter.in_loop = False
 
 
     def debug_interpret_for(self, line):
@@ -2377,35 +2536,35 @@ limitations under the License.
             action = action.strip()
 
         start, end = range_expr.split(":")
-        start_val = self.evaluate_expression(start.strip())
-        end_val = self.evaluate_expression(end.strip())
+        start_val = interpreter.evaluate_expression(start.strip())
+        end_val = interpreter.evaluate_expression(end.strip())
 
-        self.break_stack.append(False)
-        self.in_loop = True
+        interpreter.break_stack.append(False)
+        interpreter.in_loop = True
 
         if isinstance(start_val, int) and isinstance(end_val, int):
-            lines_map_snapshot = self.lines_map.copy()
+            lines_map_snapshot = interpreter.lines_map.copy()
             for val in range(start_val, end_val):
-                self.variables[loop_var] = val
+                interpreter.variables[loop_var] = val
                 command = 0
                 continue_ = False
-                self.lines_map = lines_map_snapshot.copy()
+                interpreter.lines_map = lines_map_snapshot.copy()
                 for action in actions:
                     line = action.strip()
                     if not line:
                         continue
-                    for stmt, num in self.lines_map:
+                    for stmt, num in interpreter.lines_map:
                         if line.startswith(stmt.strip()) and stmt.strip() != "":
-                            self.lines_map.remove((stmt, num))
-                            self.current_line = num + 1
+                            interpreter.lines_map.remove((stmt, num))
+                            interpreter.current_line = num + 1
                             break
 
                     if continue_ == False:
                         command_ = input("Debugger> ").strip()
                         if command_ == 's':
                             self.debug_log_message("User chose to step.")
-                            self.debug_log_message(f"Executing line {self.current_line}: {line}")
-                            print(f"Debug: Executing line {self.current_line}: {line}")
+                            self.debug_log_message(f"Executing line {interpreter.current_line}: {line}")
+                            print(f"Debug: Executing line {interpreter.current_line}: {line}")
                             if line.startswith("if"):
                                 self.debug_interpret_if(line)
                             elif line.startswith("@"):
@@ -2417,7 +2576,7 @@ limitations under the License.
                             elif line.startswith("foreach"):
                                 self.debug_interpret_foreach(line)
                             else:
-                                self.interpret(line)
+                                interpreter.interpret(line)
                             command += 1
                         elif command_ == 'c':
                             self.debug_log_message("User chose to continue.")
@@ -2442,19 +2601,19 @@ limitations under the License.
                             print("Breakpoints:", sorted(self.breakpoints))
                             self.debug_log_message(f"Breakpoints listed: {sorted(self.breakpoints)}")
                         elif command_ == 'v':
-                            print("Variables:", self.variables)
-                            self.debug_log_message(f"Variables: {self.variables}")
+                            print("Variables:", interpreter.variables)
+                            self.debug_log_message(f"Variables: {interpreter.variables}")
                         elif command_ == 'f':
-                            print("Functions:", self.functions)
-                            self.debug_log_message(f"Functions: {self.functions}")
+                            print("Functions:", interpreter.functions)
+                            self.debug_log_message(f"Functions: {interpreter.functions}")
                         elif command_ == 'st':
-                            print("Structs:", self.structs)
-                            self.debug_log_message(f"Structs: {self.structs}")
+                            print("Structs:", interpreter.structs)
+                            self.debug_log_message(f"Structs: {interpreter.structs}")
                         elif command_.startswith("!!"):
                             exec(command_[2:])
                             self.debug_log_message(f"Run code: {command_[2:]}")
                         elif command_.startswith("!"):
-                            self.interpret(command_[1:])
+                            interpreter.interpret(command_[1:])
                             print("\n")
                             self.debug_log_message(f"Run code: {command_[1:]}")
                         elif command_ == 'log':
@@ -2475,55 +2634,55 @@ limitations under the License.
                         else:
                             print("Unknown command. Type 'help' for a list of commands.")
                     else:
-                        self.debug_log_message(f"Executing line {self.current_line}: {line}")
-                        self.interpret(line)
+                        self.debug_log_message(f"Executing line {interpreter.current_line}: {line}")
+                        interpreter.interpret(line)
                         command += 1
-                    if self.break_stack[-1]:
+                    if interpreter.break_stack[-1]:
                         break
-                if self.break_stack[-1]:
+                if interpreter.break_stack[-1]:
                     break
         else:
-            self.error(29, f"Error at line {self.current_line}: Invalid range expression for loop.")
+            interpreter.error(29, f"Error at line {interpreter.current_line}: Invalid range expression for loop.")
 
-        self.break_stack.pop()
-        self.in_loop = False
+        interpreter.break_stack.pop()
+        interpreter.in_loop = False
 
 
     def debug_interpret_func(self, line):
-        self.in_func.append(True)
+        interpreter.in_func.append(True)
         function_name = line[1:].strip()
         if "(" in function_name:
             function_name, arg = function_name.split("(")
-            self.current_func_name = function_name
+            interpreter.current_func_name = function_name
             arg = arg.strip(")")
             if arg:
                 arg = re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', arg)
                 for args in range(len(arg)):
-                    arg[args] = self.evaluate_expression(arg[args].strip())
-                self.variables["args"] = arg
-        self.function_tracker.append(function_name)
-        self.function_ids.append(random.randint(0,100000000))
-        if function_name in self.functions:
+                    arg[args] = interpreter.evaluate_expression(arg[args].strip())
+                interpreter.variables["args"] = arg
+        interpreter.function_tracker.append(function_name)
+        interpreter.function_ids.append(random.randint(0,100000000))
+        if function_name in interpreter.functions:
             try:
                 command = 0
                 continue_ = False
-                self.functions[function_name] = list(filter(None, self.functions[function_name]))
-                while command < len(self.functions[function_name]):
-                    line = self.functions[function_name][command].strip()
+                interpreter.functions[function_name] = list(filter(None, interpreter.functions[function_name]))
+                while command < len(interpreter.functions[function_name]):
+                    line = interpreter.functions[function_name][command].strip()
                     if not line:
                         continue
-                    for stmt, num in self.lines_map:
+                    for stmt, num in interpreter.lines_map:
                         if line.startswith(stmt.strip()) and stmt.strip() != "":
-                            self.lines_map.remove((stmt, num))
-                            self.current_line = num + 1
+                            interpreter.lines_map.remove((stmt, num))
+                            interpreter.current_line = num + 1
                             break
 
                     if continue_ == False:
                         command_ = input("Debugger> ").strip()
                         if command_ == 's':
                             self.debug_log_message("User chose to step.")
-                            self.debug_log_message(f"Executing line {self.current_line}: {line}")
-                            print(f"Debug: Executing line {self.current_line}: {line}")
+                            self.debug_log_message(f"Executing line {interpreter.current_line}: {line}")
+                            print(f"Debug: Executing line {interpreter.current_line}: {line}")
                             if line.startswith("if"):
                                 self.debug_interpret_if(line)
                             elif line.startswith("@"):
@@ -2535,7 +2694,7 @@ limitations under the License.
                             elif line.startswith("foreach"):
                                 self.debug_interpret_foreach(line)
                             else:
-                                self.interpret(line)
+                                interpreter.interpret(line)
                             command += 1
                         elif command_ == 'c':
                             self.debug_log_message("User chose to continue.")
@@ -2560,19 +2719,19 @@ limitations under the License.
                             print("Breakpoints:", sorted(self.breakpoints))
                             self.debug_log_message(f"Breakpoints listed: {sorted(self.breakpoints)}")
                         elif command_ == 'v':
-                            print("Variables:", self.variables)
-                            self.debug_log_message(f"Variables: {self.variables}")
+                            print("Variables:", interpreter.variables)
+                            self.debug_log_message(f"Variables: {interpreter.variables}")
                         elif command_ == 'f':
-                            print("Functions:", self.functions)
-                            self.debug_log_message(f"Functions: {self.functions}")
+                            print("Functions:", interpreter.functions)
+                            self.debug_log_message(f"Functions: {interpreter.functions}")
                         elif command_ == 'st':
-                            print("Structs:", self.structs)
-                            self.debug_log_message(f"Structs: {self.structs}")
+                            print("Structs:", interpreter.structs)
+                            self.debug_log_message(f"Structs: {interpreter.structs}")
                         elif command_.startswith("!!"):
                             exec(command_[2:])
                             self.debug_log_message(f"Run code: {command_[2:]}")
                         elif command_.startswith("!"):
-                            self.interpret(command_[1:])
+                            interpreter.interpret(command_[1:])
                             print("\n")
                             self.debug_log_message(f"Run code: {command_[1:]}")
                         elif command_ == 'log':
@@ -2593,30 +2752,30 @@ limitations under the License.
                         else:
                             print("Unknown command. Type 'help' for a list of commands.")
                     else:
-                        self.debug_log_message(f"Executing line {self.current_line}: {line}")
-                        self.interpret(line)
+                        self.debug_log_message(f"Executing line {interpreter.current_line}: {line}")
+                        interpreter.interpret(line)
                         command += 1
             finally:
-                func_id = self.function_ids[-1]
-                if (function_name, func_id) in self.defer_stack:
-                    while self.defer_stack[(function_name, func_id)]:
-                        deferred = self.defer_stack[(function_name, func_id)].pop()
+                func_id = interpreter.function_ids[-1]
+                if (function_name, func_id) in interpreter.defer_stack:
+                    while interpreter.defer_stack[(function_name, func_id)]:
+                        deferred = interpreter.defer_stack[(function_name, func_id)].pop()
                         deferred = deferred.split("|")
                         for line in deferred:
-                            self.interpret(line.strip())
-                if self.gc == True:
+                            interpreter.interpret(line.strip())
+                if interpreter.gc == True:
                     to_remove = []
-                    for var in self.locals:
-                        self.locals[var] = [item for item in self.locals[var] if item[2] != func_id]
-                        if not self.locals[var]:
+                    for var in interpreter.locals:
+                        interpreter.locals[var] = [item for item in interpreter.locals[var] if item[2] != func_id]
+                        if not interpreter.locals[var]:
                             to_remove.append(var)
                     for var in to_remove:
-                        self.locals.pop(var)
+                        interpreter.locals.pop(var)
         else:
-            self.error(3, f"Error at line {self.current_line}: Function '{function_name}' is not defined.")
-        self.in_func.pop()
-        self.function_tracker.pop()
-        self.function_ids.pop()
+            interpreter.error(3, f"Error at line {interpreter.current_line}: Function '{function_name}' is not defined.")
+        interpreter.in_func.pop()
+        interpreter.function_tracker.pop()
+        interpreter.function_ids.pop()
 
     def debug_interpret_if(self, line):
         else_ = False
@@ -2680,7 +2839,7 @@ limitations under the License.
             for char in if_body:
                 if_body2 += char
             actions = if_body2.split("#!%&*")
-            if self.evaluate_expression(condition.strip()):
+            if interpreter.evaluate_expression(condition.strip()):
                 handeled = True
                 command = 0
                 continue_ = False
@@ -2689,18 +2848,18 @@ limitations under the License.
                     line = action.strip()
                     if not line:
                         continue
-                    for stmt, num in self.lines_map:
+                    for stmt, num in interpreter.lines_map:
                         if line.startswith(stmt.strip()) and stmt.strip() != "":
-                            self.lines_map.remove((stmt, num))
-                            self.current_line = num + 1
+                            interpreter.lines_map.remove((stmt, num))
+                            interpreter.current_line = num + 1
                             break
 
                     if continue_ == False:
                         command_ = input("Debugger> ").strip()
                         if command_ == 's':
                             self.debug_log_message("User chose to step.")
-                            self.debug_log_message(f"Executing line {self.current_line}: {line}")
-                            print(f"Debug: Executing line {self.current_line}: {line}")
+                            self.debug_log_message(f"Executing line {interpreter.current_line}: {line}")
+                            print(f"Debug: Executing line {interpreter.current_line}: {line}")
                             if line.startswith("@"):
                                 self.debug_interpret_func(line)
                             elif line.startswith("if"):
@@ -2712,7 +2871,7 @@ limitations under the License.
                             elif line.startswith("foreach"):
                                 self.debug_interpret_foreach(line)
                             else:
-                                self.interpret(line)
+                                interpreter.interpret(line)
                             command += 1
                         elif command_ == 'c':
                             self.debug_log_message("User chose to continue.")
@@ -2737,19 +2896,19 @@ limitations under the License.
                             print("Breakpoints:", sorted(self.breakpoints))
                             self.debug_log_message(f"Breakpoints listed: {sorted(self.breakpoints)}")
                         elif command_ == 'v':
-                            print("Variables:", self.variables)
-                            self.debug_log_message(f"Variables: {self.variables}")
+                            print("Variables:", interpreter.variables)
+                            self.debug_log_message(f"Variables: {interpreter.variables}")
                         elif command_ == 'f':
-                            print("Functions:", self.functions)
-                            self.debug_log_message(f"Functions: {self.functions}")
+                            print("Functions:", interpreter.functions)
+                            self.debug_log_message(f"Functions: {interpreter.functions}")
                         elif command_ == 'st':
-                            print("Structs:", self.structs)
-                            self.debug_log_message(f"Structs: {self.structs}")
+                            print("Structs:", interpreter.structs)
+                            self.debug_log_message(f"Structs: {interpreter.structs}")
                         elif command_.startswith("!!"):
                             exec(command_[2:])
                             self.debug_log_message(f"Run code: {command_[2:]}")
                         elif command_.startswith("!"):
-                            self.interpret(command_[1:])
+                            interpreter.interpret(command_[1:])
                             print("\n")
                             self.debug_log_message(f"Run code: {command_[1:]}")
                         elif command_ == 'log':
@@ -2770,8 +2929,8 @@ limitations under the License.
                         else:
                             print("Unknown command. Type 'help' for a list of commands.")
                     else:
-                        self.debug_log_message(f"Executing line {self.current_line}: {action}")
-                        self.interpret(action)
+                        self.debug_log_message(f"Executing line {interpreter.current_line}: {action}")
+                        interpreter.interpret(action)
                         command += 1
 
         if handeled == False and else_:
@@ -2797,18 +2956,18 @@ limitations under the License.
                 line = action.strip()
                 if not line:
                     continue
-                for stmt, num in self.lines_map:
+                for stmt, num in interpreter.lines_map:
                     if line.startswith(stmt.strip()) and stmt.strip() != "":
-                        self.lines_map.remove((stmt, num))
-                        self.current_line = num + 1
+                        interpreter.lines_map.remove((stmt, num))
+                        interpreter.current_line = num + 1
                         break
 
                 if continue_ == False:
                     command_ = input("Debugger> ").strip()
                     if command_ == 's':
                         self.debug_log_message("User chose to step.")
-                        self.debug_log_message(f"Executing line {self.current_line}: {line}")
-                        print(f"Debug: Executing line {self.current_line}: {line}")
+                        self.debug_log_message(f"Executing line {interpreter.current_line}: {line}")
+                        print(f"Debug: Executing line {interpreter.current_line}: {line}")
                         if line.startswith("@"):
                             self.debug_interpret_func(line)
                         elif line.startswith("if"):
@@ -2820,7 +2979,7 @@ limitations under the License.
                         elif line.startswith("foreach"):
                             self.debug_interpret_foreach(line)
                         else:
-                            self.interpret(line)
+                            interpreter.interpret(line)
                         command += 1
                     elif command_ == 'c':
                         self.debug_log_message("User chose to continue.")
@@ -2845,19 +3004,19 @@ limitations under the License.
                         print("Breakpoints:", sorted(self.breakpoints))
                         self.debug_log_message(f"Breakpoints listed: {sorted(self.breakpoints)}")
                     elif command_ == 'v':
-                        print("Variables:", self.variables)
-                        self.debug_log_message(f"Variables: {self.variables}")
+                        print("Variables:", interpreter.variables)
+                        self.debug_log_message(f"Variables: {interpreter.variables}")
                     elif command_ == 'f':
-                        print("Functions:", self.functions)
-                        self.debug_log_message(f"Functions: {self.functions}")
+                        print("Functions:", interpreter.functions)
+                        self.debug_log_message(f"Functions: {interpreter.functions}")
                     elif command_ == 'st':
-                        print("Structs:", self.structs)
-                        self.debug_log_message(f"Structs: {self.structs}")
+                        print("Structs:", interpreter.structs)
+                        self.debug_log_message(f"Structs: {interpreter.structs}")
                     elif command_.startswith("!!"):
                         exec(command_[2:])
                         self.debug_log_message(f"Run code: {command_[2:]}")
                     elif command_.startswith("!"):
-                        self.interpret(command_[1:])
+                        interpreter.interpret(command_[1:])
                         print("\n")
                         self.debug_log_message(f"Run code: {command_[1:]}")
                     elif command_ == 'log':
@@ -2878,8 +3037,8 @@ limitations under the License.
                     else:
                         print("Unknown command. Type 'help' for a list of commands.")
                 else:
-                    self.debug_log_message(f"Executing line {self.current_line}: {action}")
-                    self.interpret(action)
+                    self.debug_log_message(f"Executing line {interpreter.current_line}: {action}")
+                    interpreter.interpret(action)
                     command += 1
 
     def debug_print_help(self):
@@ -2896,8 +3055,8 @@ limitations under the License.
         current_line = 0
         self.breakpoints = set()
         self.log_file = None
-        self.variables["argv"] = arguments
-        self.variables["__file__"] = os.path.abspath(file_path)
+        interpreter.variables["argv"] = arguments
+        interpreter.variables["__file__"] = os.path.abspath(file_path)
 
         if file_path.startswith('"') and file_path.endswith('"'):
             file_path = file_path[1:-1]
@@ -2908,13 +3067,13 @@ limitations under the License.
             print(f"File '{file_path}' not found.")
             exit()
 
-        lines = self.preprocess(program)
-        self.current_line = 0
+        lines = interpreter.preprocess(program)
+        interpreter.current_line = 0
         for i in range(0, len(lines)):
             if lines[i].startswith("#replace"):
                 a, b = lines[i][8:].split("->")
-                a = str(self.evaluate_expression(a.strip()))
-                b = str(self.evaluate_expression(b.strip()))
+                a = str(interpreter.evaluate_expression(a.strip()))
+                b = str(interpreter.evaluate_expression(b.strip()))
                 for i, line in enumerate(lines):
                     lines[i] = re.sub(a, b, line)
 
@@ -2965,19 +3124,19 @@ limitations under the License.
                 print("Breakpoints:", sorted(self.breakpoints))
                 self.debug_log_message(f"Breakpoints listed: {sorted(self.breakpoints)}")
             elif command == 'v':
-                print("Variables:", self.variables)
-                self.debug_log_message(f"Variables: {self.variables}")
+                print("Variables:", interpreter.variables)
+                self.debug_log_message(f"Variables: {interpreter.variables}")
             elif command == 'f':
-                print("Functions:", self.functions)
-                self.debug_log_message(f"Functions: {self.functions}")
+                print("Functions:", interpreter.functions)
+                self.debug_log_message(f"Functions: {interpreter.functions}")
             elif command == 'st':
-                print("Structs:", self.structs)
-                self.debug_log_message(f"Structs: {self.structs}")
+                print("Structs:", interpreter.structs)
+                self.debug_log_message(f"Structs: {interpreter.structs}")
             elif command.startswith("!!"):
                 exec(command[2:])
                 self.debug_log_message(f"Run code: {command[2:]}")
             elif command.startswith("!"):
-                self.interpret(command[1:])
+                interpreter.interpret(command[1:])
                 print("\n")
                 self.debug_log_message(f"Run code: {command[1:]}")
             elif command == 'log':
@@ -3001,19 +3160,19 @@ limitations under the License.
         while current_line < len(lines):
             line = lines[current_line].strip()
 
-            for stmt, num in self.lines_map:
+            for stmt, num in interpreter.lines_map:
                 if line.startswith(stmt.strip()) and stmt.strip() != "":
-                    self.lines_map.remove((stmt, num))
-                    self.current_line = num + 1
+                    interpreter.lines_map.remove((stmt, num))
+                    interpreter.current_line = num + 1
                     break
 
-            if self.current_line in self.breakpoints:
-                print(f"Breakpoint hit at line {self.current_line}.")
-                self.debug_log_message(f"Breakpoint hit at line {self.current_line}.")
+            if interpreter.current_line in self.breakpoints:
+                print(f"Breakpoint hit at line {interpreter.current_line}.")
+                self.debug_log_message(f"Breakpoint hit at line {interpreter.current_line}.")
             
             if not line.startswith("//") and line != "":
-                print(f"Debug: Executing line {self.current_line}: {line}")
-                self.debug_log_message(f"Executing line {self.current_line}: {line}")
+                print(f"Debug: Executing line {interpreter.current_line}: {line}")
+                self.debug_log_message(f"Executing line {interpreter.current_line}: {line}")
 
                 try:
                     if line.startswith("@"):
@@ -3027,9 +3186,9 @@ limitations under the License.
                     elif line.startswith("foreach"):
                         self.debug_interpret_foreach(line)
                     else:
-                        self.interpret(line)
+                        interpreter.interpret(line)
                 except Exception as e:
-                    error_message = f"Error executing line {self.current_line}: {e}"
+                    error_message = f"Error executing line {interpreter.current_line}: {e}"
                     print(error_message)
                     self.debug_log_message(error_message)
             current_line += 1
@@ -3042,11 +3201,11 @@ limitations under the License.
                     break
                 elif command == 'c':
                     self.debug_log_message("User chose to continue to the next breakpoint.")
-                    while current_line < len(lines) and self.current_line not in self.breakpoints:
+                    while current_line < len(lines) and interpreter.current_line not in self.breakpoints:
                         line = lines[current_line].strip()
                         if not line.startswith("//") and line != "":
-                            print(f"Debug: Executing line {self.current_line}: {line}")
-                            self.debug_log_message(f"Executing line {self.current_line}: {line}")
+                            print(f"Debug: Executing line {interpreter.current_line}: {line}")
+                            self.debug_log_message(f"Executing line {interpreter.current_line}: {line}")
 
                             try:
                                 if line.startswith("@"):
@@ -3060,9 +3219,9 @@ limitations under the License.
                                 elif line.startswith("foreach"):
                                     self.debug_interpret_foreach(line)
                                 else:
-                                    self.interpret(line)
+                                    interpreter.interpret(line)
                             except Exception as e:
-                                error_message = f"Error executing line {self.current_line}: {e}"
+                                error_message = f"Error executing line {interpreter.current_line}: {e}"
                                 print(error_message)
                                 self.debug_log_message(error_message)
                         current_line += 1
@@ -3087,19 +3246,19 @@ limitations under the License.
                     print("Breakpoints:", sorted(self.breakpoints))
                     self.debug_log_message(f"Breakpoints listed: {sorted(self.breakpoints)}")
                 elif command == 'v':
-                    print("Variables:", self.variables)
-                    self.debug_log_message(f"Variables: {self.variables}")
+                    print("Variables:", interpreter.variables)
+                    self.debug_log_message(f"Variables: {interpreter.variables}")
                 elif command == 'f':
-                    print("Functions:", self.functions)
-                    self.debug_log_message(f"Functions: {self.functions}")
+                    print("Functions:", interpreter.functions)
+                    self.debug_log_message(f"Functions: {interpreter.functions}")
                 elif command == 'st':
-                    print("Structs:", self.structs)
-                    self.debug_log_message(f"Structs: {self.structs}")
+                    print("Structs:", interpreter.structs)
+                    self.debug_log_message(f"Structs: {interpreter.structs}")
                 elif command.startswith("!!"):
                     exec(command[2:])
                     self.debug_log_message(f"Run code: {command[2:]}")
                 elif command.startswith("!"):
-                    self.interpret(command[1:])
+                    interpreter.interpret(command[1:])
                     print("\n")
                     self.debug_log_message(f"Run code: {command[1:]}")
                 elif command == 'log':
@@ -3122,168 +3281,9 @@ limitations under the License.
         if running_from_file == True:
             cvf = input("Clear variables, functions and staructs dictionaries? (y/n): ")
             if cvf.lower() == "y":
-                self.variables.clear()
-                self.functions.clear()
-                self.structs.clear()
-
-
-    def parse_call_statement(self, statement):
-        if statement.startswith("(") and statement.endswith(")"):
-            statement = statement[1:-1]
-            parts = [part.strip() for part in re.split(r',\s*(?=(?:[^"]*"[^"]*")*[^"]*$)', statement)]
-            
-            if len(parts) < 2:
-                self.error(34, "Invalid number of arguments for call")
-            
-            file_name = self.evaluate_expression(parts[0])
-            function_name = self.evaluate_expression(parts[1])
-            
-            args = parts[2:]
-            
-            for i, arg in enumerate(args):
-                args[i] = self.evaluate_expression(arg)
-            
-            return file_name, function_name, args
-        else:
-            self.error(35, "Invalid call statement format. Expected format: call(file_name, function_name, arg1, arg2, ...)")
-
-    def call_function_from_file(self, file_name, function_name, args):
-        if not os.path.isfile(file_name):
-            print(f"File '{file_name}' does not exist.")
-            return
-
-        spec = importlib.util.spec_from_file_location("module.name", file_name)
-        
-        if spec is None:
-            print(f"Could not load the module from '{file_name}'.")
-            return
-        
-        module = importlib.util.module_from_spec(spec)
-        
-        try:
-            spec.loader.exec_module(module)
-        except Exception as e:
-            print(f"Error loading module '{file_name}': {e}")
-            return
-
-        if hasattr(module, function_name):
-            func = getattr(module, function_name)
-            if callable(func):
-                return func(*args)
-            else:
-                print(f"'{function_name}' is not callable in '{file_name}'.")
-        else:
-            print(f"Function '{function_name}' is not defined in '{file_name}'.")
-
-    def ccall_function_from_file(self, file_name, function_name, args):
-        if not os.path.isfile(file_name):
-            print(f"File '{file_name}' does not exist.")
-            return
-
-        c_functions = ctypes.CDLL(file_name)
-
-        try:
-            c_func = getattr(c_functions, function_name)
-        except AttributeError:
-            print(f"Function '{function_name}' not found in '{file_name}'.")
-            return
-
-        return c_func(*args)
-
-    def print_help(self):
-        print("""
-commands:
-    file - run a program from a file
-    cls - clear the functions, variables and structs dictionaries
-    clear - clear the console
-    debug - start debugging mode
-    history - show the commands history
-    history <number> - execute the command from the history by number
-    history clear - clear the commands history
-    history <term> - search the commands history for a term
-    info - show the interpreter version along with some other information
-    ppm - lunch the Pryzma Package Manager shell
-    ppm <command> - execute a Pryzma package manager command
-    errors - show the error codes table
-    exit - exit the interpreter
-    reboot - reboot the interpreter
-    v - show all variables
-    f - show all functions
-    s - show all structs
-    l - show all locals
-    help - show this help
-    license - show the license
-""")
-
-
-    def display_system_info():
-        current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        
-        os_info = platform.system() + " " + platform.release()
-        
-        cpu_info = platform.processor()
-        
-        machine_arch = platform.machine()
-        if machine_arch in ['x86_64', 'AMD64']:
-            arch_info = '64-bit'
-        elif machine_arch in ['i386', 'i686']:
-            arch_info = '32-bit'
-        else:
-            arch_info = 'Unknown'
-
-        print(f"Pryzma {version}")
-        print(f"Current Date and Time: {current_time}")
-        print(f"Operating System: {os_info} {arch_info} ({machine_arch})")
-        print(f"Processor: {cpu_info}")
-
-        
-    def print_error_codes_table():
-        print(
-"""
-1 - Error keyword deleted 
-2 - Invalid function definition 
-3 - Function not defined
-4 - Too much arguments for +=
-5 - Too much arguments for -=
-6 - Invalid number of arguments for write()
-7 - Invalid move() instruction syntax
-8 - Invalid index for move() instruction
-9 - Invalid swap() instruction syntax
-10 - Invalid index for swap() instruction
-11 - Invalid statement
-12 - Unknown error
-13 - Module does not have a 'start' function.
-14 - Error loading module
-15 - Error writing to file
-16 - Invalid number of arguments for replace function
-17 - Invalid number of arguments for resplit function
-18 - The first argument of resplit() must be a string (regex pattern).
-19 - The second argument of resplit() must be a string.
-20 - Invalid regex pattern.
-21 - in() function error
-22 - Invalid number of arguments for splitby function
-23 - File not found
-24 - Invalid number of arguments for index function
-25 - Value not found in list for index function
-26 - Variable is not a list for index function
-27 - List not defined for all()
-28 - Unknown variable or expression
-29 - Invalid range expression for loop
-30 - File not found for use function
-31 - List does not exist for append function
-32 - Index out of range for pop function
-33 - List does not exist for pop function
-34 - Invalid number of arguments for call.
-35 - Invalid call statement format.
-36 - Variable not found in current scope.
-37 - Referenced variable no longer exists.
-38 - Referenced function no longer exists.
-39 - Overlaping names of struct instance and one of variables used for destructuring.
-40 - Name of a non existing function pased as an argument to patch()
-41 - List not found for the foreach function.
-42 - 'using' statement can only be used with struct instances.
-""" 
-)
+                interpreter.variables.clear()
+                interpreter.functions.clear()
+                interpreter.structs.clear()
 
 
 class X86Emulator:
@@ -3698,12 +3698,13 @@ def shell(code):
 
 def main():
     global interpreter
+    global debuger
     global history
     global running_from_file
-    global debug
     global version
 
     interpreter = PryzmaInterpreter()
+    debuger = Debuger()
 
     history = []
     running_from_file = False
@@ -3736,7 +3737,7 @@ flags:
                 if arg == "-d":
                     arguments.remove(arg)
                     interpreter.debug = True
-                    interpreter.debug_interpreter(file_path, running_from_file, arguments)
+                    debuger.debug_interpreter(file_path, running_from_file, arguments)
                 if arg == "-p":
                     interpreter.preprocess_only = True
                 if arg == "-np":
