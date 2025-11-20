@@ -631,6 +631,24 @@ there also is ccall() that allows you to call c functions the same way, you just
 
 sum = ccall("./so.so", "add", 2, 2)
 
+extern:
+
+extern "libc.so.6" malloc
+extern "libc.so.6" free
+
+or
+
+extern "libc.so.6" {
+    malloc
+    free
+}
+
+than you can call them like any other function
+
+ptr = @malloc(1)
+
+@free(ptr)
+
 Time:
 
 you can do some time operations like that:

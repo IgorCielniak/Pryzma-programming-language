@@ -21,6 +21,60 @@ class FuncReference:
     def __init__(self, func_name):
         self.func_name = func_name
 
+class ExternFunction:
+    def __init__(self, func):
+        self.func = func
+
+    def invoke(self, args):
+        prepared = []
+        for arg in args:
+            prepared.append(self._prepare_arg(arg))
+        return self.func(*prepared)
+
+    def _prepare_arg(self, arg):
+        if isinstance(arg, str):
+            return arg.encode('utf-8')
+        if isinstance(arg, bool):
+            return int(arg)
+        if isinstance(arg, bytearray):
+            return bytes(arg)
+        if isinstance(arg, memoryview):
+            return arg.tobytes()
+        if isinstance(arg, (list, tuple)):
+            return self._convert_sequence(list(arg))
+        return arg
+
+    def _convert_sequence(self, sequence):
+        if not sequence:
+            return sequence
+
+        if all(isinstance(item, bool) for item in sequence):
+            return [int(item) for item in sequence]
+
+        if all(isinstance(item, int) for item in sequence):
+            array_type = ctypes.c_longlong * len(sequence)
+            return array_type(*sequence)
+
+        if all(isinstance(item, float) for item in sequence):
+            array_type = ctypes.c_double * len(sequence)
+            return array_type(*sequence)
+
+        if all(isinstance(item, (bytes, bytearray, str, memoryview)) for item in sequence):
+            converted = []
+            for item in sequence:
+                if isinstance(item, str):
+                    converted.append(item.encode('utf-8'))
+                elif isinstance(item, bytearray):
+                    converted.append(bytes(item))
+                elif isinstance(item, memoryview):
+                    converted.append(item.tobytes())
+                else:
+                    converted.append(item)
+            array_type = ctypes.c_char_p * len(converted)
+            return array_type(*converted)
+
+        return [self._prepare_arg(item) for item in sequence]
+
 class eval_dict(UserDict):
     def __getitem__(self, key):
         value = super().__getitem__(key)
@@ -486,8 +540,22 @@ class PryzmaInterpreter:
                             self.variables["args"] = arg
                     self.function_tracker.append(function_name)
                     self.function_ids.append(random.randint(0,100000000))
-                    if function_name in self.variables and isinstance(self.variables[function_name], FuncReference):
-                        function_name = self.variables[function_name].func_name
+                    var_entry = self.variables.data.get(function_name)
+                    if isinstance(var_entry, FuncReference):
+                        function_name = var_entry.func_name
+                        var_entry = self.variables.data.get(function_name)
+
+                    if isinstance(var_entry, ExternFunction):
+                        try:
+                            result = var_entry.invoke(self.variables["args"])
+                            self.ret_val = result
+                        except Exception as e:
+                            self.error(12, f"Error while calling extern function '{function_name}': {e}")
+                        finally:
+                            self.in_func.pop()
+                            self.function_tracker.pop()
+                            self.function_ids.pop()
+                        return
                     if function_name not in self.functions:
                         self.error(38, f"Error at line {self.current_line}: Referenced function '{function_name}' no longer exists")
                         return
@@ -1004,6 +1072,27 @@ class PryzmaInterpreter:
                     func_name, args = func[:-1].split("(", 1)
                     code = f"@{func_name}({var_name}, {args})"
                     self.interpret(code)
+                elif line.startswith("extern"):
+                    file_name, func_name = line[6:].strip().split(" ", 1)
+                    file_name = file_name.strip('"')
+
+                    func_name = func_name.strip()
+
+                    if func_name.startswith("{") and func_name.endswith("}"):
+                        functions = re.split(r'[|,]', func_name[1:-1])
+                        functions = list(filter(None, functions))
+                        for i, func in enumerate(functions):
+                            functions[i] = functions[i].strip(",").strip()
+
+                    c_functions = ctypes.CDLL(file_name)
+
+                    for func in functions:
+                        try:
+                            c_func = getattr(c_functions, func)
+                        except AttributeError:
+                            print(f"Function '{func}' not found in '{file_name}'.")
+                            return
+                        self.variables[func] = ExternFunction(c_func)
                 elif line == "stop":
                     sys.exit()
                 else:
