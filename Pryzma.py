@@ -1078,6 +1078,8 @@ class PryzmaInterpreter:
 
                     func_name = func_name.strip()
 
+                    functions = [func_name]
+
                     if func_name.startswith("{") and func_name.endswith("}"):
                         functions = re.split(r'[|,]', func_name[1:-1])
                         functions = list(filter(None, functions))
