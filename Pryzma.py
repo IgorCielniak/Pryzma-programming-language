@@ -902,30 +902,124 @@ class PryzmaInterpreter:
                     self.break_stack[-1] = True
                 elif (line.startswith("asm{") or line.startswith("asm {")) and line.endswith("}"):
                     try:
-                        asm_emulator = X86Emulator()
+                        from keystone import Ks, KS_ARCH_X86, KS_MODE_64
+                        import ctypes, mmap
                     except ImportError:
-                        asm_emulator = None
-                        print("ERROR: x86 emulation not available (probably missing keystone/unicorn)")
+                        print("ERROR: missing keystone")
                         return
+
                     line = line[4:-1] if line.startswith("asm{") else line[5:-1]
-                    code = line.split("|")
-                    code = list(filter(None, code))
-                    for line in range(len(code)):
-                        code[line] = self.evaluate_expression(code[line].strip())
-                    code = "asm{\n"+"\n".join(code)+"\n}"
-                    asm_vars = {}
-                    for i in self.variables:
-                        if type(self.variables[i]) == int:
-                            asm_vars[i] = self.variables[i]
-                    if asm_emulator:
+                    code = list(filter(None, line.split("|")))
+                    for i in range(len(code)):
+                        code[i] = self.evaluate_expression(code[i].strip())
+
+                    if not code:
+                        print("No asm instructions found.")
+                        return
+
+                    var_mem = {}
+                    for name, value in self.variables.items():
+                        if isinstance(value, int):
+                            var_mem[name] = ctypes.c_int64(value)
+
+                    token_re = re.compile(r"\[|\]|,|0x[0-9A-Fa-f]+|[A-Za-z_][A-Za-z0-9_]*|[-+]?\d+|\S")
+
+                    def tokenize(line):
+                        return token_re.findall(line)
+
+                    ARITH_OPS = {"add", "sub", "imul", "and", "or", "xor"}
+
+                    def resolve_vars(lines, var_mem):
+                        out = []
+                        for ln in lines:
+                            stripped = ln.strip()
+                            if not stripped:
+                                continue
+
+                            toks = tokenize(stripped)
+
+                            mnemonic = toks[0].lower() if len(toks) > 0 else ""
+                            operands = [t for t in toks[1:] if t != ","]
+
+                            def addr_load(addr_hex, dst_reg):
+                                return [f"mov r11, {addr_hex}", f"mov {dst_reg}, qword ptr [r11]"]
+
+                            def addr_store(addr_hex, src_reg):
+                                return [f"mov r11, {addr_hex}", f"mov qword ptr [r11], {src_reg}"]
+
+                            if mnemonic == "mov" and len(operands) >= 2:
+                                op1, op2 = operands[0], operands[1]
+
+                                if op2 in var_mem and re.match(r"^[er]?[abcd]x$|^r[0-9a-z]+$", op1):
+                                    addr = hex(ctypes.addressof(var_mem[op2]))
+                                    out.extend(addr_load(addr, op1))
+                                    continue
+
+                                if op1 in var_mem:
+                                    addr = hex(ctypes.addressof(var_mem[op1]))
+                                    out.extend(addr_store(addr, op2))
+                                    continue
+
+                                out.append(stripped)
+                                continue
+
+                            if mnemonic in ARITH_OPS and len(operands) >= 2:
+                                dst, src = operands[0], operands[1]
+                                if src in var_mem:
+                                    addr = hex(ctypes.addressof(var_mem[src]))
+                                    out.append(f"mov r11, {addr}")
+                                    out.append(f"{mnemonic} {dst}, qword ptr [r11]")
+                                    continue
+                                out.append(stripped)
+                                continue
+
+                            out.append(stripped)
+
+                        return out
+
+                    resolved_body = resolve_vars(code, var_mem)
+
+                    asm_lines = []
+                    asm_lines.append("push r11")
+                    asm_lines.extend(resolved_body)
+                    asm_lines.append("pop r11")
+                    asm_lines.append("ret")
+
+                    asm_text = "\n".join(asm_lines)
+
+                    ks = Ks(KS_ARCH_X86, KS_MODE_64)
+                    try:
+                        machine_code, count = ks.asm(asm_text)
+                    except Exception as e:
+                        print("ASM ERROR:", e)
+                        return
+
+                    shellcode = bytes(machine_code)
+
+                    size = len(shellcode)
+                    if size == 0:
+                        print("No bytes assembled.")
+                        return
+
+                    exec_mem = mmap.mmap(-1, size, prot=mmap.PROT_READ | mmap.PROT_WRITE | mmap.PROT_EXEC)
+                    exec_mem.write(shellcode)
+                    exec_mem.seek(0)
+
+                    addr = ctypes.addressof(ctypes.c_char.from_buffer(exec_mem))
+                    FUNC = ctypes.CFUNCTYPE(None)
+                    func = FUNC(addr)
+
+                    try:
+                        func()
+                    except Exception as e:
+                        print("Runtime error while executing asm:", e)
+
+                    for name, ref in var_mem.items():
                         try:
-                            results = asm_emulator.run(code, asm_vars)
-                            for var, val in results.items():
-                                self.variables[var] = val
-                        except Exception as e:
-                            print(f"ASM emulation error: {e}")
-                    else:
-                        print("ASM emulation not available")
+                            self.variables[name] = ref.value
+                        except Exception:
+                            pass
+                    return
                 elif (line.startswith("py{") or line.startswith("py {")) and line.endswith("}"):
                     line = line[3:-1] if line.starstwith("py{") else line[4:-1]
                     code = line.split("|")
@@ -3376,122 +3470,6 @@ class Debuger:
                 interpreter.functions.clear()
                 interpreter.structs.clear()
 
-
-class X86Emulator:
-    def __init__(self):
-        from keystone import Ks, KS_ARCH_X86, KS_MODE_64
-        from unicorn import Uc, UC_ARCH_X86, UC_MODE_64, UcError
-        from unicorn.x86_const import (
-            UC_X86_REG_RAX,
-            UC_X86_REG_RBX,
-            UC_X86_REG_RCX,
-            UC_X86_REG_RDX,
-            UC_X86_REG_RSI,
-            UC_X86_REG_RDI,
-            UC_X86_REG_RSP,
-        )
-
-        self.Ks = Ks
-        self.KS_ARCH_X86 = KS_ARCH_X86
-        self.KS_MODE_64 = KS_MODE_64
-        self.Uc = Uc
-        self.UC_ARCH_X86 = UC_ARCH_X86
-        self.UC_MODE_64 = UC_MODE_64
-        self.UcError = UcError
-
-        self.UC_X86_REG_RAX = UC_X86_REG_RAX
-        self.UC_X86_REG_RBX = UC_X86_REG_RBX
-        self.UC_X86_REG_RCX = UC_X86_REG_RCX
-        self.UC_X86_REG_RDX = UC_X86_REG_RDX
-        self.UC_X86_REG_RSI = UC_X86_REG_RSI
-        self.UC_X86_REG_RDI = UC_X86_REG_RDI
-        self.UC_X86_REG_RSP = UC_X86_REG_RSP
-
-        self.BASE_ADDR = 0x1000000
-        self.MEM_SIZE = 2 * 1024 * 1024
-        self.STACK_ADDR = self.BASE_ADDR + self.MEM_SIZE - 0x1000
-
-        self.register_order = [
-            self.UC_X86_REG_RAX,
-            self.UC_X86_REG_RBX,
-            self.UC_X86_REG_RCX,
-            self.UC_X86_REG_RDX,
-            self.UC_X86_REG_RSI,
-            self.UC_X86_REG_RDI
-        ]
-
-    def _get_reg_name(self, uc_reg):
-        return {
-            self.UC_X86_REG_RAX: 'rax',
-            self.UC_X86_REG_RBX: 'rbx',
-            self.UC_X86_REG_RCX: 'rcx',
-            self.UC_X86_REG_RDX: 'rdx',
-            self.UC_X86_REG_RSI: 'rsi',
-            self.UC_X86_REG_RDI: 'rdi',
-        }.get(uc_reg, 'unknown')
-
-    def _parse_script(self, script: str, variables: dict):
-        asm_match = re.search(r'asm\s*{(.*?)}', script, re.DOTALL)
-        return asm_match.group(1).strip() if asm_match else ""
-
-    def _resolve_variables(self, asm: str, variables: dict):
-        reg_map = {}
-        mem_map = {}
-        resolved_asm = asm
-        mem_cursor = 0x1000
-
-        for i, (var, val) in enumerate(variables.items()):
-            if i < len(self.register_order):
-                reg = self.register_order[i]
-                reg_map[var] = (reg, val)
-                resolved_asm = re.sub(rf'\b{var}\b', self._get_reg_name(reg), resolved_asm)
-            else:
-                addr = self.BASE_ADDR + mem_cursor
-                mem_map[var] = (addr, val)
-                resolved_asm = re.sub(rf'\b{var}\b', f"[{hex(addr)}]", resolved_asm)
-                mem_cursor += 8
-
-        return resolved_asm, reg_map, mem_map
-
-    def _assemble(self, asm: str) -> bytes:
-        ks = self.Ks(self.KS_ARCH_X86, self.KS_MODE_64)
-        encoding, _ = ks.asm(asm)
-        return bytes(encoding)
-
-    def _emulate(self, code: bytes, reg_map: dict, mem_map: dict):
-        mu = self.Uc(self.UC_ARCH_X86, self.UC_MODE_64)
-        mu.mem_map(self.BASE_ADDR, self.MEM_SIZE)
-        mu.mem_write(self.BASE_ADDR, code)
-        mu.reg_write(self.UC_X86_REG_RSP, self.STACK_ADDR)
-
-        for reg, val in reg_map.values():
-            mu.reg_write(reg, val)
-
-        for addr, val in mem_map.values():
-            mu.mem_write(addr, val.to_bytes(8, 'little'))
-
-        try:
-            mu.emu_start(self.BASE_ADDR, self.BASE_ADDR + len(code))
-        except Exception as e:
-            print("Emulation error:", e)
-
-        results = {}
-        for name, (reg, _) in reg_map.items():
-            val = mu.reg_read(reg)
-            results[name] = val
-
-        for name, (addr, _) in mem_map.items():
-            val = int.from_bytes(mu.mem_read(addr, 8), 'little')
-            results[name] = val
-
-        return results
-
-    def run(self, script: str, variables: dict):
-        asm = self._parse_script(script, variables)
-        resolved_asm, reg_map, mem_map = self._resolve_variables(asm, variables)
-        code = self._assemble(resolved_asm)
-        return self._emulate(code, reg_map, mem_map)
-
 class PackageManager:
     user_packages_path = os.path.dirname(os.path.abspath(__file__)) + "/packages/"
     package_api_url = "http://pryzma.dzordz.pl/download"
@@ -3819,7 +3797,6 @@ flags:
     -np - no preprocessing
     -l '<pryzma code>' - execute a single line
     -fd - forward declare all functions
-    -s  - safe mode, disable a lot of potentialy dangerous keywords
     -pk - output a packed version of a given file to stdout (recomended ext is .prz)
     -upk - output an unpacked version of a given file to stdout
     -upi - unpack and interpret the given file (content of packed files is prefixed with prz so its automaticly recognized and this flag isn't needed most of the time)
@@ -3837,8 +3814,6 @@ flags:
                     interpret_line = True
                 if arg == "-fd":
                     interpreter.forward_declare = True
-                if arg == "-s":
-                    interpreter.deleted_keywords.extend(["call", "sys(", "mkdir", "makeidrs", "rmdir", "removedirs", "copy", "copyfile", "move", "rename", "remove", "symlink", "unlink", "file_read", "file_write", "load", "pyeval", "py{", "asm", "enablekeyword", "disablekeyword"])
                 if arg == "-pk":
                     sys.stdout.buffer.write(interpreter.pack(file_path))
                     sys.exit()
