@@ -649,6 +649,21 @@ ptr = @malloc(1)
 
 @free(ptr)
 
+pyextern:
+
+pyextern "./scripts/helpers.py" greet
+pyextern "./scripts/helpers.py" { repeat as re | Tools.triple as triple }
+
+pyextern works just like extern but for Python modules. Pass either a file path ending with .py or an importable module name.
+Entries can optionally specify an alias using "as". Nested attributes are supported, so you can bind Tools.triple while exposing
+it under a different name:
+
+pyextern "./scripts/helpers.py" { Tools.triple as triple }
+
+After binding, call the function the same way as any Pryzma function:
+
+value = @triple(4)
+
 Time:
 
 you can do some time operations like that:

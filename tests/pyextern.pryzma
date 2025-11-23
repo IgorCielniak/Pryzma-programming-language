@@ -1,0 +1,22 @@
+pyextern "./tests/pyextern_helper.py" greet
+pyextern "./tests/pyextern_helper.py" {
+    add
+    Tools.triple as triple
+}
+pyextern "./tests/pyextern_helper.py" repeat as say
+
+result = @greet("Pryzma")
+print result
+print "\n"
+
+sum = @add(2, 3)
+print sum
+print "\n"
+
+triple_value = @triple(4)
+print triple_value
+print "\n"
+
+text = @say("ha", 3, "-")
+print text
+print "\n"

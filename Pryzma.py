@@ -1,6 +1,7 @@
 import re
 import sys
 import os
+import importlib
 import importlib.util
 import time
 import datetime
@@ -74,6 +75,13 @@ class ExternFunction:
             return array_type(*converted)
 
         return [self._prepare_arg(item) for item in sequence]
+
+class PyExternFunction:
+    def __init__(self, func):
+        self.func = func
+
+    def invoke(self, args):
+        return self.func(*args)
 
 class eval_dict(UserDict):
     def __getitem__(self, key):
@@ -545,7 +553,7 @@ class PryzmaInterpreter:
                         function_name = var_entry.func_name
                         var_entry = self.variables.data.get(function_name)
 
-                    if isinstance(var_entry, ExternFunction):
+                    if isinstance(var_entry, (ExternFunction, PyExternFunction)):
                         try:
                             result = var_entry.invoke(self.variables["args"])
                             self.ret_val = result
@@ -1189,6 +1197,33 @@ class PryzmaInterpreter:
                             print(f"Function '{func}' not found in '{file_name}'.")
                             return
                         self.variables[func] = ExternFunction(c_func)
+                elif line.startswith("pyextern"):
+                    parts = line.split(None, 2)
+                    if len(parts) < 3:
+                        self.error(11, f"Invalid pyextern statement at line {self.current_line}: {line}")
+                        return
+
+                    module_ref = self.resolve_pyextern_module_reference(parts[1])
+                    module = self.load_pyextern_module(module_ref)
+
+                    if module is None:
+                        return
+
+                    function_specs = self.parse_pyextern_functions(parts[2])
+
+                    if not function_specs:
+                        self.error(11, f"No functions specified for pyextern at line {self.current_line}.")
+                        return
+
+                    for func_name, alias in function_specs:
+                        py_callable = self.resolve_pyextern_callable(module, func_name)
+                        if py_callable is None:
+                            print(f"Function '{func_name}' not found in '{module_ref}'.")
+                            continue
+                        if not callable(py_callable):
+                            print(f"Attribute '{func_name}' is not callable in '{module_ref}'.")
+                            continue
+                        self.variables[alias] = PyExternFunction(py_callable)
                 elif line == "stop":
                     sys.exit()
                 else:
@@ -2344,6 +2379,83 @@ limitations under the License.
             return
 
         return c_func(*args)
+
+    def resolve_pyextern_module_reference(self, module_expr):
+        module_expr = module_expr.strip()
+
+        if module_expr.startswith("\"") and module_expr.endswith("\""):
+            return module_expr[1:-1]
+
+        return self.evaluate_expression(module_expr)
+
+    def load_pyextern_module(self, module_ref):
+        try:
+            if module_ref.endswith(".py") or os.path.sep in module_ref:
+                base_file = self.variables.get("__file__", getattr(self, "file_path", os.getcwd()))
+                base_dir = os.path.dirname(base_file)
+
+                candidates = []
+
+                if os.path.isabs(module_ref):
+                    candidates.append(module_ref)
+                else:
+                    candidates.append(os.path.abspath(module_ref))
+                    candidates.append(os.path.abspath(os.path.join(base_dir, module_ref)))
+
+                module_path = next((path for path in candidates if os.path.isfile(path)), None)
+                if module_path is None:
+                    print(f"File '{module_ref}' does not exist.")
+                    return None
+
+                module_name = f"pryzma_pyextern_{abs(hash(module_path))}"
+                spec = importlib.util.spec_from_file_location(module_name, module_path)
+                if spec is None or spec.loader is None:
+                    print(f"Could not load the module from '{module_path}'.")
+                    return None
+
+                module = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(module)
+                return module
+
+            return importlib.import_module(module_ref)
+        except Exception as e:
+            print(f"Error loading python module '{module_ref}': {e}")
+            return None
+
+    def parse_pyextern_functions(self, functions_str):
+        functions_str = functions_str.strip()
+        if not functions_str:
+            return []
+        if functions_str.startswith("{") and functions_str.endswith("}"):
+            raw_entries = re.split(r'[|,]', functions_str[1:-1])
+        else:
+            raw_entries = [functions_str]
+
+        parsed = []
+        for entry in raw_entries:
+            entry = entry.strip()
+            if not entry:
+                continue
+
+            alias = None
+            if " as " in entry:
+                func_name, alias = entry.split(" as ", 1)
+                func_name = func_name.strip()
+                alias = alias.strip()
+            else:
+                func_name = entry
+
+            alias = alias or func_name.split(".")[-1]
+            parsed.append((func_name, alias))
+        return parsed
+
+    def resolve_pyextern_callable(self, module, func_path):
+        target = module
+        for attr in func_path.split('.'):
+            if not hasattr(target, attr):
+                return None
+            target = getattr(target, attr)
+        return target
 
     def print_help(self):
         print("""
