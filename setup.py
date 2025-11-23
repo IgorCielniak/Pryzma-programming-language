@@ -11,7 +11,6 @@ setup(
     },
     install_requires=[
         'keystone-engine',
-        'unicorn',
         'requests',
     ],
 )
