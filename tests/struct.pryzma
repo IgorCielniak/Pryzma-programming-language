@@ -73,3 +73,6 @@ a.age = 7
 
 print b, "\n", c
 
+a = [{"gg": 5}]
+
+print a[0].gg

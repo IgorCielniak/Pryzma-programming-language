@@ -1762,8 +1762,27 @@ class PryzmaInterpreter:
             file_name, function_name, args = self.parse_call_statement(call_statement)
             return self.ccall_function_from_file(file_name, function_name, args)
         elif "." in expression and not expression.split(".", 1)[0].isdigit():
-            name, field = expression.split(".", 1)
-            return self.acces_field(name, field)
+            in_str = False
+            bracket_depth = 0
+            split_pos = -1
+            for i, ch in enumerate(expression):
+                if ch == '"':
+                    in_str = not in_str
+                elif ch == '[' and not in_str:
+                    bracket_depth += 1
+                elif ch == ']' and not in_str:
+                    if bracket_depth > 0:
+                        bracket_depth -= 1
+                elif ch == '.' and not in_str and bracket_depth == 0:
+                    split_pos = i
+                    break
+            if split_pos != -1:
+                name = expression[:split_pos]
+                field = expression[split_pos+1:]
+                return self.acces_field(name, field)
+            else:
+                name, field = expression.split(".", 1)
+                return self.acces_field(name, field)
         elif expression.startswith("&"):
             if expression[1:] in self.variables:
                 return Reference(expression[1:])
@@ -1843,18 +1862,76 @@ class PryzmaInterpreter:
         return None
 
     def acces_field(self, name, field):
-        obj = self.variables[name.strip()]
-        if isinstance(obj, Reference):
-            obj = self.variables[obj.var_name]
-        parts = re.findall(r'\w+|\[.*?\]', field)
+        name = name.strip()
+        base_tokens = re.findall(r"[a-zA-Z_]\w*|\[\s*[^\]]+\s*\]", name)
 
+        if not base_tokens:
+            if name in self.variables:
+                obj = self.variables[name]
+            else:
+                self.error(36, f"Error at line {self.current_line}: Variable '{name}' not found in current scope.")
+                return None
+        else:
+            base_var = base_tokens[0]
+            obj = None
+            if base_var in self.locals:
+                for i in range(len(self.function_tracker) - 1, -1, -1):
+                    for val, func_name, func_id in reversed(self.locals[base_var]):
+                        if func_name == self.function_tracker[i] and func_id == self.function_ids[i]:
+                            obj = val
+                            break
+                    if obj is not None:
+                        break
+            if obj is None:
+                if base_var in self.variables:
+                    obj = self.variables[base_var]
+                else:
+                    self.error(36, f"Error at line {self.current_line}: Variable '{base_var}' not found in current scope.")
+                    return None
+
+            if isinstance(obj, Reference):
+                if obj.var_name in self.variables:
+                    obj = self.variables[obj.var_name]
+                else:
+                    self.error(37, f"Error at line {self.current_line}: Referenced variable '{obj.var_name}' no longer exists")
+                    return None
+
+            for token in base_tokens[1:]:
+                if token.startswith('['):
+                    index_expr = token[1:-1].strip()
+                    index = self.evaluate_expression(index_expr)
+                    try:
+                        obj = obj[index]
+                    except Exception as e:
+                        self.error(43, f"Error at line {self.current_line}: Indexing error: {e}")
+                        return None
+
+        parts = re.findall(r"\w+|\[.*?\]", field)
         for part in parts:
             if part.startswith('['):
                 index_expr = part[1:-1].strip()
                 index = self.evaluate_expression(index_expr)
-                obj = obj[index]
+                try:
+                    if isinstance(obj, Reference):
+                        obj = self.variables.get(obj.var_name)
+                    obj = obj[index]
+                except Exception as e:
+                    self.error(43, f"Error at line {self.current_line}: Indexing error: {e}")
+                    return None
             else:
-                obj = obj[part.strip()]
+                key = part.strip()
+                try:
+                    if isinstance(obj, Reference):
+                        obj = self.variables.get(obj.var_name)
+                    obj = obj[key]
+                except Exception:
+                    try:
+                        if isinstance(obj, Reference):
+                            obj = self.variables.get(obj.var_name)
+                        obj = getattr(obj, key)
+                    except Exception:
+                        self.error(44, f"Error at line {self.current_line}: Field '{key}' not found on object")
+                        return None
         return obj
 
     def assign_value_local(self, var_name, expression, ref = False):
@@ -2575,6 +2652,8 @@ commands:
 40 - Name of a non existing function pased as an argument to patch()
 41 - List not found for the foreach function.
 42 - 'using' statement can only be used with struct instances.
+43 - Indexing Error.
+44 - Field not found on object.
 """
 )
 
