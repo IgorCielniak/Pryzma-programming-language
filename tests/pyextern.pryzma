@@ -20,3 +20,9 @@ print "\n"
 text = @say("ha", 3, "-")
 print text
 print "\n"
+
+pyextern "./tests/pyextern_helper.py" *
+
+upper = @shout("wild")
+print upper
+print "\n"

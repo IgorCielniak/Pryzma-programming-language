@@ -122,6 +122,7 @@ class PryzmaInterpreter:
         self.in_loop = False
         self.debug = False
         self.gc = True
+        self.c_extern_wildcards = []
 
     def interpret_file(self, file_path, *args):
         self.file_path = file_path.strip('"')
@@ -263,8 +264,6 @@ class PryzmaInterpreter:
 
             if line == "" or line.startswith("//"):
                 return
-#            if "//" in line:
-#                line = self.split_on_comment(line)
 
             deleted_keyword = False
 
@@ -578,6 +577,9 @@ class PryzmaInterpreter:
                     if isinstance(var_entry, FuncReference):
                         function_name = var_entry.func_name
                         var_entry = self.variables.data.get(function_name)
+
+                    if var_entry is None:
+                        var_entry = self.resolve_wildcard_function(function_name)
 
                     if isinstance(var_entry, (ExternFunction, PyExternFunction)):
                         try:
@@ -937,7 +939,7 @@ class PryzmaInterpreter:
                 elif (line.startswith("asm{") or line.startswith("asm {")) and line.endswith("}"):
                     try:
                         from keystone import Ks, KS_ARCH_X86, KS_MODE_64
-                        import ctypes, mmap
+                        import mmap
                     except ImportError:
                         print("ERROR: missing keystone")
                         return
@@ -1215,14 +1217,24 @@ class PryzmaInterpreter:
                             functions[i] = functions[i].strip(",").strip()
 
                     c_functions = ctypes.CDLL(file_name)
-
+                    wildcard = False
+                    cleaned_functions = []
                     for func in functions:
+                        if func == "*":
+                            wildcard = True
+                            continue
+                        cleaned_functions.append(func)
+
+                    for func in cleaned_functions:
                         try:
                             c_func = getattr(c_functions, func)
                         except AttributeError:
                             print(f"Function '{func}' not found in '{file_name}'.")
                             return
                         self.variables[func] = ExternFunction(c_func)
+
+                    if wildcard:
+                        self.register_c_wildcard_library(c_functions)
                 elif line.startswith("pyextern"):
                     parts = line.split(None, 2)
                     if len(parts) < 3:
@@ -1241,7 +1253,13 @@ class PryzmaInterpreter:
                         self.error(11, f"No functions specified for pyextern at line {self.current_line}.")
                         return
 
+                    wildcard = False
+
                     for func_name, alias in function_specs:
+                        if func_name == "*":
+                            wildcard = True
+                            continue
+
                         py_callable = self.resolve_pyextern_callable(module, func_name)
                         if py_callable is None:
                             print(f"Function '{func_name}' not found in '{module_ref}'.")
@@ -1250,6 +1268,9 @@ class PryzmaInterpreter:
                             print(f"Attribute '{func_name}' is not callable in '{module_ref}'.")
                             continue
                         self.variables[alias] = PyExternFunction(py_callable)
+
+                    if wildcard:
+                        self.bind_all_pyextern_callables(module)
                 elif line == "stop":
                     sys.exit()
                 else:
@@ -2483,6 +2504,21 @@ limitations under the License.
 
         return c_func(*args)
 
+    def register_c_wildcard_library(self, c_lib):
+        if c_lib not in self.c_extern_wildcards:
+            self.c_extern_wildcards.append(c_lib)
+
+    def resolve_wildcard_function(self, function_name):
+        for c_lib in reversed(self.c_extern_wildcards):
+            try:
+                c_func = getattr(c_lib, function_name)
+            except AttributeError:
+                continue
+            wrapper = ExternFunction(c_func)
+            self.variables[function_name] = wrapper
+            return wrapper
+        return None
+
     def resolve_pyextern_module_reference(self, module_expr):
         module_expr = module_expr.strip()
 
@@ -2540,6 +2576,10 @@ limitations under the License.
             if not entry:
                 continue
 
+            if entry == "*":
+                parsed.append(("*", "*"))
+                continue
+
             alias = None
             if " as " in entry:
                 func_name, alias = entry.split(" as ", 1)
@@ -2559,6 +2599,17 @@ limitations under the License.
                 return None
             target = getattr(target, attr)
         return target
+
+    def bind_all_pyextern_callables(self, module):
+        for attr_name in dir(module):
+            if attr_name.startswith("_"):
+                continue
+            try:
+                attr = getattr(module, attr_name)
+            except AttributeError:
+                continue
+            if callable(attr):
+                self.variables[attr_name] = PyExternFunction(attr)
 
     def print_help(self):
         print("""

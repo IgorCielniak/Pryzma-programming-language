@@ -7,6 +7,9 @@ def add(lhs, rhs):
 def repeat(text, count=2, sep=""):
     return sep.join([text] * count)
 
+def shout(text):
+    return text.upper()
+
 class Tools:
     @staticmethod
     def triple(value):

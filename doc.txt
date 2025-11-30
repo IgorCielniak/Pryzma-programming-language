@@ -649,10 +649,18 @@ ptr = @malloc(1)
 
 @free(ptr)
 
+if you want to expose every symbol from a shared library without listing them, use a wildcard:
+
+extern "libc.so.6" *
+
+The interpreter will remember the library and resolve functions on first use, so calling
+@puts, @malloc, etc. will automatically bind the matching symbol the first time you call it.
+
 pyextern:
 
 pyextern "./scripts/helpers.py" greet
 pyextern "./scripts/helpers.py" { repeat as re | Tools.triple as triple }
+pyextern "./scripts/helpers.py" *
 
 pyextern works just like extern but for Python modules. Pass either a file path ending with .py or an importable module name.
 Entries can optionally specify an alias using "as". Nested attributes are supported, so you can bind Tools.triple while exposing
@@ -663,6 +671,8 @@ pyextern "./scripts/helpers.py" { Tools.triple as triple }
 After binding, call the function the same way as any Pryzma function:
 
 value = @triple(4)
+
+Using * with pyextern registers every public (non-underscore) callable exported by the module in one statement.
 
 Time:
 
