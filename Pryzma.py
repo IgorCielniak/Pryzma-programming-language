@@ -4046,7 +4046,7 @@ def main():
 
     history = []
     running_from_file = False
-    version = 6.1
+    version = 6.2
 
     if len(sys.argv) >= 2:
         file_path = sys.argv[1]
