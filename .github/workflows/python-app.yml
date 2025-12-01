@@ -16,8 +16,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Start tmate session
-      uses: mxschmitt/action-tmate@v3
     - uses: actions/checkout@v4
     - name: Set up Python 3.12
       uses: actions/setup-python@v3
