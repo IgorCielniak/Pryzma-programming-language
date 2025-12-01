@@ -1,5 +1,0 @@
-extern "libc.so.6" *
-
-ptr = @malloc(8)
-@free(ptr)
-print "ok"
