@@ -37,8 +37,8 @@ ret_var = None
         l = line[0][1:]
         l = splitby(",",l)
         range = splitby(":",strip(l[1]))
-        start_var2 = @eval(range[0])
-        end_var2 = @eval(range[1])
+        start_var = @eval(range[0])
+        end_var = @eval(range[1])
         var2 = strip(l[0])
         actions2 = line[1][:-1]
         prog = list(actions2)
@@ -63,7 +63,7 @@ ret_var = None
         actions2 = splitby(h7,program)
         push(variables,var2,i)
 
-        for(i,start_var2:end_var2){
+        for(i,start_var:end_var){
             variables[var2] = i
             for(action2,0:len(actions2)){
                 actions2[action2] = strip(actions2[action2])
@@ -122,12 +122,12 @@ ret_var = None
             func = splitby(h4,func)
             func_name = func[0]
             h5 = char(44)
-            args = func[1]
-            args = splitby(h5,args)
-            for(arg,0:len(args)){
-                args[arg] = @eval(args[arg])
+            argss = func[1]
+            argss = splitby(h5,argss)
+            for(arg,0:len(argss)){
+                argss[arg] = @eval(argss[arg])
             }
-            push(variables,"args",args)
+            push(variables,"args",argss)
         }
         actions = functions[func_name]
         actions_count = len(actions)
@@ -378,12 +378,12 @@ ret_var = None
             func = splitby(h4,func)
             func_name = func[0]
             h5 = char(44)
-            args = func[1]
-            args = splitby(h5,args)
-            for(arg,0:len(args)){
-                args[arg] = @eval(args[arg])
+            argss = func[1]
+            argss = splitby(h5,argss)
+            for(arg,0:len(argss)){
+                argss[arg] = @eval(argss[arg])
             }
-            push(variables,"args",args)
+            push(variables,"args",argss)
         }
         actions = functions[func_name]
         actions_count = len(actions)
