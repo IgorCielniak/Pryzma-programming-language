@@ -173,7 +173,8 @@ class PryzmaInterpreter:
     def preprocess(self, program):
         program = program.splitlines()
         for line in range(0,len(program)):
-            program[line] = self.split_on_comment(program[line])
+            if "//" in program[line]:
+                program[line] = self.split_on_comment(program[line])
             if program[line].startswith("#np") or (program[line].startswith("#preproc") and "np" in program[line]):
                 self.no_preproc = True
             if self.lines_map_done == False:
