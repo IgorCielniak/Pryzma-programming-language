@@ -1,0 +1,28 @@
+extern "libc.so.6" {malloc|free}
+pyextern "raw_helper.py" {write_int_at|read_int_at}
+
+slot_size = 8
+count = 3
+bytes_needed = slot_size * count
+
+buf = @malloc(bytes_needed)
+if(buf == 0){
+    print "malloc failed"
+}else{
+    values = [1337, 42, 2025]
+    idx = 0
+    while(idx < count){
+        offset = idx * slot_size
+        @write_int_at(buf, offset, values[idx])
+        idx += 1
+    }
+
+    idx = 0
+    while(idx < count){
+        offset = idx * slot_size
+        print @read_int_at(buf, offset)
+        idx += 1
+    }
+
+    @free(buf)
+}

@@ -1,0 +1,9 @@
+#mm
+a = 5
+ptr = &a
+print *ptr
+*ptr = 12
+print a
+#amm
+a = 3
+print a

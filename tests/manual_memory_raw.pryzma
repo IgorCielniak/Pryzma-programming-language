@@ -1,0 +1,10 @@
+#mm
+pyextern "raw_helper.py" {write_int|read_int}
+a = 7
+ptr = &a
+print *ptr
+@write_int(addr(ptr), 42)
+print a
+*ptr = 64
+print @read_int(addr(ptr))
+#amm

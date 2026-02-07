@@ -11,12 +11,14 @@ import zipfile
 import platform
 import random
 import ctypes
+import ctypes.util
 from collections import UserDict
 import lzma
 
 class Reference:
-    def __init__(self, var_name):
+    def __init__(self, var_name, addr=None):
         self.var_name = var_name
+        self.addr = addr
 
 class FuncReference:
     def __init__(self, func_name):
@@ -83,15 +85,257 @@ class PyExternFunction:
     def invoke(self, args):
         return self.func(*args)
 
+class ManualMemoryManager:
+    INT64_MIN = -(1 << 63)
+    INT64_MAX = (1 << 63) - 1
+
+    def __init__(self):
+        self.libc = self._load_libc()
+        self._malloc_fn = self.libc.malloc
+        self._malloc_fn.argtypes = [ctypes.c_size_t]
+        self._malloc_fn.restype = ctypes.c_void_p
+        self._free_fn = self.libc.free
+        self._free_fn.argtypes = [ctypes.c_void_p]
+        self._free_fn.restype = None
+        self.slots = {}
+
+    def _load_libc(self):
+        if os.name == "nt":
+            for candidate in ("msvcrt.dll", "ucrtbase.dll"):
+                try:
+                    return ctypes.CDLL(candidate)
+                except OSError:
+                    continue
+            raise RuntimeError("Unable to load the Windows C runtime for raw manual memory mode")
+
+        libc_name = ctypes.util.find_library("c")
+        candidates = [libc_name] if libc_name else []
+        candidates.append(None)
+        for candidate in candidates:
+            try:
+                return ctypes.CDLL(candidate) if candidate else ctypes.CDLL(None)
+            except OSError:
+                continue
+        raise RuntimeError("Unable to locate libc for raw manual memory mode")
+
+    def supports_value(self, value):
+        try:
+            self._value_descriptor(value)
+            return True
+        except (TypeError, OverflowError, ValueError):
+            return False
+
+    def allocate(self, value):
+        desc = self._value_descriptor(value)
+        addr = self._malloc(desc["capacity"])
+        try:
+            self._initialize_slot(addr, desc)
+        except Exception:
+            self._free(addr)
+            raise
+        self.slots[addr] = {
+            "type": desc["type"],
+            "capacity": desc["capacity"],
+            "length": desc["length"],
+            "ctype": desc.get("ctype")
+        }
+        return addr
+
+    def read(self, addr):
+        addr = int(addr)
+        slot = self.slots.get(addr)
+        if not slot:
+            raise KeyError(f"Manual memory slot {addr} not found")
+        slot_type = slot["type"]
+        if slot_type == "int":
+            return ctypes.c_longlong.from_address(addr).value
+        if slot_type == "float":
+            return ctypes.c_double.from_address(addr).value
+        if slot_type == "bool":
+            return bool(ctypes.c_uint8.from_address(addr).value)
+        if slot_type == "bytes":
+            length = slot["length"]
+            if length == 0:
+                return b""
+            return ctypes.string_at(addr, length)
+        raise TypeError(f"Unsupported slot type '{slot_type}'")
+
+    def write(self, addr, value):
+        addr = int(addr)
+        slot = self.slots.get(addr)
+        if not slot:
+            raise KeyError(f"Manual memory slot {addr} not found")
+        desc = self._value_descriptor(value)
+        if desc["type"] != slot["type"]:
+            raise TypeError(f"Slot at {addr} stores '{slot['type']}' but received '{desc['type']}'")
+
+        if desc["type"] == "bytes":
+            if desc["length"] > slot["capacity"]:
+                raise ValueError(f"Value of length {desc['length']} exceeds slot capacity {slot['capacity']}")
+            if desc["length"]:
+                ctypes.memmove(addr, desc["value"], desc["length"])
+            if slot["capacity"] > desc["length"]:
+                ctypes.memset(addr + desc["length"], 0, slot["capacity"] - desc["length"])
+            slot["length"] = desc["length"]
+            return
+
+        if desc["type"] == "int":
+            ctypes.c_longlong.from_address(addr).value = desc["value"]
+        elif desc["type"] == "float":
+            ctypes.c_double.from_address(addr).value = desc["value"]
+        elif desc["type"] == "bool":
+            ctypes.c_uint8.from_address(addr).value = desc["value"]
+        else:
+            raise TypeError(f"Unsupported slot type '{desc['type']}'")
+
+    def free(self, addr):
+        addr = int(addr)
+        if addr in self.slots:
+            self._free(addr)
+            self.slots.pop(addr, None)
+
+    def reset(self):
+        for addr in list(self.slots.keys()):
+            self._free(addr)
+        self.slots.clear()
+
+    def _malloc(self, size):
+        size = max(1, int(size))
+        addr = self._malloc_fn(ctypes.c_size_t(size))
+        if not addr:
+            raise MemoryError("Raw manual memory allocation failed")
+        return ctypes.c_void_p(addr).value
+
+    def _free(self, addr):
+        self._free_fn(ctypes.c_void_p(addr))
+
+    def _value_descriptor(self, value):
+        if isinstance(value, bool):
+            return {
+                "type": "bool",
+                "ctype": ctypes.c_uint8,
+                "capacity": 1,
+                "length": 1,
+                "value": 1 if value else 0
+            }
+        if isinstance(value, int) and not isinstance(value, bool):
+            ivalue = int(value)
+            if ivalue < self.INT64_MIN or ivalue > self.INT64_MAX:
+                raise OverflowError("Raw manual memory only supports signed 64-bit integers")
+            return {
+                "type": "int",
+                "ctype": ctypes.c_longlong,
+                "capacity": ctypes.sizeof(ctypes.c_longlong),
+                "length": ctypes.sizeof(ctypes.c_longlong),
+                "value": ivalue
+            }
+        if isinstance(value, float):
+            return {
+                "type": "float",
+                "ctype": ctypes.c_double,
+                "capacity": ctypes.sizeof(ctypes.c_double),
+                "length": ctypes.sizeof(ctypes.c_double),
+                "value": float(value)
+            }
+        if isinstance(value, (bytes, bytearray, memoryview)):
+            data = bytes(value)
+            return {
+                "type": "bytes",
+                "ctype": None,
+                "capacity": max(len(data), 1),
+                "length": len(data),
+                "value": data
+            }
+        raise TypeError(f"Raw manual memory cannot store values of type {type(value).__name__}")
+
+    def _initialize_slot(self, addr, desc):
+        slot_type = desc["type"]
+        if slot_type == "int":
+            ctypes.c_longlong.from_address(addr).value = desc["value"]
+        elif slot_type == "float":
+            ctypes.c_double.from_address(addr).value = desc["value"]
+        elif slot_type == "bool":
+            ctypes.c_uint8.from_address(addr).value = desc["value"]
+        elif slot_type == "bytes":
+            length = desc["length"]
+            if length:
+                ctypes.memmove(addr, desc["value"], length)
+            if desc["capacity"] > length:
+                ctypes.memset(addr + length, 0, desc["capacity"] - length)
+        else:
+            raise TypeError(f"Unsupported slot type '{slot_type}'")
+
+class MemoryPointer:
+    def __init__(self, manager, addr):
+        self.manager = manager
+        self.addr = addr
+
+    def __call__(self):
+        return self.manager.read(self.addr)
+
+    def set(self, value):
+        self.manager.write(self.addr, value)
+
+    def __repr__(self):
+        addr_val = int(self.addr) if self.addr else 0
+        return f"<MemoryPointer addr={addr_val}>"
+
 class eval_dict(UserDict):
     def __getitem__(self, key):
         value = super().__getitem__(key)
         return value() if callable(value) else value
 
+class MemoryDict(eval_dict):
+    def __init__(self, interpreter):
+        super().__init__({})
+        self.interpreter = interpreter
+
+    def __setitem__(self, key, value):
+        existing = self.data.get(key)
+        if isinstance(existing, MemoryPointer):
+            manager = self.interpreter.manual_memory_manager
+            if manager and not manager.supports_value(value):
+                raise TypeError(f"Manual memory backend cannot store value of type {type(value).__name__} for variable '{key}'")
+            existing.set(value)
+            return
+
+        if self.interpreter.should_manage_value(key, value):
+            addr = self.interpreter.manual_memory_manager.allocate(value)
+            super().__setitem__(key, MemoryPointer(self.interpreter.manual_memory_manager, addr))
+        else:
+            super().__setitem__(key, value)
+
+    def get(self, key, default=None):
+        if key in self.data:
+            return self[key]
+        return default
+
+    def pop(self, key, default=None):
+        if key in self.data:
+            value = self[key]
+            del self.data[key]
+            return value
+        if default is None:
+            raise KeyError(key)
+        return default
+
+    def items(self):
+        for key in list(self.data.keys()):
+            yield key, self[key]
+
+    def values(self):
+        for key in list(self.data.keys()):
+            yield self[key]
+
+    def get_raw(self, key):
+        return self.data.get(key)
+
 class PryzmaInterpreter:
     
     def __init__(self):
-        self.variables = eval_dict({})
+        self.manual_memory_manager = None
+        self.manual_memory_enabled = False
+        self.variables = MemoryDict(self)
         self.functions = {}
         self.structs = {}
         self.locals = {}
@@ -122,6 +366,7 @@ class PryzmaInterpreter:
         self.in_loop = False
         self.debug = False
         self.gc = True
+        self.manual_memory_protected = set()
         self.c_extern_wildcards = []
 
     def interpret_file(self, file_path, *args):
@@ -573,10 +818,10 @@ class PryzmaInterpreter:
                             self.variables["args"] = arg
                     self.function_tracker.append(function_name)
                     self.function_ids.append(random.randint(0,100000000))
-                    var_entry = self.variables.data.get(function_name)
+                    var_entry = self.variables.get_raw(function_name)
                     if isinstance(var_entry, FuncReference):
                         function_name = var_entry.func_name
-                        var_entry = self.variables.data.get(function_name)
+                        var_entry = self.variables.get_raw(function_name)
 
                     if var_entry is None:
                         var_entry = self.resolve_wildcard_function(function_name)
@@ -1231,6 +1476,7 @@ class PryzmaInterpreter:
                         except AttributeError:
                             print(f"Function '{func}' not found in '{file_name}'.")
                             return
+                        self.configure_c_function_defaults(func, c_func)
                         self.variables[func] = ExternFunction(c_func)
 
                     if wildcard:
@@ -1354,6 +1600,50 @@ class PryzmaInterpreter:
             self.gc = True
         if "ngc" in args:
             self.gc = False
+        if "mmraw" in args or "mm" in args:
+            self.enable_manual_memory()
+        if "amm" in args:
+            self.disable_manual_memory()
+
+    def should_manage_value(self, key, value):
+        if not self.manual_memory_enabled or self.manual_memory_manager is None:
+            return False
+        if isinstance(value, (Reference, FuncReference, ExternFunction, PyExternFunction, MemoryPointer)):
+            return False
+        if callable(value):
+            return False
+        return self.manual_memory_manager.supports_value(value)
+
+    def enable_manual_memory(self):
+        if self.manual_memory_enabled:
+            return
+        if self.manual_memory_manager is None:
+            try:
+                self.manual_memory_manager = ManualMemoryManager()
+            except RuntimeError as exc:
+                print(f"Manual memory unavailable: {exc}")
+                return
+        self.manual_memory_enabled = True
+
+        for key, stored in list(self.variables.data.items()):
+            if isinstance(stored, MemoryPointer):
+                continue
+            if not self.should_manage_value(key, stored):
+                continue
+            addr = self.manual_memory_manager.allocate(stored)
+            self.variables.data[key] = MemoryPointer(self.manual_memory_manager, addr)
+
+    def disable_manual_memory(self):
+        if not self.manual_memory_enabled or self.manual_memory_manager is None:
+            return
+        for key, stored in list(self.variables.data.items()):
+            if isinstance(stored, MemoryPointer):
+                value = stored()
+                self.variables.data[key] = value
+        if self.manual_memory_manager:
+            self.manual_memory_manager.reset()
+        self.manual_memory_manager = None
+        self.manual_memory_enabled = False
 
 
     def struct_split(self, s):
@@ -1734,6 +2024,22 @@ class PryzmaInterpreter:
             char = self.evaluate_expression(char)
             value = self.evaluate_expression(value)
             return char.join(value)
+        elif expression.startswith("addr(") and expression.endswith(")"):
+            target = self.evaluate_expression(expression[5:-1])
+            resolved_addr = None
+            if isinstance(target, Reference):
+                if target.addr is not None:
+                    resolved_addr = target.addr
+                else:
+                    raw = self.variables.get_raw(target.var_name)
+                    if isinstance(raw, MemoryPointer):
+                        resolved_addr = raw.addr
+            elif isinstance(target, MemoryPointer):
+                resolved_addr = target.addr
+            if resolved_addr is None:
+                self.error(59, f"Error at line {self.current_line}: addr() requires a manual memory reference")
+                return None
+            return resolved_addr
         elif expression.startswith("defined(") and expression.endswith(")"):
             name = expression[8:-1]
             return name in self.variables or name in self.locals or name in self.functions
@@ -1805,15 +2111,22 @@ class PryzmaInterpreter:
                 name, field = expression.split(".", 1)
                 return self.acces_field(name, field)
         elif expression.startswith("&"):
-            if expression[1:] in self.variables:
-                return Reference(expression[1:])
-            elif expression[1:] in self.locals:
-                return Reference(expression[1:])
-            elif expression[1:] in self.functions:
-                return FuncReference(expression[1:])
+            target = expression[1:]
+            addr = None
+            raw = self.variables.get_raw(target)
+            if isinstance(raw, MemoryPointer):
+                addr = raw.addr
+            if target in self.variables:
+                return Reference(target, addr)
+            elif target in self.locals:
+                return Reference(target)
+            elif target in self.functions:
+                return FuncReference(target)
         elif expression.startswith("*"):
             ref = self.evaluate_expression(expression[1:])
             if isinstance(ref, Reference):
+                if ref.addr is not None and self.manual_memory_enabled:
+                    return self.manual_memory_manager.read(ref.addr)
                 if ref.var_name in self.variables:
                     return self.variables[ref.var_name]
                 elif ref.var_name in self.locals:
@@ -1963,6 +2276,9 @@ class PryzmaInterpreter:
         if var_name.startswith("*"):
             ref = self.evaluate_expression(var_name[1:].strip())
             if isinstance(ref, Reference):
+                if ref.addr is not None and self.manual_memory_enabled:
+                    self.manual_memory_manager.write(ref.addr, value)
+                    return
                 var_name = ref.var_name
 
         if "." in var_name:
@@ -2054,6 +2370,9 @@ class PryzmaInterpreter:
         if var_name.startswith("*"):
             ref = self.evaluate_expression(var_name[1:].strip())
             if isinstance(ref, Reference):
+                if ref.addr is not None and self.manual_memory_enabled:
+                    self.manual_memory_manager.write(ref.addr, value)
+                    return
                 var_name = ref.var_name
 
         if "." in var_name:
@@ -2610,6 +2929,30 @@ limitations under the License.
                 continue
             if callable(attr):
                 self.variables[attr_name] = PyExternFunction(attr)
+
+    def configure_c_function_defaults(self, func_name, c_func):
+        lowered = func_name.lower()
+        try:
+            if lowered == "malloc":
+                c_func.argtypes = [ctypes.c_size_t]
+                c_func.restype = ctypes.c_void_p
+            elif lowered == "calloc":
+                c_func.argtypes = [ctypes.c_size_t, ctypes.c_size_t]
+                c_func.restype = ctypes.c_void_p
+            elif lowered == "realloc":
+                c_func.argtypes = [ctypes.c_void_p, ctypes.c_size_t]
+                c_func.restype = ctypes.c_void_p
+            elif lowered == "free":
+                c_func.argtypes = [ctypes.c_void_p]
+                c_func.restype = None
+            elif lowered in ("memcpy", "memmove"):
+                c_func.argtypes = [ctypes.c_void_p, ctypes.c_void_p, ctypes.c_size_t]
+                c_func.restype = ctypes.c_void_p
+            elif lowered == "memset":
+                c_func.argtypes = [ctypes.c_void_p, ctypes.c_int, ctypes.c_size_t]
+                c_func.restype = ctypes.c_void_p
+        except Exception:
+            pass
 
     def print_help(self):
         print("""

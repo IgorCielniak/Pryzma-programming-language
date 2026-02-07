@@ -1220,7 +1220,56 @@ its automaticly dereferenced on call, @*a is not supported but b = *a; @b is bec
 in pryzma you can dereference all values and if the value isn't a reference it will just be unaffected
 i think its all self explanatory
 
-you can check if somwthink is a function with is_func()
+Manual memory mode:
+
+You can toggle the libc-backed storage backend for globals using pragmas:
+
+#mm    // enable raw manual storage (defaults to this backend)
+#mmraw // alias for #mm
+#amm   // disable and return to automatic mode
+
+When manual memory is active each global variable is backed by an actual `malloc` slot
+inside the interpreter. Using `&var` captures the slot address and `*ptr` dereferences it,
+so assignments like:
+
+value = 5
+ptr = &value
+*ptr = 12
+
+modify the same underlying memory cell and remain visible through `value`. Turning the
+mode off with `#amm` unwraps everything back to normal automatic storage.
+
+Key properties of the raw backend:
+
+- Slots are carved out of libc, so `addr(ptr)` returns a pointer you can pass directly to
+    `extern` or `pyextern` functions (including `libc.free`).
+- Supported types mirror safe C layouts: booleans, signed 64-bit integers, doubles and
+    byte buffers (bytes/bytearray/memoryview). Strings should be encoded explicitly.
+- Byte slots keep the capacity they were first given; trying to write past it raises an
+    error instead of silently corrupting memory.
+- The interpreter manages every slot you create via normal assignments, which means
+    globally enabling `#mm` instantly moves *all* globals to the C heap without sprinkling
+    manual `malloc` calls.
+
+Example roundtrip with the helper functions from `raw_helper.py`:
+
+```
+#mm
+pyextern raw_helper {write_int|read_int}
+a = 7
+ptr = &a
+@write_int(addr(ptr), 42)
+print @read_int(addr(ptr)) // prints 42
+#amm
+```
+
+If you want to interact with the system allocator directly, Pryzma now sets up sensible
+default signatures for common libc routines when you import them via `extern`. The
+`tests/libc_malloc.pryzma` program shows how to combine `extern "libc.so.6" {malloc|free}`
+with the helpers from `raw_helper.py` to store multiple 64-bit integers inside a manually
+managed buffer.
+
+you can check if somethink is a function with is_func()
 
 /func{return 2+2}
 a = &func
