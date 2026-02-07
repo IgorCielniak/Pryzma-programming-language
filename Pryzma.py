@@ -14,6 +14,8 @@ import ctypes
 import ctypes.util
 from collections import UserDict
 import lzma
+import struct
+import mmap
 
 class Reference:
     def __init__(self, var_name, addr=None):
@@ -368,6 +370,7 @@ class PryzmaInterpreter:
         self.gc = True
         self.manual_memory_protected = set()
         self.c_extern_wildcards = []
+        self.asm_backend = "emu"
 
     def interpret_file(self, file_path, *args):
         self.file_path = file_path.strip('"')
@@ -1182,124 +1185,7 @@ class PryzmaInterpreter:
                 elif line == "break":
                     self.break_stack[-1] = True
                 elif (line.startswith("asm{") or line.startswith("asm {")) and line.endswith("}"):
-                    try:
-                        from keystone import Ks, KS_ARCH_X86, KS_MODE_64
-                        import mmap
-                    except ImportError:
-                        print("ERROR: missing keystone")
-                        return
-
-                    line = line[4:-1] if line.startswith("asm{") else line[5:-1]
-                    code = list(filter(None, line.split("|")))
-                    for i in range(len(code)):
-                        code[i] = self.evaluate_expression(code[i].strip())
-
-                    if not code:
-                        print("No asm instructions found.")
-                        return
-
-                    var_mem = {}
-                    for name, value in self.variables.items():
-                        if isinstance(value, int):
-                            var_mem[name] = ctypes.c_int64(value)
-
-                    token_re = re.compile(r"\[|\]|,|0x[0-9A-Fa-f]+|[A-Za-z_][A-Za-z0-9_]*|[-+]?\d+|\S")
-
-                    def tokenize(line):
-                        return token_re.findall(line)
-
-                    ARITH_OPS = {"add", "sub", "imul", "and", "or", "xor"}
-
-                    def resolve_vars(lines, var_mem):
-                        out = []
-                        for ln in lines:
-                            stripped = ln.strip()
-                            if not stripped:
-                                continue
-
-                            toks = tokenize(stripped)
-
-                            mnemonic = toks[0].lower() if len(toks) > 0 else ""
-                            operands = [t for t in toks[1:] if t != ","]
-
-                            def addr_load(addr_hex, dst_reg):
-                                return [f"mov r11, {addr_hex}", f"mov {dst_reg}, qword ptr [r11]"]
-
-                            def addr_store(addr_hex, src_reg):
-                                return [f"mov r11, {addr_hex}", f"mov qword ptr [r11], {src_reg}"]
-
-                            if mnemonic == "mov" and len(operands) >= 2:
-                                op1, op2 = operands[0], operands[1]
-
-                                if op2 in var_mem and re.match(r"^[er]?[abcd]x$|^r[0-9a-z]+$", op1):
-                                    addr = hex(ctypes.addressof(var_mem[op2]))
-                                    out.extend(addr_load(addr, op1))
-                                    continue
-
-                                if op1 in var_mem:
-                                    addr = hex(ctypes.addressof(var_mem[op1]))
-                                    out.extend(addr_store(addr, op2))
-                                    continue
-
-                                out.append(stripped)
-                                continue
-
-                            if mnemonic in ARITH_OPS and len(operands) >= 2:
-                                dst, src = operands[0], operands[1]
-                                if src in var_mem:
-                                    addr = hex(ctypes.addressof(var_mem[src]))
-                                    out.append(f"mov r11, {addr}")
-                                    out.append(f"{mnemonic} {dst}, qword ptr [r11]")
-                                    continue
-                                out.append(stripped)
-                                continue
-
-                            out.append(stripped)
-
-                        return out
-
-                    resolved_body = resolve_vars(code, var_mem)
-
-                    asm_lines = []
-                    asm_lines.append("push r11")
-                    asm_lines.extend(resolved_body)
-                    asm_lines.append("pop r11")
-                    asm_lines.append("ret")
-
-                    asm_text = "\n".join(asm_lines)
-
-                    ks = Ks(KS_ARCH_X86, KS_MODE_64)
-                    try:
-                        machine_code, count = ks.asm(asm_text)
-                    except Exception as e:
-                        print("ASM ERROR:", e)
-                        return
-
-                    shellcode = bytes(machine_code)
-
-                    size = len(shellcode)
-                    if size == 0:
-                        print("No bytes assembled.")
-                        return
-
-                    exec_mem = mmap.mmap(-1, size, prot=mmap.PROT_READ | mmap.PROT_WRITE | mmap.PROT_EXEC)
-                    exec_mem.write(shellcode)
-                    exec_mem.seek(0)
-
-                    addr = ctypes.addressof(ctypes.c_char.from_buffer(exec_mem))
-                    FUNC = ctypes.CFUNCTYPE(None)
-                    func = FUNC(addr)
-
-                    try:
-                        func()
-                    except Exception as e:
-                        print("Runtime error while executing asm:", e)
-
-                    for name, ref in var_mem.items():
-                        try:
-                            self.variables[name] = ref.value
-                        except Exception:
-                            pass
+                    self.execute_inline_asm(line)
                     return
                 elif (line.startswith("py{") or line.startswith("py {")) and line.endswith("}"):
                     line = line[3:-1] if line.starstwith("py{") else line[4:-1]
@@ -1526,6 +1412,252 @@ class PryzmaInterpreter:
             except Exception as e:
                 self.error(12, f"Error at line {self.current_line}: {e}")
 
+    def execute_inline_asm(self, raw_line):
+        try:
+            from keystone import Ks, KS_ARCH_X86, KS_MODE_64
+        except ImportError:
+            print("ERROR: missing keystone")
+            return
+
+        backend = (self.asm_backend or "emu").lower()
+        if backend not in {"emu", "native"}:
+            backend = "emu"
+
+        segment = raw_line[4:-1] if raw_line.startswith("asm{") else raw_line[5:-1]
+        code = list(filter(None, segment.split("|")))
+        for idx in range(len(code)):
+            code[idx] = self.evaluate_expression(code[idx].strip())
+
+        if not code:
+            print("No asm instructions found.")
+            return
+
+        context = self._build_inline_asm_context(backend)
+        if context is None:
+            return
+
+        resolved_body = self._resolve_inline_asm_vars(code, context["address_lookup"])
+        asm_lines = ["push r11"]
+        asm_lines.extend(resolved_body)
+        asm_lines.append("pop r11")
+        asm_lines.append("ret")
+        asm_text = "\n".join(asm_lines)
+
+        ks = Ks(KS_ARCH_X86, KS_MODE_64)
+        try:
+            machine_code, _ = ks.asm(asm_text)
+        except Exception as exc:
+            print("ASM ERROR:", exc)
+            return
+
+        shellcode = bytes(machine_code)
+        if not shellcode:
+            print("No bytes assembled.")
+            return
+
+        if backend == "native":
+            if not self._run_inline_asm_native(shellcode):
+                return
+        else:
+            if not self._run_inline_asm_emulated(shellcode, context):
+                return
+
+        context["sync_back"]()
+
+    def _build_inline_asm_context(self, backend):
+        if backend == "native":
+            var_mem = {}
+            for name, value in self.variables.items():
+                if isinstance(value, int):
+                    var_mem[name] = ctypes.c_int64(value)
+
+            def address_lookup(var_name):
+                ref = var_mem.get(var_name)
+                if ref is None:
+                    return None
+                return ctypes.addressof(ref)
+
+            def sync_back():
+                for name, ref in var_mem.items():
+                    try:
+                        self.variables[name] = ref.value
+                    except Exception:
+                        pass
+
+            return {
+                "backend": "native",
+                "var_mem": var_mem,
+                "address_lookup": address_lookup,
+                "sync_back": sync_back,
+            }
+
+        if backend == "emu":
+            var_mem = {}
+            offset = 0
+            for name, value in self.variables.items():
+                if isinstance(value, int):
+                    var_mem[name] = {
+                        "offset": offset,
+                        "value": ctypes.c_int64(value).value,
+                    }
+                    offset += 8
+
+            var_base = 0x40000000
+            var_size = self._align_to_page(offset)
+
+            def address_lookup(var_name):
+                entry = var_mem.get(var_name)
+                if entry is None:
+                    return None
+                return var_base + entry["offset"]
+
+            def sync_back():
+                for name, entry in var_mem.items():
+                    self.variables[name] = entry.get("value", self.variables.get(name, 0))
+
+            return {
+                "backend": "emu",
+                "var_mem": var_mem,
+                "var_base": var_base,
+                "var_size": var_size,
+                "address_lookup": address_lookup,
+                "sync_back": sync_back,
+            }
+
+        print(f"Unknown inline asm backend '{backend}'")
+        return None
+
+    def _resolve_inline_asm_vars(self, lines, address_lookup):
+        token_re = re.compile(r"\[|\]|,|0x[0-9A-Fa-f]+|[A-Za-z_][A-Za-z0-9_]*|[-+]?\d+|\S")
+        arith_ops = {"add", "sub", "imul", "and", "or", "xor"}
+        register_matcher = re.compile(r"^[er]?[abcd]x$|^r[0-9a-z]+$")
+
+        def addr_load(addr_value, dst_reg):
+            return [f"mov r11, {hex(addr_value)}", f"mov {dst_reg}, qword ptr [r11]"]
+
+        def addr_store(addr_value, src_reg):
+            return [f"mov r11, {hex(addr_value)}", f"mov qword ptr [r11], {src_reg}"]
+
+        resolved = []
+        for raw in lines:
+            stripped = raw.strip()
+            if not stripped:
+                continue
+
+            toks = token_re.findall(stripped)
+            mnemonic = toks[0].lower() if toks else ""
+            operands = [tok for tok in toks[1:] if tok != ","]
+
+            if mnemonic == "mov" and len(operands) >= 2:
+                op1, op2 = operands[0], operands[1]
+
+                addr = address_lookup(op2)
+                if addr is not None and register_matcher.match(op1):
+                    resolved.extend(addr_load(addr, op1))
+                    continue
+
+                addr = address_lookup(op1)
+                if addr is not None:
+                    resolved.extend(addr_store(addr, op2))
+                    continue
+
+                resolved.append(stripped)
+                continue
+
+            if mnemonic in arith_ops and len(operands) >= 2:
+                dst, src = operands[0], operands[1]
+                addr = address_lookup(src)
+                if addr is not None:
+                    resolved.append(f"mov r11, {hex(addr)}")
+                    resolved.append(f"{mnemonic} {dst}, qword ptr [r11]")
+                    continue
+                resolved.append(stripped)
+                continue
+
+            resolved.append(stripped)
+
+        return resolved
+
+    def _run_inline_asm_native(self, shellcode):
+        size = len(shellcode)
+        if size == 0:
+            return False
+
+        try:
+            exec_mem = mmap.mmap(-1, size, prot=mmap.PROT_READ | mmap.PROT_WRITE | mmap.PROT_EXEC)
+        except Exception as exc:
+            print("Inline asm allocation error:", exc)
+            return False
+
+        try:
+            exec_mem.write(shellcode)
+            exec_mem.seek(0)
+            addr = ctypes.addressof(ctypes.c_char.from_buffer(exec_mem))
+            func = ctypes.CFUNCTYPE(None)(addr)
+            func()
+        except Exception as exc:
+            print("Runtime error while executing asm:", exc)
+            exec_mem.close()
+            return False
+
+        exec_mem.close()
+        return True
+
+    def _run_inline_asm_emulated(self, shellcode, context):
+        try:
+            from unicorn import Uc, UC_ARCH_X86, UC_MODE_64, UcError
+            from unicorn.x86_const import UC_X86_REG_RSP
+        except ImportError:
+            print("ERROR: missing unicorn for asm emulation")
+            return False
+
+        code_addr = 0x10000000
+        stack_addr = 0x20000000
+        stack_size = 0x10000
+        exit_addr = 0x50000000
+
+        emu = Uc(UC_ARCH_X86, UC_MODE_64)
+
+        code_size = self._align_to_page(len(shellcode)) or 0x1000
+        emu.mem_map(code_addr, code_size)
+        emu.mem_write(code_addr, shellcode)
+
+        emu.mem_map(stack_addr, stack_size)
+        stack_top = stack_addr + stack_size
+        emu.reg_write(UC_X86_REG_RSP, stack_top - 8)
+        emu.mem_map(exit_addr, 0x1000)
+        emu.mem_write(stack_top - 8, struct.pack("<Q", exit_addr))
+
+        var_mem = context.get("var_mem", {})
+        var_base = context.get("var_base", 0x40000000)
+        var_size = context.get("var_size", 0)
+
+        if var_mem and var_size:
+            emu.mem_map(var_base, var_size)
+            for entry in var_mem.values():
+                addr = var_base + entry["offset"]
+                emu.mem_write(addr, struct.pack("<q", entry["value"]))
+
+        try:
+            emu.emu_start(code_addr, exit_addr)
+        except UcError as exc:
+            print("ASM EMU ERROR:", exc)
+            return False
+
+        if var_mem and var_size:
+            for entry in var_mem.values():
+                addr = var_base + entry["offset"]
+                entry["value"] = struct.unpack("<q", emu.mem_read(addr, 8))[0]
+
+        return True
+
+    @staticmethod
+    def _align_to_page(size):
+        if size <= 0:
+            return 0
+        page = 0x1000
+        return ((size + page - 1) // page) * page
+
     def error(self, code, message):
         if not self.in_try_block:
             self.in_func_err()
@@ -1600,6 +1732,10 @@ class PryzmaInterpreter:
             self.gc = True
         if "ngc" in args:
             self.gc = False
+        if ("asm_native" in args) or ("anat" in args):
+            self.asm_backend = "native"
+        if ("asm_emu" in args) or ("asm_emulator" in args) or ("aemu" in args):
+            self.asm_backend = "emu"
         if "mmraw" in args or "mm" in args:
             self.enable_manual_memory()
         if "amm" in args:

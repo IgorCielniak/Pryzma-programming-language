@@ -944,6 +944,11 @@ output will be:
 
 for now it only supports integers
 
+asm backend pragmas:
+
+#asm_native/anat -> switches inline asm to the native RWX backend (uses keystone)
+#asm_emu/asm_emulator/aemu -> switches inline asm back to the unicorn emulator backend (default)
+
 File and directories operations etc.
 
 
